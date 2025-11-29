@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zen - {{PLAN_TITLE}}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root { --paper-bg: #fafaf9; --ink-black: #1c1917; --ink-gray: #78716c; --line-color: #e7e5e4; --focus-highlight: #f5f5f4; {{CSS_VARS}} }
+        body { font-family: 'Noto Serif SC', 'Songti SC', serif; background-color: var(--paper-bg); color: var(--ink-black); background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E"); }
+        .sans-font { font-family: 'Inter', sans-serif; }
+        .zen-card { background: white; border: 1px solid var(--line-color); border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); border-left: 4px solid var(--line-color); transition: all 0.3s ease; }
+        .zen-card:hover { border-left-color: var(--ink-black); box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
+        .sidebar-item { border-left: 2px solid transparent; transition: all 0.2s; }
+        .sidebar-item.active { border-left-color: var(--ink-black); background: var(--focus-highlight); font-weight: 700; color: var(--ink-black); }
+        .task-row { border-bottom: 1px solid var(--line-color); transition: background-color 0.2s; position: relative; } 
+        .task-row:last-child { border-bottom: none; } 
+        .task-row:hover { background-color: var(--focus-highlight); }
+        .zen-checkbox { width: 20px; height: 20px; border: 1.5px solid var(--ink-gray); border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; }
+        .task-completed .zen-checkbox { background-color: var(--ink-black); border-color: var(--ink-black); transform: scale(0.9); }
+        .task-completed h4 { text-decoration: line-through; color: #a8a29e; transition: color 0.3s; }
+        .zen-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(250, 250, 249, 0.9); backdrop-filter: blur(4px); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; transition: opacity 0.6s ease; }
+        .zen-btn { background: var(--ink-black); color: white; padding: 12px 36px; border-radius: 2px; letter-spacing: 0.1em; transition: transform 0.2s, box-shadow 0.2s; }
+        .zen-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .zen-note-area { width: 100%; background: transparent; border: none; background-image: linear-gradient(transparent 95%, var(--line-color) 95%); background-size: 100% 2.4em; line-height: 2.4em; padding: 0; resize: none; color: var(--ink-gray); outline: none; transition: color 0.3s; font-size: 0.95rem; }
+        .zen-note-area:focus { color: var(--ink-black); }
+        .zen-note-area::placeholder { color: #d6d3d1; font-style: italic; }
+        .stamp-wrapper { position: absolute; bottom: 30px; right: 30px; pointer-events: none; z-index: 10; opacity: 0; transform: scale(1.5) rotate(-10deg); transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1); mix-blend-mode: multiply; }
+        .stamp-wrapper.show { opacity: 0.85; transform: scale(1) rotate(-5deg); }
+        .stamp-inner { width: 90px; height: 90px; border: 4px solid var(--seal-red); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: var(--seal-red); font-weight: 900; font-size: 2rem; box-shadow: inset 0 0 0 2px var(--seal-red), inset 0 0 12px rgba(185, 28, 28, 0.1); letter-spacing: 0.1em; -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' fill='white'/%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.4'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' fill='white'/%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.4'/%3E%3C/svg%3E"); }
+        .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @media (max-width: 768px) { .mobile-select-wrapper { position: relative; margin: 0 16px; } .mobile-select-wrapper select { appearance: none; padding-right: 30px; font-family: 'Noto Serif SC', serif; } .mobile-select-icon { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; } }
+    </style>
+</head>
+<body class="h-screen flex flex-col {{BODY_CLASS}}">
+    <header class="border-b border-stone-200 bg-white/80 backdrop-blur-sm sticky top-0 z-30 flex-none">
+        <div class="max-w-5xl mx-auto px-4 md:px-6 h-16 flex justify-between items-center">
+            <div class="flex items-center gap-3 group cursor-pointer" onclick="renamePlan()">
+                <div class="p-1.5 bg-stone-100 rounded text-stone-700"><i data-lucide="feather" class="w-4 h-4"></i></div>
+                <h1 id="planTitleText" class="text-lg md:text-xl font-bold tracking-tight text-stone-900 truncate max-w-[200px] md:max-w-md">{{PLAN_TITLE}}</h1>
+                <i data-lucide="edit-2" class="w-3 h-3 text-stone-300 group-hover:text-stone-500 transition-colors hidden md:block"></i>
+            </div>
+            <div class="flex items-center gap-4 text-sm">
+                <span class="hidden md:inline text-stone-500 italic text-xs tracking-wider">专注模式</span>
+                <div class="hidden md:block h-4 w-px bg-stone-300"></div>
+                <span id="progressText" class="font-bold tabular-nums sans-font">0%</span>
+                <button onclick="resetProgress()" class="text-stone-400 hover:text-red-700 transition-colors ml-2 p-2 hover:bg-stone-100 rounded" title="重置记录"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
+            </div>
+        </div>
+    </header>
+    <div class="flex flex-1 max-w-5xl mx-auto w-full overflow-hidden">
+        <aside class="hidden md:block w-64 border-r border-stone-200 overflow-y-auto no-scrollbar py-8 flex-none">
+            <div class="px-4 mb-4 flex justify-between items-center">
+                <span class="text-xs font-bold text-stone-400 uppercase tracking-widest">时光轴</span>
+                <span class="text-xs text-stone-300 sans-font" id="totalDaysLabel"></span>
+            </div>
+            <div id="dateList" class="space-y-0.5"></div>
+        </aside>
+        <main class="flex-1 overflow-y-auto no-scrollbar relative w-full" id="mainScroll">
+            <div class="md:hidden sticky top-0 bg-white/95 backdrop-blur z-20 py-3 border-b border-stone-100">
+                <div class="mobile-select-wrapper">
+                    <select id="mobileDateSelect" class="w-full bg-stone-50 border border-stone-200 text-stone-800 text-sm font-bold py-2 px-3 rounded outline-none focus:ring-1 focus:ring-stone-400"></select>
+                    <i data-lucide="chevron-down" class="mobile-select-icon w-4 h-4 text-stone-400"></i>
+                </div>
+            </div>
+            <div class="max-w-2xl mx-auto py-8 md:py-12 px-4 md:px-6 min-h-[80vh]">
+                <div class="mb-10 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <span class="inline-block border border-stone-300 px-3 py-1 text-xs rounded-full text-stone-500 mb-4 tracking-wide">第 <span id="dayNumDisplay" class="sans-font">1</span> 天</span>
+                    <h2 class="text-3xl md:text-5xl text-stone-900 mb-2 tracking-tight sans-font" id="dateDisplay">--</h2>
+                    <div class="w-8 h-1 bg-stone-800 mx-auto mt-6 rounded-full"></div>
+                </div>
+                <div class="relative min-h-[300px]">
+                    <div id="zenOverlay" class="zen-overlay" style="display: none;">
+                        <div class="text-center animate-in zoom-in duration-500">
+                            <i data-lucide="coffee" class="w-8 h-8 mx-auto mb-4 text-stone-400"></i>
+                            <h2 class="text-2xl mb-2 font-bold">静心 · 专注</h2>
+                            <p class="text-stone-500 mb-8 max-w-xs mx-auto text-sm leading-relaxed">摒弃杂念，只关注当下。<br>准备好了吗？</p>
+                            <button onclick="unlockDay()" class="zen-btn group">
+                                <span class="group-hover:translate-x-1 transition-transform inline-block">开启今日计划 &rarr;</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="taskList" class="zen-card p-0 overflow-hidden transition-all duration-700 opacity-100"></div>
+                    <div id="stampContainer" class="stamp-wrapper"><div class="stamp-inner"><span>圆满</span></div></div>
+                </div>
+                <div class="mt-16 pt-8 border-t border-stone-200">
+                    <div class="flex items-center gap-2 mb-4 opacity-60"><i data-lucide="feather" class="w-3 h-3"></i><h3 class="text-xs font-bold text-stone-500 uppercase tracking-widest">静思 (Daily Note)</h3></div>
+                    <textarea id="dailyNote" class="zen-note-area" rows="4" placeholder="在此刻，写下你的感悟..." oninput="saveNote()"></textarea>
+                </div>
+                <div class="mt-16 text-center"><p class="text-stone-300 text-xs italic selection:bg-stone-200">"大道至简，衍化至繁。"</p></div>
+            </div>
+        </main>
+    </div>
+    <div id="zenToast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-stone-900 text-white px-5 py-2.5 rounded shadow-xl text-xs tracking-wide opacity-0 transition-all duration-500 pointer-events-none z-50 flex items-center gap-2">
+        <i data-lucide="pen-tool" class="w-3 h-3"></i> <span>已记录</span>
+    </div>
+
+    <script>
+        const RAW_DATA_STR = '{{TASKS_DATA}}';
+        const RAW_ID = '{{PLAN_ID}}';
+        const RAW_TITLE = '{{PLAN_TITLE}}';
+        
+        // --- 【新增】音频库配置 ---
+        // 自动映射到 audio/pencil/pencil_1.MP3 到 pencil_6.MP3
+        const OSS_PREFIX = 'https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com';
+
+const PENCIL_SOUNDS = [
+    OSS_PREFIX + '/audio/pencil/pencil_1.MP3',
+    OSS_PREFIX + '/audio/pencil/pencil_2.MP3',
+    OSS_PREFIX + '/audio/pencil/pencil_3.MP3',
+    OSS_PREFIX + '/audio/pencil/pencil_4.MP3',
+    OSS_PREFIX + '/audio/pencil/pencil_5.MP3',
+    OSS_PREFIX + '/audio/pencil/pencil_6.MP3'
+];
+        
+        let tasksData = [];
+        let planId = 'zen_demo';
+        let planTitle = 'Zen Demo';
+
+        if (RAW_DATA_STR.includes('{{')) {
+            console.log("Running in DEMO MODE (Zen)");
+            planId = 'zen_' + new Date().getTime();
+            for(let i=0; i<5; i++) {
+                let d = new Date(); d.setDate(d.getDate() + i);
+                tasksData.push({ date: d.toISOString().split('T')[0], dayNum: i+1, tasks: [{ title: '深度阅读', desc: '阅读 20 页经典著作', tag: '输入' }, { title: '正念冥想', desc: '15 分钟专注呼吸', tag: '修心' }] });
+            }
+        } else {
+            tasksData = JSON.parse(RAW_DATA_STR);
+            planId = RAW_ID;
+            planTitle = RAW_TITLE;
+        }
+
+        const STORAGE_KEY = 'zen_progress_' + planId;
+        const START_KEY = 'zen_started_' + planId;
+        const TITLE_KEY = 'zen_title_' + planId;
+        const NOTE_KEY = 'zen_note_' + planId;
+
+        let userProgress = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        let startedDays = JSON.parse(localStorage.getItem(START_KEY) || '[]');
+        let dailyNotes = JSON.parse(localStorage.getItem(NOTE_KEY) || '{}');
+        let currentIndex = 0;
+        
+        function loadDay(idx) { 
+             currentIndex = idx; 
+             const task = tasksData[idx];
+             document.getElementById('mobileDateSelect').value = idx; 
+             document.getElementById('dayNumDisplay').innerText = task.dayNum;
+             document.getElementById('dateDisplay').innerText = task.date;
+             document.getElementById('dailyNote').value = dailyNotes[task.date] || '';
+             renderTasks(task); 
+             renderSidebar(); 
+             checkLock(task.date);
+             checkStamp(task);
+        }
+
+        function renderTasks(day) {
+            const container = document.getElementById('taskList'); 
+            container.innerHTML = ''; 
+            if(day.tasks.length === 0) { container.innerHTML = '<div class="p-12 text-center text-stone-400 italic">今日无事，静享时光。</div>'; return; }
+            
+            day.tasks.forEach((task, tIdx) => {
+                const taskId = day.date + '-' + tIdx; 
+                const checked = !!userProgress[taskId];
+                let indicatorStyle = 'border-left-color: transparent;'; 
+                let tagStyle = 'border: 1px solid #e7e5e4; color: #a8a29e; background: transparent;';
+                
+                if (task.tag) {
+                    if (task.tagColor) {
+                        tagStyle = `border: 1px solid ${task.tagColor}40; color: ${task.tagColor}; background: ${task.tagColor}08;`;
+                    } else if (['Core', '核心', '输入', 'Input'].some(k => task.tag.includes(k))) {
+                        indicatorStyle = 'border-left-color: var(--ink-black);';
+                        tagStyle = 'background: #f5f5f4; color: #1c1917; border-color: #d6d3d1;';
+                    }
+                }
+
+                const badgeHTML = task.tag ? `<span class="text-[10px] tracking-wider px-2 py-0.5 rounded font-bold" style="${tagStyle}">${task.tag}</span>` : '';
+                const checkSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 text-white"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                
+                const html = `<div onclick="toggleTask('${taskId}')" class="task-row p-5 md:p-6 flex gap-5 cursor-pointer group ${checked ? 'task-completed' : ''}" style="${indicatorStyle}"><div class="zen-checkbox flex-shrink-0 group-hover:border-stone-800">${checked ? checkSVG : ''}</div><div class="flex-1 min-w-0"><div class="flex flex-wrap items-baseline justify-between mb-1 gap-2"><h4 class="text-base md:text-lg font-medium text-stone-800 transition-colors">${task.title}</h4>${badgeHTML}</div>${task.desc ? `<p class="text-sm text-stone-500 leading-relaxed line-clamp-2 group-hover:line-clamp-none transition-all">${task.desc}</p>` : ''}</div></div>`;
+                container.innerHTML += html;
+            });
+            lucide.createIcons();
+        }
+
+        // --- 【修改】随机播放铅笔音效 ---
+        function playCheckSound() {
+            try {
+                // 1. 随机选一个索引
+                const randomIndex = Math.floor(Math.random() * PENCIL_SOUNDS.length);
+                const soundPath = PENCIL_SOUNDS[randomIndex];
+                
+                // 2. 创建音频对象
+                const audio = new Audio(soundPath);
+                audio.volume = 0.6; 
+                
+                return new Promise((resolve) => {
+                    audio.play()
+                        .then(() => { 
+                            // 播放成功
+                            setTimeout(resolve, 100); 
+                        })
+                        .catch((e) => { 
+                            // 播放失败 (路径错误/文件不存在/浏览器限制等)
+                            // 仅在开发者控制台(F12)发出警告，不弹窗影响用户
+                            console.warn("DeepFlow [Audio Error]: 无法加载或播放音效。请检查 PENCIL_SOUNDS 链接是否有效或文件位置是否正确。", soundPath, e);
+                            resolve(); 
+                        });
+                });
+            } catch (err) {
+                console.error("Critical Audio Error:", err);
+                return Promise.resolve();
+            }
+        }
+
+        async function toggleTask(id) {
+            if(document.getElementById('zenOverlay').style.display !== 'none') return;
+            if(userProgress[id]) { delete userProgress[id]; } 
+            else { 
+                userProgress[id] = true; 
+                await playCheckSound(); // 播放随机铅笔音
+                showToast("已记录"); 
+            }
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(userProgress));
+            const currentDay = tasksData[currentIndex];
+            renderTasks(currentDay); renderSidebar(); updateProgress(); checkStamp(currentDay);
+        }
+
+        function checkStamp(day) {
+            const stamp = document.getElementById('stampContainer');
+            if(!day || day.tasks.length === 0) return;
+            const doneCount = day.tasks.filter((_, i) => userProgress[day.date + '-' + i]).length;
+            if (doneCount === day.tasks.length) stamp.classList.add('show'); else stamp.classList.remove('show');
+        }
+
+        function saveNote() {
+            const val = document.getElementById('dailyNote').value;
+            const date = tasksData[currentIndex].date;
+            if(val.trim()) dailyNotes[date] = val; else delete dailyNotes[date];
+            localStorage.setItem(NOTE_KEY, JSON.stringify(dailyNotes));
+        }
+
+        function checkLock(dateStr) {
+            const overlay = document.getElementById('zenOverlay'); const content = document.getElementById('taskList'); const stamp = document.getElementById('stampContainer');
+            const isStarted = startedDays.includes(dateStr) || Object.keys(userProgress).some(k => k.startsWith(dateStr));
+            if(isStarted) { overlay.style.display = 'none'; content.style.filter = 'none'; content.style.pointerEvents = 'auto'; } 
+            else { overlay.style.display = 'flex'; overlay.style.opacity = '1'; content.style.filter = 'blur(4px) grayscale(100%)'; content.style.pointerEvents = 'none'; stamp.classList.remove('show'); }
+        }
+
+        function unlockDay() {
+            const day = tasksData[currentIndex]; 
+            if(!startedDays.includes(day.date)) { startedDays.push(day.date); localStorage.setItem(START_KEY, JSON.stringify(startedDays)); }
+            // 每日开启时也播放一个音效 (随机取一个)
+            //playCheckSound();
+            
+            const overlay = document.getElementById('zenOverlay'); overlay.style.opacity = '0';
+            setTimeout(() => { overlay.style.display = 'none'; const content = document.getElementById('taskList'); content.style.filter = 'none'; content.style.pointerEvents = 'auto'; }, 500);
+            checkStamp(day);
+        }
+
+        function updateProgress() {
+            let total = 0, done = 0; tasksData.forEach(d => { d.tasks.forEach((_, tIdx) => { total++; if(userProgress[d.date + '-' + tIdx]) done++; }); });
+            const pct = total === 0 ? 0 : Math.round((done/total)*100); document.getElementById('progressText').innerText = pct + '%';
+        }
+        
+        function resetProgress() { if(confirm('确定要归零所有记录吗？')) { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(START_KEY); localStorage.removeItem(NOTE_KEY); location.reload(); } }
+        function renamePlan() { const newTitle = prompt("为你的计划重新命名:", document.getElementById('planTitleText').innerText); if(newTitle) { document.getElementById('planTitleText').innerText = newTitle; localStorage.setItem(TITLE_KEY, newTitle); } }
+        
+        function renderSidebar() {
+            const el = document.getElementById('dateList'); el.innerHTML = '';
+            tasksData.forEach((d, idx) => {
+                const isDone = d.tasks.length > 0 && d.tasks.every((_, tIdx) => userProgress[d.date + '-' + tIdx]);
+                const div = document.createElement('div');
+                div.className = `sidebar-item px-4 py-3 cursor-pointer flex justify-between items-center text-sm text-stone-500 hover:bg-stone-50 hover:text-stone-800 ${idx === currentIndex ? 'active' : ''}`;
+                div.innerHTML = `<div class="flex items-center gap-3"><span class="w-4 text-xs opacity-50 sans-font">${d.dayNum}</span><span class="sans-font">${d.date.substring(5)}</span></div> ${isDone ? '<div class="w-1.5 h-1.5 rounded-full bg-stone-800"></div>' : ''}`;
+                div.onclick = () => loadDay(idx); el.appendChild(div);
+            });
+        }
+
+        function showToast(text) {
+            const t = document.getElementById('zenToast'); t.innerHTML = `<i data-lucide="feather" class="w-3 h-3"></i> <span>${text}</span>`; lucide.createIcons();
+            t.style.opacity = '1'; t.style.transform = 'translate(-50%, -10px)'; setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translate(-50%, 0)'; }, 1500);
+        }
+
+        function init() {
+            if (!RAW_DATA_STR.includes('{{')) { const st = localStorage.getItem(TITLE_KEY); if(st) { document.getElementById('planTitleText').innerText = st; } } else { document.getElementById('planTitleText').innerText = planTitle; }
+            document.getElementById('totalDaysLabel').innerText = tasksData.length + ' 天';
+            const mobileSelect = document.getElementById('mobileDateSelect');
+            tasksData.forEach((task, index) => { const opt = document.createElement('option'); opt.value = index; opt.text = `Day ${task.dayNum} · ${task.date}`; mobileSelect.appendChild(opt); });
+            mobileSelect.addEventListener('change', (e) => loadDay(parseInt(e.target.value)));
+            loadDay(currentIndex); updateProgress(); lucide.createIcons();
+        }
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

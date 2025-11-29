@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>构建控制台 | DeepFlow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="./rules_db.js"></script>
+    
+    <style>
+        /* 基础结构和字体 */
+        body { font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; transition: all 0.5s ease; background-attachment: fixed !important; background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important; position: relative; }
+        .console-panel { backdrop-filter: blur(24px); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); transition: all 0.5s ease; }
+        
+        /* Cyberpunk 扫描线动画 (用于 Cyberpunk 主题) */
+        .cyber-line { position: absolute; width: 100%; height: 2px; top: 0; left: 0; opacity: 0; animation: scan 2s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+        @keyframes scan { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+        .upload-zone:hover .cyber-line { opacity: 1; }
+
+        /* 终端日志滚动条 */
+        #terminalLogs::-webkit-scrollbar { width: 4px; }
+        #terminalLogs::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 4px; }
+        
+        /* DeepFlow Pro - 【最终修正：确保蓝、绿、粉三色均匀混合】 */
+        body.bg-pro-fluid { background-color: #f7f7f7; color: #1f2937; }
+        body.bg-pro-fluid::before { 
+            content: ''; 
+            position: absolute; 
+            inset: 0; 
+            /* 修正：将三个径向渐变的圆心位置和大小调整为高重叠区域，确保三色混合均匀 */
+            background: radial-gradient(circle at 10% 40%, rgba(6, 182, 212, 0.7) 0%, transparent 25%), /* 蓝色（左上） */
+                        radial-gradient(circle at 90% 60%, rgba(16, 185, 129, 0.6) 0%, transparent 25%), /* 绿色（右下） */
+                        radial-gradient(circle at 50% 50%, rgba(244, 114, 182, 0.5) 0%, transparent 25%); /* 粉色（中心） */
+            background-size: 200% 200%; 
+            filter: blur(100px) saturate(2.0) contrast(1.1); 
+            opacity: 0.9; 
+            z-index: -1; 
+            pointer-events: none; 
+        }
+        /* Zen Mode */
+        body.bg-zen-grid { background-image: linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px); background-size: 30px 30px; background-color: #ffffff; color: #18181b; }
+        /* Cyberpunk */
+        body.bg-cyber-pulse { background-color: #000000; color: #d946ef; text-shadow: 0 0 5px rgba(217, 70, 239, 0.8); }
+        body.bg-cyber-pulse::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(rgba(217, 70, 239, 0.2) 0px, transparent 1px, rgba(34, 211, 238, 0.1) 2px, transparent 3px); background-size: 15px 15px; opacity: 0.8; filter: brightness(1.2) contrast(1.5); z-index: -1; pointer-events: none; }
+    </style>
+</head>
+<body class="transition-colors duration-500">
+    <nav class="fixed w-full z-40 top-0 border-b border-white/5 bg-transparent backdrop-blur-md">
+        <div class="max-w-5xl mx-auto px-6 h-20 flex justify-between items-center">
+            <a href="着陆模板.html" id="backBtn" class="flex items-center gap-2 transition group text-white">
+                <i data-lucide="arrow-left" class="w-4 h-4 group-hover:-translate-x-1 transition-transform"></i>
+                <span class="text-sm font-bold">切换引擎</span>
+            </a>
+            <div id="systemStatus" class="flex items-center gap-2 px-3 py-1 rounded-full border border-white/20">
+                <div class="w-2 h-2 rounded-full animate-pulse bg-emerald-500"></div>
+                <span class="text-[10px] font-mono tracking-widest uppercase text-slate-300">系统在线</span>
+            </div>
+        </div>
+    </nav>
+    <main class="min-h-screen flex flex-col items-center justify-center px-6 relative pt-10">
+        <div class="text-center mb-10 space-y-4 relative z-10">
+            <div id="engineLogo" class="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-6 transition-all duration-500 text-white"><i id="logoIcon" data-lucide="cpu" class="w-8 h-8"></i></div>
+            <h1 id="mainTitle" class="text-4xl md:text-6xl font-black tracking-tight transition-colors duration-300 text-white">初始化构建</h1>
+            <p id="subTitle" class="text-lg max-w-md mx-auto transition-colors duration-300 text-slate-400">引擎已挂载，请注入数据。</p>
+        </div>
+        <div id="consoleCard" class="console-panel w-full max-w-xl rounded-3xl p-3 relative group transition-all duration-500">
+            <div id="dropZone" class="relative w-full h-80 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all duration-300 upload-zone">
+                <input type="file" id="uploadInput" accept=".xlsx" class="hidden" onclick="this.value=null" />
+                <div id="cyberLine" class="cyber-line"></div> <div id="idleState" class="flex flex-col items-center gap-6 z-10 transition-transform duration-300 group-hover:-translate-y-2">
+                    <div id="uploadIcon" class="w-20 h-20 rounded-3xl flex items-center justify-center border transition-all duration-300 text-white"><i data-lucide="upload" class="w-8 h-8"></i></div>
+                    <div class="text-center space-y-1"><p id="uploadText" class="text-lg font-bold text-white">点击或拖拽文件</p><p id="uploadSub" class="text-xs font-mono opacity-60 text-slate-400">格式: .XLSX</p></div>
+                </div>
+                <div id="processingState" class="hidden absolute inset-0 z-20 flex-col p-8 font-mono text-xs">
+                    <div id="terminalHeader" class="flex items-center justify-between border-b pb-4 mb-4"><span class="opacity-60">终端日志</span><div class="flex gap-2"><div class="w-2 h-2 rounded-full bg-red-500"></div><div class="w-2 h-2 rounded-full bg-yellow-500"></div><div class="w-2 h-2 rounded-full bg-green-500"></div></div></div>
+                    <div id="terminalLogs" class="space-y-2 flex-1 overflow-y-auto opacity-80 text-white"></div>
+                </div>
+            </div>
+        </div>
+        <div class="mt-8"><button onclick="downloadSampleExcel()" id="sampleBtn" class="text-xs font-bold transition flex items-center gap-2 px-4 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i> 下载标准模版</button></div>
+    </main>
+
+    <script>
+        // ====================================================================================
+        // 【核心配置与主题逻辑】
+        // ====================================================================================
+
+        const params = new URLSearchParams(window.location.search);
+        let activeTheme = params.get('theme') || 'pro'; 
+        if (activeTheme === 'zen') activeTheme = 'Zen Mode';
+        else if (activeTheme === 'cyberpunk') activeTheme = 'Cyberpunk';
+        else activeTheme = 'DeepFlow Pro';
+
+        const VISUAL_CONFIG = {
+            'DeepFlow Pro': {
+                displayName: '多巴胺心流', fileSuffix: '_Pro', templateURL: 'templates/template_pro.html',
+                bgClass: 'bg-transparent bg-pro-fluid', cardClass: 'bg-white/90 border border-gray-200 shadow-xl', 
+                textColor: 'text-gray-900', subTextColor: 'text-gray-600', 
+                accentColor: '#06b6d4', logoBg: 'bg-cyan-500/10 text-cyan-500', 
+                icon: 'zap', descTitle: 'DeepFlow Pro', descSub: '心流注入 · 多巴胺反馈引擎',
+                uploadText: '心流注入 (Flow Infusion)', uploadSub: '即时转换 · 奖励生成',
+                cssVars: `--glass-bg: rgba(255, 255, 255, 0.95); --surface: #f7f7f7; --primary: #06b6d4; --success: #10b981; --text-main: #1f2937; --text-muted: #6b7280; --progress-bg: #f3f4f6; --border: #e5e7eb; --checked-bg: rgba(235, 248, 255, 0.8); --overlay: rgba(247, 247, 247, 0.8); --bg-grad: linear-gradient(135deg, #eff6ff 0%, #d1fae5 33%, #fce7f3 66%, #e0f2f1 100%); --bg-opacity: 1; --seal-red: #b91c1c;`, 
+                bodyClass: 'selection:bg-cyan-400/30 pro-style-active', iconBoxClass: 'bg-cyan-500', confetti: ['#06b6d4', '#10b981', '#f472b6']
+            },
+            'Zen Mode': {
+    displayName: '禅意模式', fileSuffix: '_Zen', templateURL: 'templates/template_zen.html',
+    bgClass: 'bg-white bg-zen-grid', cardClass: 'bg-white/80 border border-gray-300 shadow-xl', textColor: 'text-gray-900', subTextColor: 'text-gray-600', accentColor: '#18181b', logoBg: 'bg-gray-100 text-black', icon: 'circle', scanLineColor: 'none', 
+    descTitle: '心流归档', descSub: '剔除所有干扰的极简主义。',
+    uploadText: '拖入文件以归档', uploadSub: '专注模式 · 极速处理',
+    // 关键修复点：确保所有变量都用分号 ; 结束
+    cssVars: `--glass-bg: #ffffff; --surface: #ffffff; --text-main: #18181b; --text-muted: #71717a; --glass: #ffffff; --primary: #18181b; --success: #10b981; --border: #e4e4e7; --progress-bg: #f4f4f5; --checked-bg: #f4f4f5; --overlay: rgba(255, 255, 255, 0.95); --bg-grad: #ffffff; --bg-opacity: 0; --seal-red: #b91c1c;`, 
+    bodyClass: 'tracking-tight selection:bg-gray-400/30',
+    iconBoxClass: 'bg-black', confetti: ['#000000', '#525252']
+},
+            'Cyberpunk': {
+                displayName: '赛博朋克', fileSuffix: '_Cyber', templateURL: 'templates/template_zen.html',
+                bgClass: 'bg-transparent bg-cyber-pulse', cardClass: 'bg-black/80 border border-fuchsia-500/50 shadow-[0_0_30px_rgba(217,70,239,0.3)]', textColor: 'text-white', subTextColor: 'text-fuchsia-400', accentColor: '#d946ef', logoBg: 'bg-fuchsia-900/50 text-fuchsia-400', icon: 'gamepad-2', 
+                scanLineColor: 'linear-gradient(90deg, transparent, #d946ef, transparent)', 
+                descTitle: '赛博竞技场', descSub: '强烈的霓虹光栅与数据流。', 
+                uploadText: '上传数据流 (Upload Stream)', uploadSub: '即时解析 · 快速编译',
+                cssVars: `--glass-bg: rgba(15, 23, 42, 0.7); --surface: #020617; --text-main: #e2e8f0; --text-muted: #94a3b8; --glass: rgba(15, 23, 42, 0.7); --primary: #d946ef; --success: #22d3ee; --border: #1e293b; --progress-bg: #1e293b; --checked-bg: #1e293b; --overlay: rgba(2, 6, 23, 0.8); --bg-grad: #020617; --bg-opacity: 0; --seal-red: #d946ef;`,
+                bodyClass: 'selection:bg-fuchsia-500/30', iconBoxClass: 'bg-fuchsia-600', confetti: ['#d946ef', '#22d3ee', '#f472b6']
+            }
+        };
+        const config = VISUAL_CONFIG[activeTheme];
+
+        // --- 特效控制状态变量 ---
+        let lastMouseX = 0; 
+        let lastMouseY = 0; 
+        let isInsideDropZone = false;
+        let enterTimeoutId = null;
+
+        function triggerProConfetti(e) {
+            if (activeTheme === 'DeepFlow Pro') {
+                const xPos = e.clientX / window.innerWidth;
+                const yPos = e.clientY / window.innerHeight;
+                confetti({
+                    particleCount: 15, spread: 360, startVelocity: 25, decay: 0.92, gravity: 0, drift: 0,
+                    ticks: 150, origin: { x: xPos, y: yPos }, colors: config.confetti, shapes: ['square'], scalar: 1.0
+                });
+                confetti({
+                    particleCount: 10, spread: 360, startVelocity: 15, decay: 0.96, gravity: 0, ticks: 150,
+                    origin: { x: xPos, y: yPos }, colors: config.confetti, shapes: ['circle'], scalar: 0.6
+                });
+            }
+        }
+
+        function triggerConfettiBurst(e) {
+            if (activeTheme === 'DeepFlow Pro' && typeof triggerProConfetti === 'function') {
+                const adjustedEvent = { clientX: lastMouseX, clientY: lastMouseY, target: e.target };
+                triggerProConfetti(adjustedEvent);
+            }
+        }
+
+        function applyTheme() {
+            document.body.className = `transition-colors duration-500 ${config.bgClass}`;
+            const bgClasses = config.bgClass.split(' '); document.body.classList.add(...bgClasses); 
+            document.body.classList.remove('text-white', 'text-gray-900', 'text-gray-600', 'text-fuchsia-400'); document.body.classList.add(config.textColor.replace('text-', '')); 
+            
+            ['mainTitle', 'subTitle', 'backBtn', 'sampleBtn'].forEach(id => {
+                const el = document.getElementById(id);
+                el.className = el.className.replace(/text-(white|slate-400|gray-900|gray-600|fuchsia-400)/g, '');
+                el.classList.add(id === 'mainTitle' ? config.textColor : config.subTextColor);
+            });
+            
+            document.getElementById('mainTitle').innerText = config.descTitle; 
+            document.getElementById('subTitle').innerText = config.descSub; 
+            
+            document.getElementById('engineLogo').className = `w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-6 transition-all duration-500 ${config.logoBg}`;
+            document.getElementById('logoIcon').setAttribute('data-lucide', config.icon);
+            document.getElementById('consoleCard').className = `w-full max-w-xl rounded-3xl p-3 relative group transition-all duration-500 console-panel ${config.cardClass}`;
+            document.getElementById('terminalHeader').style.color = config.accentColor;
+            const uploadIconBox = document.getElementById('uploadIcon');
+            const iconColor = config.textColor.startsWith('text-') ? config.textColor : `text-${config.textColor}`;
+            uploadIconBox.className = `w-20 h-20 rounded-3xl flex items-center justify-center border transition-all duration-300 ${iconColor}`;
+            document.getElementById('uploadText').classList.add(config.textColor);
+            document.getElementById('uploadSub').classList.add(config.subTextColor);
+            
+            document.getElementById('uploadText').innerText = config.uploadText;
+            document.getElementById('uploadSub').innerText = config.uploadSub;
+
+            const cyberLine = document.getElementById('cyberLine');
+            if (activeTheme === 'Cyberpunk') {
+                cyberLine.style.background = config.scanLineColor;
+                cyberLine.style.display = 'block';
+            } else {
+                cyberLine.style.display = 'none';
+            }
+            
+            const status = document.getElementById('systemStatus');
+            status.style.borderColor = config.accentColor; status.querySelector('div').style.backgroundColor = config.accentColor;
+            lucide.createIcons();
+        }
+        applyTheme();
+
+        const dropZone = document.getElementById('dropZone'); 
+        const fileInput = document.getElementById('uploadInput');
+
+        // 1. 阻止浏览器默认行为 (这是最关键的一步，防止浏览器直接打开文件)
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // 2. 视觉反馈：拖拽进来变色
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.style.borderColor = config.accentColor;
+                dropZone.classList.add('bg-white/5'); // 增加一点背景高亮
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.style.borderColor = '';
+                dropZone.classList.remove('bg-white/5');
+            }, false);
+        });
+
+        // 3. 核心：处理文件放下 (Drop)
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                handleFiles(files);
+            }
+        }, false);
+
+        // 4. 处理点击上传
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => { 
+            if (e.target.files.length > 0) handleFiles(e.target.files); 
+        });
+
+        // --- (保留之前的特效逻辑，不要删) ---
+        dropZone.addEventListener('mouseenter', (e) => { 
+            // ... (这里保留你之前的 confetti 特效代码) ...
+            if (activeTheme === 'DeepFlow Pro') {
+                isInsideDropZone = true; 
+                if (enterTimeoutId) clearTimeout(enterTimeoutId);
+                const currentEvent = e;
+                enterTimeoutId = setTimeout(() => {
+                    if (isInsideDropZone) triggerConfettiBurst(currentEvent);
+                }, 500);
+            }
+        });
+        
+        dropZone.addEventListener('mouseleave', () => { 
+            isInsideDropZone = false; 
+            if (enterTimeoutId) { clearTimeout(enterTimeoutId); enterTimeoutId = null; }
+        });
+        
+        const updateMousePosition = (e) => { lastMouseX = e.clientX; lastMouseY = e.clientY; };
+        dropZone.addEventListener('mousemove', updateMousePosition);
+        
+        function logStep(msg, icon = 'play', isError = false) {
+            const logs = document.getElementById('terminalLogs'); 
+            const p = document.createElement('div');
+            let iconColor = isError ? 'text-red-400' : (icon === 'check' ? 'text-emerald-400' : (icon === 'loader' ? 'text-blue-400 animate-spin' : 'text-slate-400'));
+            p.innerHTML = `<span class="flex items-center gap-2"><i data-lucide="${icon}" class="w-4 h-4 ${iconColor}"></i> <span>${msg}</span></span>`;
+            logs.appendChild(p); logs.scrollTop = logs.scrollHeight;
+            lucide.createIcons();
+        }
+        function logError(title, msg) { 
+            document.getElementById('processingState').style.color = '#ff0000'; 
+            logStep(`[FATAL ERROR] ${title}: ${msg}`, 'alert-triangle', true); 
+            setTimeout(() => { alert(`构建失败: ${title} - ${msg}`); location.reload(); }, 100); 
+        }
+
+        function handleFiles(files) {
+            const file = files[0];
+            if (!file.name.endsWith('.xlsx')) { logError('格式错误', '请上传 .xlsx 格式文件'); return; }
+
+            document.getElementById('idleState').classList.add('hidden');
+            const processView = document.getElementById('processingState');
+            processView.classList.remove('hidden'); processView.classList.add('flex');
+            document.getElementById('terminalLogs').innerHTML = '';
+
+            if(activeTheme === 'Zen Mode' || activeTheme === 'DeepFlow Pro') { 
+                processView.style.background = 'rgba(255,255,255,0.95)';
+                processView.style.color = '#000';
+            } else { 
+                processView.style.background = 'rgba(5,5,5,0.9)';
+                processView.style.color = '#fff';
+            }
+
+            let pipelineTitle;
+            let iconStart = config.icon;
+            let themeKeywords = '';
+
+            if (activeTheme === 'DeepFlow Pro') {
+                pipelineTitle = 'DOPAMINE SEQUENCE INITIATED';
+                themeKeywords = '心流算法启动';
+            } else if (activeTheme === 'Zen Mode') {
+                pipelineTitle = 'ZEN MODE ARCHIVE SEQUENCE';
+                themeKeywords = '归档进程就绪';
+            } else {
+                pipelineTitle = 'KERNEL UPLOAD PROTOCOL ACTIVE';
+                themeKeywords = '数据上传协议';
+            }
+            
+            logStep(`> ${pipelineTitle} - Theme: ${activeTheme}`, iconStart);
+            
+            async function runGeneratorPipeline() {
+                try {
+                    logStep(`-> [1/4] 接收文件: ${file.name} | 正在解析数据结构...`, 'loader');
+                    await new Promise(r => setTimeout(r, 800)); 
+                    
+                    const processedData = await parseExcelData(file);
+                    const dayCount = processedData.length;
+                    
+                    if (activeTheme === 'DeepFlow Pro') {
+                         logStep(`-> [1/4] 愉悦反馈注入成功！任务天数已校准为 D1 - D${dayCount}.`, 'check');
+                    } else {
+                         logStep(`-> [1/4] 数据清洗与 DayNum 修复完成 (共 ${dayCount} 天计划)`, 'check');
+                    }
+                    
+                    const planName = file.name.replace(/\.[^/.]+$/, "");
+                    
+                    logStep(`-> [2/4] 核心任务：请求模板并执行 ${themeKeywords} ...`, 'code');
+                    await new Promise(r => setTimeout(r, 800)); 
+
+                    await realGenerate(processedData, planName);
+                    
+                    logStep('-> [3/4] 编译优化完成。', 'check');
+                    logStep('-> [4/4] 文件生成完毕，已触发下载。', 'download');
+                    
+                    setTimeout(() => { if(confirm(`构建成功！\n\n是否继续构建？`)) location.reload(); }, 500);
+
+                } catch (err) {
+                    logError('处理失败', err.message);
+                }
+            }
+            
+            runGeneratorPipeline();
+        }
+
+        // --- 核心工具函数 (与上一版本保持一致) ---
+        function excelDateToJSDate(serial) {
+            if (!serial) return null;
+            if (typeof serial === 'string') return serial.replace(/\//g, '-').trim();
+            if (typeof serial === 'number') {
+                const date_info = new Date((serial - 25569) * 86400 * 1000);
+                return `${date_info.getFullYear()}-${String(date_info.getMonth() + 1).padStart(2, '0')}-${String(date_info.getDate()).padStart(2, '0')}`;
+            }
+            return null;
+        }
+
+        // --- 【替换的函数】processData: 集成智能标签识别逻辑 ---
+        function processData(jsonData) {
+            const rows = jsonData.map(row => {
+                const cleanRow = {};
+                // 数据清洗：转小写并去空格，防止 Excel 列名大小写问题
+                Object.keys(row).forEach(k => cleanRow[k.trim().toLowerCase()] = row[k]);
+                
+                // 获取基础信息
+                const rawDate = cleanRow['date'] || cleanRow['日期'] || cleanRow['time'];
+                const title = cleanRow['tasktitle'] || cleanRow['task'] || cleanRow['任务'] || cleanRow['标题'] || '未命名任务';
+                const desc = cleanRow['taskdescription'] || cleanRow['desc'] || cleanRow['描述'] || cleanRow['备注'] || '';
+                
+                // --- 【核心修改开始】智能标签逻辑 V2.0 ---
+                let finalTag = cleanRow['tag'] || cleanRow['标签'] || cleanRow['分类']; // 1. 优先使用 Excel 填写的 Tag
+                
+                if (!finalTag) {
+                    // 2. 如果 Excel 没填 Tag，尝试调用 rules_db.js 进行智能识别
+                    // 将标题和描述拼起来一起搜，增加识别率
+                    const contentToScan = title + " " + desc;
+                    
+                    // 检查 autoDetectTag 函数是否存在 (由 rules_db.js 加载)
+                    if (typeof autoDetectTag === 'function') {
+                        const smartResult = autoDetectTag(contentToScan);
+                        
+                        // 标签格式： Emoji + 精准标签 (如: 🇬🇧 雅思屠鸭)
+                        finalTag = smartResult.emoji ? `${smartResult.emoji} ${smartResult.label}` : smartResult.label; 
+                    }
+                }
+
+                // 3. 实在识别不出来 (或 rules_db.js 未加载)，给个默认值
+                if (!finalTag) finalTag = "📌 日常"; 
+                // --- 【核心修改结束】 ---
+
+                return {
+                    date: excelDateToJSDate(rawDate),
+                    title: title,
+                    desc: desc,
+                    tag: finalTag // 使用最终决定的标签 (包含 Emoji)
+                };
+            }).filter(r => r.date); 
+
+            // 后续逻辑保持不变：排序和按日期分组
+            rows.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            const uniqueDates = [...new Set(rows.map(r => r.date))];
+            const dateToDayNum = {};
+            uniqueDates.forEach((date, index) => {
+                dateToDayNum[date] = index + 1;
+            });
+
+            const daysMap = {};
+            rows.forEach(row => {
+                if (!daysMap[row.date]) {
+                    daysMap[row.date] = {
+                        date: row.date,
+                        dayNum: dateToDayNum[row.date], 
+                        tasks: []
+                    };
+                }
+                daysMap[row.date].tasks.push({ title: row.title, desc: row.desc, tag: row.tag });
+            });
+
+            return Object.values(daysMap).sort((a, b) => new Date(a.date) - new Date(b.date));
+        }
+        
+        // 解析 Excel 数据的包装函数
+        function parseExcelData(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                        
+                        const processedData = processData(jsonData);
+                        if (processedData.length === 0) throw new Error("未在 Excel 中找到有效的日期列。");
+                        
+                        resolve(processedData);
+                    } catch (err) {
+                        reject(err);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // 核心生成逻辑 (Fetch 接口)
+        function realGenerate(processedData, planName) {
+            return fetch(config.templateURL)
+                .then(r => {
+                    if (!r.ok) throw new Error(`模板文件不存在。`); return r.text();
+                })
+                .then(rawTemplate => {
+                    // 注意：这里仍然使用 {{TASKS_DATA}} 作为 JSON 数据的占位符
+                    const finalHTML = rawTemplate
+                        .replace(/{{PLAN_TITLE}}/g, planName)
+                        .replace(/{{PLAN_ID}}/g, Date.now())
+                        .replace('{{TASKS_DATA}}', JSON.stringify(processedData))
+                        .replace('{{CSS_VARS}}', config.cssVars)
+                        .replace('{{BODY_CLASS}}', config.bodyClass)
+                        .replace('{{ICON_BOX_CLASS}}', config.iconBoxClass)
+                        .replace('{{EXTRA_CSS}}', '') 
+                        .replace('{{CONFETTI_COLORS}}', JSON.stringify(config.confetti));
+                    
+                    downloadHTML(finalHTML, `${planName}${config.fileSuffix}.html`);
+                });
+        }
+
+        function downloadHTML(content, filename) {
+            const blob = new Blob([content], {type: 'text/html'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
+        function downloadSampleExcel() {
+            const wb = XLSX.utils.book_new();
+            const ws_data = [["Date", "Tag", "TaskTitle", "TaskDescription"], ["2025-11-28", "核心", "测试自动天数1", "说明"], ["2025-11-29", "运动", "测试自动天数2", "说明"]];
+            const ws = XLSX.utils.aoa_to_sheet(ws_data); XLSX.utils.book_append_sheet(wb, ws, "Sheet1"); XLSX.writeFile(wb, "DeepFlow_Demo.xlsx");
+        }
+    </script>

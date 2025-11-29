@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DeepFlow Pro V4 - Daily Dopamine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root { --primary: #007AFF; --primary-dark: #0056b3; --primary-light: rgba(0, 122, 255, 0.08); --text-on-primary: #ffffff; --surface: #f5f5f7; --glass-border: rgba(255, 255, 255, 0.6); }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Noto Sans SC', sans-serif; background-color: var(--surface); color: #1d1d1f; transition: background-color 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); -webkit-font-smoothing: antialiased; }
+        .bg-spotlight { position: fixed; top: -20%; left: -20%; width: 140vw; height: 140vh; z-index: -1; background: radial-gradient(circle at 50% 30%, var(--primary-light), transparent 70%); opacity: 1; transition: background 0.8s ease; pointer-events: none; }
+        .ios-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); box-shadow: 0 4px 24px rgba(0,0,0,0.04); transition: all 0.3s; }
+        .ios-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.08); border-color: rgba(255,255,255,0.9); }
+        .palette-wrapper { position: relative; z-index: 50; }
+        .palette-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: var(--text-on-primary); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px var(--primary-light); transition: transform 0.2s, background-color 0.5s ease; }
+        .palette-btn:active { transform: scale(0.92); }
+        .reset-btn { background: #ff3b30 !important; color: white; box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3); }
+        .palette-popover { position: absolute; top: 120%; right: 0; width: 210px; padding: 12px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(24px); border-radius: 16px; box-shadow: 0 12px 48px rgba(0,0,0,0.12); opacity: 0; transform: scale(0.9) translateY(-10px); pointer-events: none; transition: all 0.3s; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .palette-popover.active { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
+        .color-dot { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; position: relative; transition: transform 0.2s; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+        .color-dot:hover { transform: scale(1.15); z-index: 2; }
+        .color-dot.active-swatch::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid var(--primary); animation: ringSnap 0.4s forwards; }
+        @keyframes ringSnap { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .mix-dot { background: linear-gradient(135deg, #FF3B30, #FF9500, #34C759, #007AFF, #AF52DE); }
+        .picker-dot { background: conic-gradient(from 0deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); }
+        .mix-icon, .picker-icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        .task-item { border-left: 4px solid transparent; }
+        .task-checked { background-color: var(--primary-light) !important; border-left-color: var(--primary) !important; }
+        .task-checked h4 { text-decoration: line-through; color: #86868b; opacity: 0.8; }
+        .checkbox-ios { width: 22px; height: 22px; border-radius: 6px; border: 2px solid #d1d1d6; background: white; transition: all 0.3s; display: flex; align-items: center; justify-content: center; }
+        .task-checked .checkbox-ios { background: var(--primary); border-color: var(--primary); transform: scale(1.05); box-shadow: 0 4px 10px var(--primary-light); }
+        .theme-transition { transition: all 0.6s ease; }
+        .fade-in-up { animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; opacity: 0; transform: translateY(15px); }
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+        #customPickerInput { opacity: 0; position: absolute; pointer-events: none; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+    <div class="bg-spotlight"></div>
+    <header class="ios-card z-40 relative m-3 md:m-4 rounded-2xl flex-none">
+        <div class="px-5 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <div id="headerIcon" class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-colors duration-500" style="background: var(--primary)"><i data-lucide="trophy" class="w-5 h-5" style="color: var(--text-on-primary)"></i></div>
+                <div>
+                    <div class="flex items-center gap-2 group cursor-pointer" onclick="renamePlan()"><h1 id="planTitleText" class="text-lg font-black tracking-tight text-slate-800">{{PLAN_TITLE}}</h1><i data-lucide="edit-3" class="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500"></i></div>
+                    <div id="modeLabel" class="text-[10px] font-bold text-slate-400 tracking-wide">DOPAMINE MIX</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="palette-btn reset-btn" onclick="resetProgress()" title="重置进度"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></div>
+                <div class="palette-wrapper">
+                    <div class="palette-btn" onclick="togglePalette(event)" title="更改主题色"><i data-lucide="palette" class="w-4 h-4"></i></div>
+                    <div id="palettePopover" class="palette-popover"></div>
+                    <input type="color" id="customPickerInput" onchange="switchToSingleColor(this.value)">
+                </div>
+                <div class="text-right hidden sm:block">
+                    <div class="text-[10px] text-slate-400 font-bold uppercase">Progress</div>
+                    <div class="font-black text-lg leading-none transition-colors" style="color: var(--primary)" id="totalCompletionDisplay">0%</div>
+                </div>
+            </div>
+        </div>
+        <div class="h-1 w-full bg-slate-100 overflow-hidden rounded-b-2xl relative"><div id="overallProgressBar" class="absolute h-full transition-all duration-700 w-0 theme-transition" style="background: var(--primary)"></div></div>
+    </header>
+    <div class="flex flex-1 overflow-hidden max-w-7xl mx-auto w-full px-3 md:px-4 pb-4">
+        <aside class="hidden md:flex w-64 flex-col ios-card mr-4 rounded-2xl overflow-hidden my-0 flex-none">
+            <div class="p-4 border-b border-slate-100 font-bold text-slate-700 text-sm flex justify-between bg-white/50"><span>🗓️ 日程表</span><span class="text-slate-400 font-mono text-xs" id="totalDaysLabel">--</span></div>
+            <div class="flex-1 overflow-y-auto p-2 space-y-1" id="dateList"></div>
+        </aside>
+        <main class="flex-1 overflow-y-auto relative no-scrollbar rounded-2xl" id="mainScroll">
+            <div class="max-w-3xl mx-auto py-2 md:py-4 min-h-[80vh]">
+                <div class="ios-card rounded-2xl p-6 md:p-8 mb-6 relative overflow-hidden group">
+                    <div class="absolute -right-8 -top-8 w-40 h-40 opacity-15 rounded-full blur-3xl transition-colors duration-700" style="background: var(--primary)"></div> 
+                    <div class="relative z-10 flex justify-between items-end">
+                        <div>
+                            <div class="flex items-center gap-2 mb-2"><span class="text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm" style="background: #1d1d1f">DAY <span id="dayCountDisplay">1</span></span><div id="dayTypeBadge"></div></div>
+                            <h2 class="text-3xl md:text-4xl font-black text-slate-800 tracking-tight" id="currentDateDisplay">--</h2>
+                            <div class="mt-4 flex items-center gap-3">
+                                <div class="w-32 h-2 bg-slate-100 rounded-full overflow-hidden"><div id="dailyProgressBar" class="h-full transition-all duration-500 w-0 theme-transition" style="background: var(--primary)"></div></div>
+                                <span class="text-xs font-mono font-bold text-slate-400" id="dailyProgressText">0/0</span>
+                            </div>
+                        </div>
+                        <div id="trophyContainer" class="cursor-pointer hover:scale-105 transition-transform" onclick="confettiEffect()"></div>
+                    </div>
+                </div>
+                <div id="ritualOverlay" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-xl transition-all duration-500" style="display: none;">
+                    <div class="ios-card p-10 rounded-3xl shadow-2xl fade-in-up max-w-sm w-full text-center border border-white">
+                        <div class="lock-icon-bg mb-6 inline-flex p-5 rounded-full shadow-sm theme-transition" style="background: var(--primary-light)"><i data-lucide="lock" class="w-8 h-8 theme-transition" style="color: var(--primary)"></i></div>
+                        <h3 class="text-2xl font-black text-slate-800 mb-2">Ready?</h3>
+                        <p class="text-slate-500 text-sm mb-8 px-2">今日任务已锁定。点击开始，全情投入。</p>
+                        <button onclick="startDay()" class="w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-transform hover:-translate-y-0.5 active:scale-95 theme-transition" style="background: var(--primary)">开启今日计划</button>
+                    </div>
+                </div>
+                <div id="contentLocker" class="transition-all duration-700 space-y-3"><div id="dynamicTasksContainer"></div></div>
+            </div>
+        </main>
+    </div>
+    <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 flex items-center gap-3 px-5 py-2.5 bg-slate-900/90 backdrop-blur text-white rounded-full shadow-2xl transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none z-[100]">
+        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i><span id="toastMsg" class="font-bold text-xs tracking-wide">已完成</span>
+    </div>
+
+    <script>
+        const DOPAMINE_COLORS = ['#007AFF', '#FF3B30', '#FF9500', '#AF52DE', '#34C759', '#32ADE6', '#FF2D55', '#5856D6', '#FFCC00', '#00C7BE'];
+        const RAW_DATA = '{{TASKS_DATA}}';
+        
+        // --- 【新增】音频库配置 ---
+        // 自动映射到 audio/pencil/pencil_1.MP3 到 pencil_6.MP3
+        const OSS_PREFIX = 'https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com';
+
+const PENCIL_SOUNDS = [
+    OSS_PREFIX + '/audio/pencil/pencil_1.MP3',
+    OSS_PREFIX + '/audio/pencil/pencil_2.MP3',
+    OSS_PREFIX + '/audio/pencil/pencil_3.MP3',
+    OSS_PREFIX + '/audio/pencil/pencil_4.MP3',
+    OSS_PREFIX + '/audio/pencil/pencil_5.MP3',
+    OSS_PREFIX + '/audio/pencil/pencil_6.MP3'
+];
+
+        let tasksData = [];
+        let planId = 'pro_v4_demo';
+        
+        if (RAW_DATA.includes('{{')) {
+            const today = new Date();
+            for(let i=0; i<7; i++) {
+                let d = new Date(today); d.setDate(today.getDate() + i);
+                tasksData.push({ date: d.toISOString().split('T')[0], dayNum: i+1, tasks: [{ title: 'Core Vocabulary', desc: 'Memorize 50 words', tag: 'Input' }, { title: 'Speaking Practice', desc: 'Record Part 2 topic', tag: 'Output' }] });
+            }
+        } else {
+            tasksData = JSON.parse(RAW_DATA);
+            planId = '{{PLAN_ID}}';
+        }
+
+        const STORAGE_KEY = 'v4_prog_' + planId;
+        const START_KEY = 'v4_start_' + planId;
+        const THEME_MODE_KEY = 'v4_mode_' + planId; 
+        const THEME_COLOR_KEY = 'v4_color_' + planId;
+        const TITLE_KEY = 'v4_title_' + planId;
+
+        let userProgress = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        let startedDays = JSON.parse(localStorage.getItem(START_KEY) || '[]');
+        let currentMode = localStorage.getItem(THEME_MODE_KEY) || 'mix'; 
+        let currentSingleColor = localStorage.getItem(THEME_COLOR_KEY) || DOPAMINE_COLORS[0];
+        let currentDayIdx = 0;
+
+        function initPalette() {
+            const container = document.getElementById('palettePopover'); container.innerHTML = '';
+            const mixBtn = document.createElement('div'); mixBtn.className = 'color-dot mix-dot'; mixBtn.innerHTML = '<div class="mix-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></div>';
+            mixBtn.onclick = (e) => { e.stopPropagation(); switchToMixMode(); closePalette(); };
+            if(currentMode === 'mix') mixBtn.classList.add('active-swatch'); container.appendChild(mixBtn);
+            DOPAMINE_COLORS.forEach(color => {
+                const dot = document.createElement('div'); dot.className = 'color-dot'; dot.style.backgroundColor = color;
+                dot.onclick = (e) => { e.stopPropagation(); switchToSingleColor(color); closePalette(); };
+                if(currentMode === 'single' && color.toUpperCase() === currentSingleColor.toUpperCase()) dot.classList.add('active-swatch');
+                container.appendChild(dot);
+            });
+            const custom = document.createElement('div'); custom.className = 'color-dot picker-dot'; custom.innerHTML = '<div class="picker-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg></div>';
+            custom.onclick = (e) => { e.stopPropagation(); document.getElementById('customPickerInput').click(); };
+            container.appendChild(custom);
+        }
+
+        function getDayColor(dayIndex) { return currentMode === 'mix' ? DOPAMINE_COLORS[dayIndex % DOPAMINE_COLORS.length] : currentSingleColor; }
+        function switchToMixMode() { currentMode = 'mix'; localStorage.setItem(THEME_MODE_KEY, 'mix'); document.getElementById('modeLabel').innerText = "DOPAMINE MIX"; renderDay(currentDayIdx); }
+        function switchToSingleColor(hex) { currentMode = 'single'; currentSingleColor = hex; localStorage.setItem(THEME_MODE_KEY, 'single'); localStorage.setItem(THEME_COLOR_KEY, hex); document.getElementById('modeLabel').innerText = "PRO FOCUS"; renderDay(currentDayIdx); }
+        function applyThemeColor(hex) {
+            const root = document.documentElement; const rgb = hexToRgb(hex); const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+            root.style.setProperty('--primary', hex); root.style.setProperty('--primary-dark', adjustBrightness(hex, -20));
+            root.style.setProperty('--primary-light', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.1)`); root.style.setProperty('--text-on-primary', brightness < 128 ? '#ffffff' : '#1d1d1f');
+        }
+
+        // --- 【修改】随机播放铅笔音效 ---
+        function playCheckSound() {
+            try {
+                // 1. 随机选一个索引
+                const randomIndex = Math.floor(Math.random() * PENCIL_SOUNDS.length);
+                const soundPath = PENCIL_SOUNDS[randomIndex];
+                
+                // 2. 创建音频对象
+                const audio = new Audio(soundPath);
+                audio.volume = 0.6; 
+                
+                return new Promise((resolve) => {
+                    audio.play()
+                        .then(() => { 
+                            // 播放成功
+                            setTimeout(resolve, 100); 
+                        })
+                        .catch((e) => { 
+                            // 播放失败 (路径错误/文件不存在/浏览器限制等)
+                            // 仅在开发者控制台(F12)发出警告，不弹窗影响用户
+                            console.warn("DeepFlow [Audio Error]: 无法加载或播放音效。请检查 PENCIL_SOUNDS 链接是否有效或文件位置是否正确。", soundPath, e);
+                            resolve(); 
+                        });
+                });
+            } catch (err) {
+                console.error("Critical Audio Error:", err);
+                return Promise.resolve();
+            }
+        }
+
+        function renderDay(idx) {
+            if (idx < 0 || idx >= tasksData.length) idx = 0; currentDayIdx = idx; const day = tasksData[idx];
+            const todayColor = getDayColor(idx); applyThemeColor(todayColor);
+            
+            const dateList = document.getElementById('dateList'); dateList.innerHTML = '';
+            tasksData.forEach((d, i) => {
+                const isSelected = i === idx; const itemColor = getDayColor(i);
+                const el = document.createElement('div');
+                el.className = `p-3 rounded-lg flex justify-between items-center text-sm cursor-pointer transition-all mb-1 hover:bg-white/60`;
+                if(isSelected) { el.className += ' bg-white shadow-sm font-bold border-l-4 text-slate-800'; el.style.borderLeftColor = itemColor; } 
+                else { el.className += ' text-slate-500 border-l-4 border-transparent'; }
+                const done = d.tasks.filter((_, ti) => userProgress[d.date+'_'+ti]).length;
+                const isAll = done === d.tasks.length && d.tasks.length > 0;
+                let iconHtml = isAll ? `<div class="w-2 h-2 rounded-full shadow-sm" style="background:${itemColor}; box-shadow: 0 0 4px ${itemColor}80;"></div>` : (!isSelected ? `<div class="w-1.5 h-1.5 rounded-full bg-slate-200"></div>` : '');
+                el.innerHTML = `<span>${d.date.substring(5)}</span> ${iconHtml}`;
+                el.onclick = () => renderDay(i); dateList.appendChild(el);
+            });
+
+            document.getElementById('currentDateDisplay').innerText = day.date; document.getElementById('dayCountDisplay').innerText = day.dayNum; updateStats(day);
+            const container = document.getElementById('dynamicTasksContainer'); container.innerHTML = '';
+            if (day.tasks.length === 0) { container.innerHTML = '<div class="text-center p-10 text-slate-400 italic">今日无任务，尽情享受时光。</div>'; } 
+            else {
+                day.tasks.forEach((t, i) => {
+                    const tid = day.date + '_' + i; const checked = !!userProgress[tid];
+                    const smartColor = t.tagColor ? t.tagColor : 'var(--primary)';
+                    const badge = t.tag ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded border opacity-80" style="color:${smartColor}; border-color:${smartColor}">${t.tag}</span>` : '';
+                    const div = document.createElement('div');
+                    div.className = `task-item ios-card p-4 rounded-xl flex gap-4 cursor-pointer hover:bg-white transition-all ${checked ? 'task-checked' : ''}`;
+                    div.onclick = () => toggleTask(tid);
+                    div.innerHTML = `<div class="checkbox-ios flex-shrink-0"><svg class="w-3.5 h-3.5 text-white ${checked ? 'opacity-100' : 'opacity-0'}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div><div class="flex-1"><div class="flex justify-between items-start mb-1"><h4 class="font-bold text-slate-800 text-base leading-tight transition-colors">${t.title}</h4>${badge}</div><p class="text-sm text-slate-500 font-medium leading-relaxed">${t.desc}</p></div>`;
+                    container.appendChild(div);
+                });
+            }
+            checkLock(day.date); lucide.createIcons();
+        }
+
+        async function toggleTask(tid) {
+            if(document.getElementById('contentLocker').style.filter.includes('blur')) return;
+            if(userProgress[tid]) { delete userProgress[tid]; } 
+            else { 
+                userProgress[tid] = true; 
+                await playCheckSound(); // 播放随机铅笔音效
+                showToast(); 
+                const dayDate = tid.split('_')[0]; const dayObj = tasksData.find(d => d.date === dayDate);
+                if(dayObj && dayObj.tasks.filter((_, i) => userProgress[dayDate+'_'+i]).length === dayObj.tasks.length) confettiEffect();
+                if(navigator.vibrate) navigator.vibrate(10);
+            }
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(userProgress));
+            renderDay(currentDayIdx);
+        }
+        
+        function resetProgress() { if(confirm('确定要重置所有进度吗？\n将清除记录，并恢复到默认的混合多巴胺配色。')) { userProgress = {}; startedDays = []; localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(START_KEY); switchToMixMode(); location.reload(); } }
+        function updateStats(day) {
+            const total = day.tasks.length; const done = day.tasks.filter((_, i) => userProgress[day.date+'_'+i]).length; const pct = total ? (done/total)*100 : 0;
+            document.getElementById('dailyProgressBar').style.width = pct + '%'; document.getElementById('dailyProgressText').innerText = done + '/' + total;
+            const trophy = document.getElementById('trophyContainer');
+            trophy.innerHTML = (done === total && total > 0) ? `<div class="p-3 rounded-full text-white shadow-lg animate-bounce theme-bg-target" style="background: var(--primary)"><i data-lucide="award" class="w-6 h-6"></i></div>` : `<div class="bg-slate-100 p-3 rounded-full text-slate-300"><i data-lucide="target" class="w-6 h-6"></i></div>`;
+            let allT=0, allD=0; tasksData.forEach(d => { allT += d.tasks.length; allD += d.tasks.filter((_,i) => userProgress[d.date+'_'+i]).length; });
+            const gPct = allT ? Math.round((allD/allT)*100) : 0; document.getElementById('totalCompletionDisplay').innerText = gPct + '%'; document.getElementById('overallProgressBar').style.width = gPct + '%';
+        }
+        function startDay() { const d = tasksData[currentDayIdx].date; if(!startedDays.includes(d)) { startedDays.push(d); localStorage.setItem(START_KEY, JSON.stringify(startedDays)); } document.getElementById('ritualOverlay').style.opacity = '0'; setTimeout(() => { document.getElementById('ritualOverlay').style.display = 'none'; unlockContent();  }, 500); }
+        function checkLock(date) { const overlay = document.getElementById('ritualOverlay'); const locker = document.getElementById('contentLocker'); const hasStarted = startedDays.includes(date) || Object.keys(userProgress).some(k => k.startsWith(date)); if(hasStarted) { overlay.style.display = 'none'; unlockContent(); } else { overlay.style.display = 'flex'; overlay.style.opacity = '1'; locker.style.filter = 'blur(8px)'; locker.style.pointerEvents = 'none'; locker.style.opacity = '0.5'; } }
+        function unlockContent() { const locker = document.getElementById('contentLocker'); locker.style.filter = 'none'; locker.style.pointerEvents = 'auto'; locker.style.opacity = '1'; }
+        function showToast() { const t = document.getElementById('toast'); t.style.opacity = '1'; t.style.transform = 'translate(-50%, 0)'; setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translate(-50%, -20px)'; }, 1500); }
+        function confettiEffect(colors) { confetti({ particleCount: 80, spread: 60, origin: { y: 0.65 }, colors: colors || [getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()] }); }
+        function togglePalette(e) { if(e) e.stopPropagation(); const p = document.getElementById('palettePopover'); if(!p.classList.contains('active')) initPalette(); p.classList.toggle('active'); }
+        function closePalette() { document.getElementById('palettePopover').classList.remove('active'); }
+        function hexToRgb(hex) { let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex); return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : {r:0,g:0,b:0}; }
+        function adjustBrightness(hex, percent) { let num = parseInt(hex.replace("#",""),16), amt = Math.round(2.55 * percent), R = (num >> 16) + amt, B = (num >> 8 & 0x00FF) + amt, G = (num & 0x0000FF) + amt; return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (B<255?B<1?0:B:255)*0x100 + (G<255?G<1?0:G:255)).toString(16).slice(1); }
+        function renamePlan() { const t = prompt("Rename Plan:", document.getElementById('planTitleText').innerText); if(t) { document.getElementById('planTitleText').innerText = t; localStorage.setItem(TITLE_KEY, t); } }
+        function init() {
+            if (!RAW_DATA.includes('{{')) { const st = localStorage.getItem(TITLE_KEY); if(st) document.getElementById('planTitleText').innerText = st; }
+            document.getElementById('totalDaysLabel').innerText = tasksData.length;
+            renderDay(0);
+            document.getElementById('modeLabel').innerText = currentMode === 'mix' ? "DOPAMINE MIX" : "PRO FOCUS";
+            document.addEventListener('click', (e) => { if(!e.target.closest('.palette-wrapper')) closePalette(); });
+        }
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
