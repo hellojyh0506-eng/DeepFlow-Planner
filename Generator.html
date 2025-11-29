@@ -51,9 +51,9 @@
 <body class="transition-colors duration-500">
     <nav class="fixed w-full z-40 top-0 border-b border-white/5 bg-transparent backdrop-blur-md">
         <div class="max-w-5xl mx-auto px-6 h-20 flex justify-between items-center">
-            <a href="着陆模板.html" id="backBtn" class="flex items-center gap-2 transition group text-white">
+            <a href="landing.html" id="backBtn" class="flex items-center gap-2 transition group text-white">
                 <i data-lucide="arrow-left" class="w-4 h-4 group-hover:-translate-x-1 transition-transform"></i>
-                <span class="text-sm font-bold">切换引擎</span>
+                <span class="text-sm font-bold">切换模板</span>
             </a>
             <div id="systemStatus" class="flex items-center gap-2 px-3 py-1 rounded-full border border-white/20">
                 <div class="w-2 h-2 rounded-full animate-pulse bg-emerald-500"></div>
@@ -100,7 +100,7 @@
                 bgClass: 'bg-transparent bg-pro-fluid', cardClass: 'bg-white/90 border border-gray-200 shadow-xl', 
                 textColor: 'text-gray-900', subTextColor: 'text-gray-600', 
                 accentColor: '#06b6d4', logoBg: 'bg-cyan-500/10 text-cyan-500', 
-                icon: 'zap', descTitle: 'DeepFlow Pro', descSub: '心流注入 · 多巴胺反馈引擎',
+                icon: 'zap', descTitle: 'DeepFlow Pro', descSub: '心流注入 · 情绪燃料补给站',
                 uploadText: '心流注入 (Flow Infusion)', uploadSub: '即时转换 · 奖励生成',
                 cssVars: `--glass-bg: rgba(255, 255, 255, 0.95); --surface: #f7f7f7; --primary: #06b6d4; --success: #10b981; --text-main: #1f2937; --text-muted: #6b7280; --progress-bg: #f3f4f6; --border: #e5e7eb; --checked-bg: rgba(235, 248, 255, 0.8); --overlay: rgba(247, 247, 247, 0.8); --bg-grad: linear-gradient(135deg, #eff6ff 0%, #d1fae5 33%, #fce7f3 66%, #e0f2f1 100%); --bg-opacity: 1; --seal-red: #b91c1c;`, 
                 bodyClass: 'selection:bg-cyan-400/30 pro-style-active', iconBoxClass: 'bg-cyan-500', confetti: ['#06b6d4', '#10b981', '#f472b6']
@@ -355,69 +355,76 @@
         }
 
         // --- 【替换的函数】processData: 集成智能标签识别逻辑 ---
-        function processData(jsonData) {
-            const rows = jsonData.map(row => {
-                const cleanRow = {};
-                // 数据清洗：转小写并去空格，防止 Excel 列名大小写问题
-                Object.keys(row).forEach(k => cleanRow[k.trim().toLowerCase()] = row[k]);
+        // Generator.html 文件中，替换整个 function processData(jsonData) { ... }
+
+function processData(jsonData) {
+    const rows = jsonData.map(row => {
+        const cleanRow = {};
+        // 数据清洗：转小写并去空格，防止 Excel 列名大小写问题
+        Object.keys(row).forEach(k => cleanRow[k.trim().toLowerCase()] = row[k]);
+        
+        // 获取基础信息
+        const rawDate = cleanRow['date'] || cleanRow['日期'] || cleanRow['time'];
+        const title = cleanRow['tasktitle'] || cleanRow['task'] || cleanRow['任务'] || cleanRow['标题'] || '未命名任务';
+        const desc = cleanRow['taskdescription'] || cleanRow['desc'] || cleanRow['描述'] || cleanRow['备注'] || '';
+        
+        // --- 【核心修正开始】智能标签逻辑 V3.0 ---
+        let finalTag = cleanRow['tag'] || cleanRow['标签'] || cleanRow['分类']; // 1. 优先使用 Excel 填写的 Tag
+        let smartColor = null; // 【新增】变量来存储颜色
+
+        if (!finalTag) {
+            // 2. 如果 Excel 没填 Tag，尝试调用 rules_db.js 进行智能识别
+            const contentToScan = title + " " + desc;
+            
+            if (typeof autoDetectTag === 'function') {
+                const smartResult = autoDetectTag(contentToScan);
                 
-                // 获取基础信息
-                const rawDate = cleanRow['date'] || cleanRow['日期'] || cleanRow['time'];
-                const title = cleanRow['tasktitle'] || cleanRow['task'] || cleanRow['任务'] || cleanRow['标题'] || '未命名任务';
-                const desc = cleanRow['taskdescription'] || cleanRow['desc'] || cleanRow['描述'] || cleanRow['备注'] || '';
-                
-                // --- 【核心修改开始】智能标签逻辑 V2.0 ---
-                let finalTag = cleanRow['tag'] || cleanRow['标签'] || cleanRow['分类']; // 1. 优先使用 Excel 填写的 Tag
-                
-                if (!finalTag) {
-                    // 2. 如果 Excel 没填 Tag，尝试调用 rules_db.js 进行智能识别
-                    // 将标题和描述拼起来一起搜，增加识别率
-                    const contentToScan = title + " " + desc;
-                    
-                    // 检查 autoDetectTag 函数是否存在 (由 rules_db.js 加载)
-                    if (typeof autoDetectTag === 'function') {
-                        const smartResult = autoDetectTag(contentToScan);
-                        
-                        // 标签格式： Emoji + 精准标签 (如: 🇬🇧 雅思屠鸭)
-                        finalTag = smartResult.emoji ? `${smartResult.emoji} ${smartResult.label}` : smartResult.label; 
-                    }
-                }
-
-                // 3. 实在识别不出来 (或 rules_db.js 未加载)，给个默认值
-                if (!finalTag) finalTag = "📌 日常"; 
-                // --- 【核心修改结束】 ---
-
-                return {
-                    date: excelDateToJSDate(rawDate),
-                    title: title,
-                    desc: desc,
-                    tag: finalTag // 使用最终决定的标签 (包含 Emoji)
-                };
-            }).filter(r => r.date); 
-
-            // 后续逻辑保持不变：排序和按日期分组
-            rows.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-            const uniqueDates = [...new Set(rows.map(r => r.date))];
-            const dateToDayNum = {};
-            uniqueDates.forEach((date, index) => {
-                dateToDayNum[date] = index + 1;
-            });
-
-            const daysMap = {};
-            rows.forEach(row => {
-                if (!daysMap[row.date]) {
-                    daysMap[row.date] = {
-                        date: row.date,
-                        dayNum: dateToDayNum[row.date], 
-                        tasks: []
-                    };
-                }
-                daysMap[row.date].tasks.push({ title: row.title, desc: row.desc, tag: row.tag });
-            });
-
-            return Object.values(daysMap).sort((a, b) => new Date(a.date) - new Date(b.date));
+                // 修正：将标签和颜色都从 smartResult 中提取
+                finalTag = smartResult.emoji ? `${smartResult.emoji} ${smartResult.label}` : smartResult.label; 
+                smartColor = smartResult.color; // 【关键】：提取颜色信息
+            }
         }
+
+        // 3. 实在识别不出来，给个默认值
+        if (!finalTag) {
+            finalTag = "📌 日常";
+            smartColor = "#8E8E93"; // 默认灰色
+        } 
+        // --- 【核心修正结束】 ---
+
+        return {
+            date: excelDateToJSDate(rawDate),
+            title: title,
+            desc: desc,
+            tag: finalTag,
+            tagColor: smartColor // 【关键】：将颜色信息添加到最终对象中
+        };
+    }).filter(r => r.date); 
+
+    // 后续逻辑保持不变：排序和按日期分组
+    rows.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    const uniqueDates = [...new Set(rows.map(r => r.date))];
+    const dateToDayNum = {};
+    uniqueDates.forEach((date, index) => {
+        dateToDayNum[date] = index + 1;
+    });
+
+    const daysMap = {};
+    rows.forEach(row => {
+        if (!daysMap[row.date]) {
+            daysMap[row.date] = {
+                date: row.date,
+                dayNum: dateToDayNum[row.date], 
+                tasks: []
+            };
+        }
+        // 确保 tasks 数组里的对象也带有 tagColor
+        daysMap[row.date].tasks.push({ title: row.title, desc: row.desc, tag: row.tag, tagColor: row.tagColor });
+    });
+
+    return Object.values(daysMap).sort((a, b) => new Date(a.date) - new Date(b.date));
+}
         
         // 解析 Excel 数据的包装函数
         function parseExcelData(file) {

@@ -167,9 +167,7 @@ const PENCIL_SOUNDS = [
                 let tagStyle = 'border: 1px solid #e7e5e4; color: #a8a29e; background: transparent;';
                 
                 if (task.tag) {
-                    if (task.tagColor) {
-                        tagStyle = `border: 1px solid ${task.tagColor}40; color: ${task.tagColor}; background: ${task.tagColor}08;`;
-                    } else if (['Core', '核心', '输入', 'Input'].some(k => task.tag.includes(k))) {
+                    if (['Core', '核心', '输入', 'Input'].some(k => task.tag.includes(k))) {
                         indicatorStyle = 'border-left-color: var(--ink-black);';
                         tagStyle = 'background: #f5f5f4; color: #1c1917; border-color: #d6d3d1;';
                     }

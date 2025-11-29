@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>模版工厂 | DeepFlow Engine</title>
+    <title>构建中心 | DeepFlow</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -48,49 +48,40 @@
 
         /* --- 1. PRO 卡片：纯 CSS 绘制多巴胺光斑 (DeepFlow Pro) - 最终透明版 --- */
         .card-pro-premium {
-            /* **核心修改：使用浅透明背景，让彩虹伪元素成为主背景** */
             background: rgba(255, 255, 255, 0.1); 
-            color: white; /* 恢复白色文字 */
-            border: 1px solid rgba(255, 255, 255, 0.4); /* 更明显的白色边框 */
+            color: white; 
+            border: 1px solid rgba(255, 255, 255, 0.4); 
             box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
             position: relative; overflow: hidden;
             border-radius: 24px;
             transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-            backdrop-filter: blur(20px); /* 强化玻璃效果 */
+            backdrop-filter: blur(20px); 
         }
-        /* 核心升级：纯 CSS 绘制彩虹光斑背景 */
         .card-pro-premium::before {
             content: ''; position: absolute; inset: -50%; 
-            /* 纯 CSS 绘制：彩虹光晕 (粉, 黄, 绿, 蓝) */
             background: 
-                /* 粉红/红 (右上角) */
                 radial-gradient(circle at 80% 20%, rgba(255, 100, 150, 0.8) 0%, transparent 20%), 
-                /* 黄色 (左下角) */
                 radial-gradient(circle at 20% 80%, rgba(255, 255, 100, 0.7) 0%, transparent 25%), 
-                /* 蓝色 (中间底部) */
                 radial-gradient(circle at 50% 100%, rgba(59, 130, 246, 0.7) 0%, transparent 30%); 
-            
             background-size: 300% 300%;
             background-position: center;
-            filter: blur(100px) saturate(3.5) contrast(1.5); /* 极致模糊和超高饱和度 */
+            filter: blur(100px) saturate(3.5) contrast(1.5); 
             opacity: 0.9; 
             z-index: 0;
             pointer-events: none;
-            mix-blend-mode: screen; /* 混合模式：让光晕在暗底上呈现出来 */
+            mix-blend-mode: screen; 
             transition: transform 0.8s ease; 
             transform: scale(1);
         }
         .card-pro-premium:hover::before { 
-            transform: scale(1.1) rotate(5deg); /* 悬停时背景动起来 */
+            transform: scale(1.1) rotate(5deg); 
             opacity: 1; 
         }
-
         .card-pro-premium:hover { 
-            /* 悬停时的边框和阴影使用粉色系 */
             box-shadow: 0 20px 50px -12px rgba(236, 72, 153, 0.5); 
             border-color: rgba(236, 72, 153, 0.8); 
         }
-        .btn-pro-gem { /* 宝石按钮 */
+        .btn-pro-gem { 
             background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             border: 1px solid rgba(255,255,255,0.2); box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 4px 20px rgba(37, 99, 235, 0.5);
             position: relative; overflow: hidden; z-index: 10; transition: all 0.3s;
@@ -99,7 +90,7 @@
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 6px 25px rgba(37, 99, 235, 0.7); 
             transform: translateY(-1px); 
         }
-        .btn-pro-gem::before { /* 按钮流光 */
+        .btn-pro-gem::before { 
             content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -109,11 +100,11 @@
         
         /* --- 2. ZEN 卡片：纯净白色留白 (最终形态) --- */
         .card-zen-matte {
-            background: #ffffff; /* 纯白色 */
-            color: #18181b; /* 黑色文字 */
+            background: #ffffff; 
+            color: #18181b; 
             border: 1px solid #e4e4e7;
-            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.2); /* 柔和投影 */
-            backdrop-filter: none; /* 移除模糊 */
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.2); 
+            backdrop-filter: none; 
         }
         .card-zen-matte:hover { box-shadow: 0 0 30px rgba(0, 0, 0, 0.1); border-color: #d4d4d4; }
         .btn-zen-minimal {
@@ -148,7 +139,6 @@
             border-color: rgba(34, 211, 238, 0.8);
         }
 
-        /* 通用微交互 */
         .font-mono { font-family: 'JetBrains Mono', monospace; }
 
     </style>
@@ -160,7 +150,7 @@
 
     <nav class="fixed w-full z-40 top-0 border-b border-white/5 bg-slate-950/60 backdrop-blur-xl">
         <div class="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
-            <a href="网页官网.html" class="flex items-center gap-2 group opacity-60 hover:opacity-100 transition duration-300">
+            <a href="index.html" class="flex items-center gap-2 group opacity-60 hover:opacity-100 transition duration-300">
                 <div class="bg-white/5 p-1.5 rounded-lg group-hover:bg-white/10"><i data-lucide="arrow-left" class="w-4 h-4"></i></div>
                 <span class="font-bold text-sm">返回官网</span>
             </a>
@@ -179,11 +169,11 @@
 
     <div class="pt-40 pb-20 text-center px-6">
         <h1 class="text-5xl md:text-7xl font-black mb-6 tracking-tight text-white drop-shadow-2xl">
-            选择你的 <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">构建引擎</span>
+            选择你的 <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">构建模式</span>
         </h1>
         <p class="text-slate-400 text-lg max-w-xl mx-auto leading-relaxed font-medium">
             每个模版都是一套独立的视觉算法。<br>
-            <span class="opacity-60">选择最适合你当前心流状态的引擎。</span>
+            <span class="opacity-60">选择最适合你当前心流状态的风格。</span>
         </p>
     </div>
 
@@ -326,7 +316,7 @@
     </div>
 
     <div class="fixed bottom-6 left-0 w-full text-center pointer-events-none opacity-30">
-        <p class="text-[10px] font-mono text-slate-500">DEEPFLOW ENGINE v8.0 // 选择协议</p>
+        <p class="text-[10px] font-mono text-slate-500">DeepFlow System V3.0 // 选择模式</p>
     </div>
 
     <script>
@@ -335,6 +325,7 @@
         function navigateToGenerator(theme) {
             console.log(`正在加载协议: ${theme}...`);
             setTimeout(() => {
+                // 链接修改为 Generator.html (注意这里保持原来的名字，和上传的文件一致)
                 window.location.href = `Generator.html?theme=${theme}`;
             }, 150);
         }

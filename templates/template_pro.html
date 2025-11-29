@@ -223,7 +223,7 @@ const PENCIL_SOUNDS = [
             else {
                 day.tasks.forEach((t, i) => {
                     const tid = day.date + '_' + i; const checked = !!userProgress[tid];
-                    const smartColor = t.tagColor ? t.tagColor : 'var(--primary)';
+                    const smartColor = t.tagColor ? t.tagColor : getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
                     const badge = t.tag ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded border opacity-80" style="color:${smartColor}; border-color:${smartColor}">${t.tag}</span>` : '';
                     const div = document.createElement('div');
                     div.className = `task-item ios-card p-4 rounded-xl flex gap-4 cursor-pointer hover:bg-white transition-all ${checked ? 'task-checked' : ''}`;
