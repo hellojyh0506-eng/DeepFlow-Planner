@@ -4,5 +4,4 @@
 /build/
 *.log
 *.tmp
-*.xlsx
 *.original.js
