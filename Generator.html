@@ -1,6 +1,137 @@
 <!DOCTYPE html>
 <html lang="zh-CN" class="scroll-smooth">
 <head>
+    <style>
+    /* --- DeepFlow Dark Theme Modal Design (Redesigned) --- */
+    .df-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        /* 背景遮罩加深，使用深蓝色调 */
+        background: rgba(2, 6, 23, 0.85);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .df-modal-overlay.active {
+        display: flex;
+        opacity: 1;
+    }
+
+    .df-modal-card {
+        /* 改为深色磨砂玻璃背景 */
+        background: rgba(30, 41, 59, 0.9); /* Slate-800 with opacity */
+        border: 1px solid rgba(255, 255, 255, 0.1); /* 细微白边框 */
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); /* 更深的阴影 */
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        color: white; /* 全局文字变白 */
+
+        width: 90%;
+        max-width: 420px;
+        border-radius: 24px;
+        padding: 32px 24px;
+        text-align: center;
+        transform: scale(0.95) translateY(10px);
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .df-modal-overlay.active .df-modal-card {
+        transform: scale(1) translateY(0);
+    }
+
+    .df-icon-circle {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, #007AFF, #00C6FF);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        /* 阴影改为深色发光效果 */
+        box-shadow: 0 0 30px rgba(0, 122, 255, 0.4);
+    }
+
+    .df-modal-title {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 22px;
+        font-weight: 800;
+        color: white; /* 白色标题 */
+        margin-bottom: 8px;
+        letter-spacing: -0.5px;
+    }
+
+    .df-modal-desc {
+        font-size: 14px;
+        color: #94a3b8; /* Slate-400 浅灰色描述 */
+        margin-bottom: 32px;
+        line-height: 1.6;
+    }
+
+    .df-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .df-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 16px;
+        border-radius: 14px;
+        font-size: 15px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s;
+        cursor: pointer;
+        border: none;
+    }
+
+    .df-btn:active { transform: scale(0.98); }
+
+    /* 主按钮：使用符合主题的蓝紫渐变 */
+    .df-btn-primary {
+        background: linear-gradient(to right, #2563eb, #4f46e5);
+        color: white;
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+    }
+    .df-btn-primary:hover { 
+        background: linear-gradient(to right, #1d4ed8, #4338ca);
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+    }
+
+    /* 次要按钮：改为深色玻璃风格 */
+    .df-btn-secondary {
+        background: rgba(255, 255, 255, 0.05);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(5px);
+    }
+    .df-btn-secondary:hover { 
+        background: rgba(255, 255, 255, 0.1); 
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .df-close {
+        margin-top: 24px;
+        background: none;
+        border: none;
+        color: #64748b; /* Slate-500 */
+        font-size: 13px;
+        cursor: pointer;
+        padding: 8px;
+        transition: color 0.2s;
+    }
+    .df-close:hover { color: white; }
+</style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DeepFlow | 构建中心</title>
@@ -915,18 +1046,14 @@
                 
                 if (rulesDbContent) {
                     finalHtml = finalHtml.replace('<script src="rules_db.js"><\/script>', '<script>' + rulesDbContent + '<\/script>');
-                }
-
-                const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
+                    }
                 const safeFileName = safeTitle.replace(/[<>:"/\\|?*]/g, '_') + '_' + selectedTheme + '.html';
-                a.download = safeFileName;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-8' });
+                const blobUrl = URL.createObjectURL(blob);
+                
+                // --- 修复处：传递 blobUrl 并移除立即销毁的代码 ---
+                displayResultOptions(blobUrl, safeFileName);
+                // URL.revokeObjectURL(url); // 已删除这行错误代码
 
                 customAlert(
                     '✅ 生成成功！\n\n包含 ' + structuredData.length + ' 天计划。',
@@ -1036,6 +1163,61 @@
                 });
             }
         });
+        
+        let currentBlobUrl = null; // 用于存储当前的 Blob URL
+
+        function displayResultOptions(blobUrl, fileName) {
+            const previewButton = document.getElementById('previewButton');
+            const downloadButton = document.getElementById('downloadButton');
+            const modal = document.getElementById('resultModalOverlay');
+            
+            previewButton.href = blobUrl;
+            
+            // --- 修复处：增加文件名，确保下载时文件名正确 ---
+            downloadButton.href = blobUrl;
+            downloadButton.download = fileName; // 关键修复：设置下载文件名
+            
+            downloadButton.onclick = () => {
+                setTimeout(closeResultModal, 50); 
+            };
+            
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('active');
+            }, 10);
+        }
+
+        function closeResultModal() {
+            const modal = document.getElementById('resultModalOverlay');
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
     </script>
+    <div id="resultModalOverlay" class="df-modal-overlay">
+    <div class="df-modal-card">
+        <div class="df-icon-circle">
+            <i data-lucide="check" style="color: white; width: 32px; height: 32px; stroke-width: 3px;"></i>
+        </div>
+        
+        <h3 class="df-modal-title">计划已生成 (Ready)</h3>
+        <p class="df-modal-desc">您的 DeepFlow 计划已准备就绪。<br>请根据您的设备选择打开方式。</p>
+        
+        <div class="df-actions">
+            <a id="previewButton" target="_blank" class="df-btn df-btn-primary">
+                <i data-lucide="eye" style="width: 18px; height: 18px;"></i>
+                <span>实时预览 (iOS / 手机推荐)</span>
+            </a>
+            
+            <a id="downloadButton" class="df-btn df-btn-secondary">
+                <i data-lucide="download" style="width: 18px; height: 18px;"></i>
+                <span>下载文件 (电脑推荐)</span>
+            </a>
+        </div>
+
+        <button onclick="closeResultModal()" class="df-close">关闭窗口</button>
+    </div>
+</div>
 </body>
 </html>
