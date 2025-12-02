@@ -745,18 +745,8 @@
         }
 
         // ============================================
-        // 核心工具函数
+        // 核心工具函数 (原版保留)
         // ============================================
-
-        // 新增：Base64 编码函数，用于将生成的 HTML 转换为 Data URI
-        function base64Encode(str) {
-            try {
-                return btoa(unescape(encodeURIComponent(str)));
-            } catch (e) {
-                console.error("Base64 Encoding Failed:", e);
-                return "";
-            }
-        }
 
         function formatExcelTime(val) {
             if (val === undefined || val === null || val === '') return '';
@@ -1058,19 +1048,12 @@
                     finalHtml = finalHtml.replace('<script src="rules_db.js"><\/script>', '<script>' + rulesDbContent + '<\/script>');
                     }
                 const safeFileName = safeTitle.replace(/[<>:"/\\|?*]/g, '_') + '_' + selectedTheme + '.html';
-                
-                // --- 1. 生成 Base64 URI 供预览 (这是 Android 的 Plan B) ---
-                const base64Content = base64Encode(finalHtml);
-                const previewDataUri = 'data:text/html;base64,' + base64Content;
-
-                // --- 2. 重新生成 Blob URL 仅供下载 (Blob URL 在下载文件时更稳定) ---
                 const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-8' });
-                const downloadBlobUrl = URL.createObjectURL(blob);
+                const blobUrl = URL.createObjectURL(blob);
                 
-                // --- 3. 唤起结果弹窗 (传递两个不同的 URL) ---
-                displayResultOptions(previewDataUri, downloadBlobUrl, safeFileName);
-                
-                // 注意：不再调用 URL.revokeObjectURL，由用户点击下载后延时释放或页面刷新释放
+                // --- 修复处：传递 blobUrl 并移除立即销毁的代码 ---
+                displayResultOptions(blobUrl, safeFileName);
+                // URL.revokeObjectURL(url); // 已删除这行错误代码
 
                 customAlert(
                     '✅ 生成成功！\n\n包含 ' + structuredData.length + ' 天计划。',
@@ -1181,25 +1164,18 @@
             }
         });
         
-        // 修改后的 displayResultOptions 函数
-        // previewUrl: 用于预览的 Base64 链接
-        // downloadUrl: 用于下载的 Blob 链接
-        function displayResultOptions(previewUrl, downloadUrl, fileName) {
+        let currentBlobUrl = null; // 用于存储当前的 Blob URL
+
+        function displayResultOptions(blobUrl, fileName) {
             const previewButton = document.getElementById('previewButton');
             const downloadButton = document.getElementById('downloadButton');
             const modal = document.getElementById('resultModalOverlay');
             
-            // 1. 配置预览按钮 (使用 Base64 Data URI)
-            previewButton.href = previewUrl;
-            previewButton.onclick = (e) => {
-                e.preventDefault();
-                // 直接打开 Base64 链接，不使用 Blob，避免 Android 拦截
-                window.open(previewUrl, '_blank');
-            };
+            previewButton.href = blobUrl;
             
-            // 2. 配置下载按钮 (使用 Blob URL)
-            downloadButton.href = downloadUrl;
-            downloadButton.download = fileName; 
+            // --- 修复处：增加文件名，确保下载时文件名正确 ---
+            downloadButton.href = blobUrl;
+            downloadButton.download = fileName; // 关键修复：设置下载文件名
             
             downloadButton.onclick = () => {
                 setTimeout(closeResultModal, 50); 
