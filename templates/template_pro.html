@@ -305,29 +305,35 @@
         function renderDay(idx) { 
             if (idx < 0 || idx >= tasksData.length) idx = 0; 
             currentDayIdx = idx; 
-            localStorage.setItem(CURRENT_DAY_KEY, idx); 
 
             const day = tasksData[idx]; 
             const todayColor = getDayColor(idx); 
             applyThemeColor(todayColor); 
-            
+            window.location.hash = `day=${idx}`;
             // --- 渲染左侧日历 ---
             const dateList = document.getElementById('dateList'); 
             dateList.innerHTML = ''; 
             tasksData.forEach((d, i) => { 
-                const isSelected = i === idx; 
-                const itemColor = getDayColor(i); 
-                const el = document.createElement('div'); 
-                el.className = `p-3 rounded-lg flex justify-between items-center text-sm cursor-pointer transition-all mb-1 hover:bg-white/60`; 
-                if(isSelected) { el.className += ' bg-white shadow-sm font-bold border-l-4 text-slate-800'; el.style.borderLeftColor = itemColor; } 
-                else { el.className += ' text-slate-500 border-l-4 border-transparent'; } 
-                const done = d.tasks.filter((_, ti) => userProgress[d.date+'_'+ti]).length; 
-                const isAll = done === d.tasks.length && d.tasks.length > 0; 
-                let iconHtml = isAll ? `<div class="w-2 h-2 rounded-full shadow-sm" style="background:${itemColor}; box-shadow: 0 0 4px ${itemColor}80;"></div>` : (!isSelected ? `<div class="w-1.5 h-1.5 rounded-full bg-slate-200"></div>` : ''); 
-                el.innerHTML = `<span>${d.date.substring(5)}</span> ${iconHtml}`; 
-                el.onclick = () => renderDay(i); 
-                dateList.appendChild(el); 
-            }); 
+    const isSelected = i === idx; 
+    const itemColor = getDayColor(i); 
+    const el = document.createElement('div'); 
+    el.className = `p-3 rounded-lg flex justify-between items-center text-sm cursor-pointer transition-all mb-1 hover:bg-white/60`; 
+    if(isSelected) { el.className += ' bg-white shadow-sm font-bold border-l-4 text-slate-800'; el.style.borderLeftColor = itemColor; } 
+    else { el.className += ' text-slate-500 border-l-4 border-transparent'; } 
+    const done = d.tasks.filter((_, ti) => userProgress[d.date+'_'+ti]).length; 
+    const isAll = done === d.tasks.length && d.tasks.length > 0; 
+    let iconHtml = isAll ? `<div class="w-2 h-2 rounded-full shadow-sm" style="background:${itemColor}; box-shadow: 0 0 4px ${itemColor}80;"></div>` : (!isSelected ? `<div class="w-1.5 h-1.5 rounded-full bg-slate-200"></div>` : ''); 
+    
+    el.innerHTML = `<span>${d.date.substring(5)}</span> ${iconHtml}`; 
+    
+    // 🔴 修复点 1：点击事件只负责修改 URL 哈希
+    el.onclick = () => { 
+        window.location.hash = `day=${i}`;
+    };
+    
+    // 🔴 修复点 2：将 element 添加到 DOM，否则侧边栏为空
+    dateList.appendChild(el); 
+});
             
             document.getElementById('currentDateDisplay').innerText = day.date; 
             document.getElementById('dayCountDisplay').innerText = day.dayNum; 
@@ -516,6 +522,10 @@
             } 
             document.getElementById('totalDaysLabel').innerText = tasksData.length; 
             let initialDayIdx = parseInt(localStorage.getItem(CURRENT_DAY_KEY) || '0');
+    const hashMatch = window.location.hash.match(/day=(\d+)/);
+    if (hashMatch) {
+        initialDayIdx = parseInt(hashMatch[1]);
+    }
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('day')) {
                 const urlDayIdx = parseInt(urlParams.get('day'));
@@ -530,6 +540,14 @@
                 const tip = document.getElementById('dockTooltip'); 
                 if(tip) { tip.classList.remove('show'); tip.style.opacity = '0'; tip.style.transform = 'translateY(-50%) translateX(10px)'; } 
             }, 4000); 
+            window.addEventListener('hashchange', () => {
+    const hashMatch = window.location.hash.match(/day=(\d+)/);
+    if (hashMatch) {
+        const newDayIdx = parseInt(hashMatch[1]);
+        // 使用新的索引重新渲染页面 (无需再写入 localStorage)
+        renderDay(newDayIdx);
+    }
+});
         }
         window.addEventListener('DOMContentLoaded', init);
 
