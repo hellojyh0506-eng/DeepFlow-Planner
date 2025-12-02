@@ -1,144 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-CN" class="scroll-smooth">
 <head>
-    <style>
-    /* --- DeepFlow Dark Theme Modal Design (Redesigned) --- */
-    .df-modal-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        /* 背景遮罩加深，使用深蓝色调 */
-        background: rgba(2, 6, 23, 0.85);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        z-index: 9999;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    
-    .df-modal-overlay.active {
-        display: flex;
-        opacity: 1;
-    }
-
-    .df-modal-card {
-        /* 改为深色磨砂玻璃背景 */
-        background: rgba(30, 41, 59, 0.9); /* Slate-800 with opacity */
-        border: 1px solid rgba(255, 255, 255, 0.1); /* 细微白边框 */
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); /* 更深的阴影 */
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        color: white; /* 全局文字变白 */
-
-        width: 90%;
-        max-width: 420px;
-        border-radius: 24px;
-        padding: 32px 24px;
-        text-align: center;
-        transform: scale(0.95) translateY(10px);
-        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .df-modal-overlay.active .df-modal-card {
-        transform: scale(1) translateY(0);
-    }
-
-    .df-icon-circle {
-        width: 64px;
-        height: 64px;
-        background: linear-gradient(135deg, #007AFF, #00C6FF);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 20px;
-        /* 阴影改为深色发光效果 */
-        box-shadow: 0 0 30px rgba(0, 122, 255, 0.4);
-    }
-
-    .df-modal-title {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        font-size: 22px;
-        font-weight: 800;
-        color: white; /* 白色标题 */
-        margin-bottom: 8px;
-        letter-spacing: -0.5px;
-    }
-
-    .df-modal-desc {
-        font-size: 14px;
-        color: #94a3b8; /* Slate-400 浅灰色描述 */
-        margin-bottom: 32px;
-        line-height: 1.6;
-    }
-
-    .df-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .df-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        padding: 16px;
-        border-radius: 14px;
-        font-size: 15px;
-        font-weight: 700;
-        text-decoration: none;
-        transition: all 0.2s;
-        cursor: pointer;
-        border: none;
-    }
-
-    .df-btn:active { transform: scale(0.98); }
-
-    /* 主按钮：使用符合主题的蓝紫渐变 */
-    .df-btn-primary {
-        background: linear-gradient(to right, #2563eb, #4f46e5);
-        color: white;
-        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
-    }
-    .df-btn-primary:hover { 
-        background: linear-gradient(to right, #1d4ed8, #4338ca);
-        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
-    }
-
-    /* 次要按钮：改为深色玻璃风格 */
-    .df-btn-secondary {
-        background: rgba(255, 255, 255, 0.05);
-        color: white;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(5px);
-    }
-    .df-btn-secondary:hover { 
-        background: rgba(255, 255, 255, 0.1); 
-        border-color: rgba(255, 255, 255, 0.2);
-    }
-
-    .df-close {
-        margin-top: 24px;
-        background: none;
-        border: none;
-        color: #64748b; /* Slate-500 */
-        font-size: 13px;
-        cursor: pointer;
-        padding: 8px;
-        transition: color 0.2s;
-    }
-    .df-close:hover { color: white; }
-</style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DeepFlow | 构建中心</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/lucide.min.js"></script>
+    <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/tailwind.js"></script>
+    <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/xlsx.full.min.js"></script>
     
     <script>
         tailwind.config = {
@@ -153,10 +21,12 @@
         }
     </script>
     <style>
+        /* ==========================================================================
+           1. 核心视觉样式 (Deep Space)
+           ========================================================================== */
         body { background-color: #020617; color: white; overflow-x: hidden; }
         .glass-nav { background: rgba(2, 6, 23, 0.7); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05); }
 
-        /* === 核心背景视觉 === */
         .deep-space-bg {
             position: fixed; inset: 0; z-index: -2;
             background: 
@@ -173,7 +43,6 @@
             pointer-events: none;
         }
 
-        /* === 玻璃面板容器 === */
         .glass-panel { 
             background: rgba(255,255,255,0.02); 
             border: 1px solid rgba(255,255,255,0.05); 
@@ -183,10 +52,8 @@
         .glass-panel:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
 
         /* ==========================================================================
-           【核心移植】来自 Index.html 的顶级特效卡片样式
+           2. 主题卡片特效
            ========================================================================== */
-        
-        /* 基础选择卡片容器 */
         .selection-card {
             position: relative;
             border-radius: 20px;
@@ -200,83 +67,30 @@
         }
         .selection-card:hover { transform: translateY(-5px) scale(1.02); }
 
-        /* --- PRO 主题特效 --- */
-        .card-pro-premium {
-            background: rgba(255, 255, 255, 0.05); 
-            color: white; 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-            backdrop-filter: blur(20px); 
-        }
-        .card-pro-premium::before {
-            content: ''; position: absolute; inset: -50%; 
-            background: 
-                radial-gradient(circle at 80% 20%, rgba(255, 100, 150, 0.8) 0%, transparent 20%), 
-                radial-gradient(circle at 20% 80%, rgba(255, 255, 100, 0.7) 0%, transparent 25%), 
-                radial-gradient(circle at 50% 100%, rgba(59, 130, 246, 0.7) 0%, transparent 30%); 
-            background-size: 300% 300%;
-            filter: blur(60px) saturate(3.5) contrast(1.5);
-            opacity: 0.4;
-            z-index: 0;
-            pointer-events: none;
-            mix-blend-mode: screen; 
-            transition: transform 0.8s ease, opacity 0.5s; 
-        }
+        /* PRO Theme */
+        .card-pro-premium { background: rgba(255, 255, 255, 0.05); color: white; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); }
+        .card-pro-premium::before { content: ''; position: absolute; inset: -50%; background: radial-gradient(circle at 80% 20%, rgba(255, 100, 150, 0.8) 0%, transparent 20%), radial-gradient(circle at 20% 80%, rgba(255, 255, 100, 0.7) 0%, transparent 25%), radial-gradient(circle at 50% 100%, rgba(59, 130, 246, 0.7) 0%, transparent 30%); background-size: 300% 300%; filter: blur(60px) saturate(3.5) contrast(1.5); opacity: 0.4; z-index: 0; pointer-events: none; mix-blend-mode: screen; transition: transform 0.8s ease, opacity 0.5s; }
         .card-pro-premium:hover::before { transform: scale(1.1) rotate(5deg); opacity: 0.8; }
         .card-pro-premium:hover { border-color: rgba(236, 72, 153, 0.5); box-shadow: 0 10px 30px rgba(236, 72, 153, 0.2); }
-        .card-pro-premium.selected {
-            border-color: #3b82f6; 
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5), 0 10px 40px rgba(59, 130, 246, 0.4);
-        }
+        .card-pro-premium.selected { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5), 0 10px 40px rgba(59, 130, 246, 0.4); }
 
-        /* --- ZEN 主题特效 --- */
-        .card-zen-matte {
-            background: #ffffff; 
-            color: #18181b; 
-            border: 1px solid #e4e4e7;
-        }
+        /* ZEN Theme */
+        .card-zen-matte { background: #ffffff; color: #18181b; border: 1px solid #e4e4e7; }
         .card-zen-matte .zen-text { color: #52525b; transition: color 0.3s; }
         .card-zen-matte:hover .zen-text { color: #18181b; }
         .card-zen-matte:hover { box-shadow: 0 0 30px rgba(255, 255, 255, 0.4); border-color: #d4d4d4; }
-        .card-zen-matte.selected {
-            border-color: #18181b;
-            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.5), 0 0 0 6px #18181b;
-        }
+        .card-zen-matte.selected { border-color: #18181b; box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.5), 0 0 0 6px #18181b; }
 
-        /* --- CYBER 主题特效 --- */
-        .card-cyber-neon {
-            background: #09090b; border: 1px solid rgba(217, 70, 239, 0.3);
-            background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(217, 70, 239, 0.05) 3px);
-        }
-        .card-cyber-neon:hover {
-            box-shadow: 0 0 40px rgba(217, 70, 239, 0.5), inset 0 0 20px rgba(217, 70, 239, 0.1);
-            border-color: #d946ef;
-        }
-        .card-cyber-neon.selected {
-            border-color: #d946ef;
-            box-shadow: 0 0 0 2px #09090b, 0 0 0 4px #d946ef, 0 0 50px rgba(217, 70, 239, 0.6);
-        }
+        /* CYBER Theme */
+        .card-cyber-neon { background: #09090b; border: 1px solid rgba(217, 70, 239, 0.3); background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(217, 70, 239, 0.05) 3px); }
+        .card-cyber-neon:hover { box-shadow: 0 0 40px rgba(217, 70, 239, 0.5), inset 0 0 20px rgba(217, 70, 239, 0.1); border-color: #d946ef; }
+        .card-cyber-neon.selected { border-color: #d946ef; box-shadow: 0 0 0 2px #09090b, 0 0 0 4px #d946ef, 0 0 50px rgba(217, 70, 239, 0.6); }
 
-        /* 选中状态的打勾图标动画 */
-        .check-circle {
-            position: absolute; top: 1rem; right: 1rem; z-index: 20;
-            width: 24px; height: 24px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            opacity: 0; transform: scale(0.5); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
+        .check-circle { position: absolute; top: 1rem; right: 1rem; z-index: 20; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transform: scale(0.5); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
         .selected .check-circle { opacity: 1; transform: scale(1); }
 
-        /* 模态框动画 */
-        .modal-enter { opacity: 0; transform: translateY(-20px); }
-        .modal-enter-active { opacity: 1; transform: translateY(0); transition: opacity 0.3s ease, transform 0.3s ease; }
-
-        /* 计划标题输入弹窗样式 */
-        .modal-bg-enter { opacity: 0; pointer-events: none; }
-        .modal-bg-enter-active { opacity: 1; pointer-events: auto; transition: opacity 0.3s ease; }
-        .modal-content-enter { transform: scale(0.95) translateY(10px); opacity: 0; }
-        .modal-content-enter-active { transform: scale(1) translateY(0); opacity: 1; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-
         /* ==========================================================================
-           【新增】在线构建器 (Builder) 样式
+           3. 组件样式 & 弹窗
            ========================================================================== */
         .tab-btn { position: relative; color: #94a3b8; transition: all 0.3s; padding-bottom: 0.5rem; }
         .tab-btn.active { color: white; font-weight: 700; }
@@ -284,19 +98,38 @@
         
         .builder-day { border-left: 2px solid rgba(255,255,255,0.1); padding-left: 1rem; margin-bottom: 1.5rem; position: relative; transition: all 0.3s; }
         .builder-day:hover { border-left-color: #3b82f6; background: rgba(255,255,255,0.02); }
-        
-        .builder-input { 
-            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); 
-            color: white; padding: 0.5rem 0.75rem; border-radius: 0.5rem; width: 100%; 
-            outline: none; transition: 0.3s; font-size: 0.9rem; 
-        }
+        .builder-input { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.5rem 0.75rem; border-radius: 0.5rem; width: 100%; outline: none; transition: 0.3s; font-size: 0.9rem; }
         .builder-input:focus { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
         
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+        
+        /* 结果弹窗 (深色模式) */
+        .df-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
+        .df-modal-overlay.active { display: flex; opacity: 1; }
+        .df-modal-card { background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); backdrop-filter: blur(16px); color: white; width: 90%; max-width: 420px; border-radius: 24px; padding: 32px 24px; text-align: center; transform: scale(0.95) translateY(10px); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .df-modal-overlay.active .df-modal-card { transform: scale(1) translateY(0); }
+        .df-icon-circle { width: 64px; height: 64px; background: linear-gradient(135deg, #007AFF, #00C6FF); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 0 30px rgba(0, 122, 255, 0.4); }
+        .df-modal-title { font-size: 22px; font-weight: 800; color: white; margin-bottom: 8px; }
+        .df-modal-desc { font-size: 14px; color: #94a3b8; margin-bottom: 32px; line-height: 1.6; }
+        .df-actions { display: flex; flex-direction: column; gap: 12px; }
+        .df-btn { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 16px; border-radius: 14px; font-size: 15px; font-weight: 700; text-decoration: none; transition: all 0.2s; cursor: pointer; border: none; }
+        .df-btn:active { transform: scale(0.98); }
+        .df-btn-primary { background: linear-gradient(to right, #2563eb, #4f46e5); color: white; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); }
+        .df-btn-primary:hover { background: linear-gradient(to right, #1d4ed8, #4338ca); }
+        .df-btn-secondary { background: rgba(255, 255, 255, 0.05); color: white; border: 1px solid rgba(255, 255, 255, 0.1); }
+        .df-btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
+        .df-close { margin-top: 24px; background: none; border: none; color: #64748b; font-size: 13px; cursor: pointer; }
+        .df-close:hover { color: white; }
 
+        /* 通用动画 */
+        .modal-enter { opacity: 0; transform: translateY(-20px); }
+        .modal-enter-active { opacity: 1; transform: translateY(0); transition: opacity 0.3s ease, transform 0.3s ease; }
+        .modal-bg-enter { opacity: 0; pointer-events: none; }
+        .modal-bg-enter-active { opacity: 1; pointer-events: auto; transition: opacity 0.3s ease; }
+        .modal-content-enter { transform: scale(0.95) translateY(10px); opacity: 0; }
+        .modal-content-enter-active { transform: scale(1) translateY(0); opacity: 1; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
     </style>
 </head>
 <body class="antialiased selection:bg-blue-500/30">
@@ -356,7 +189,7 @@
                             </div>
                             <p class="text-lg font-bold text-white">点击上传 / 拖拽 Excel 文件</p>
                             <p id="file-status" class="text-sm text-slate-400 mt-2">支持：日期、任务标题、描述、标签、时间等</p>
-                            <input type="file" id="excel-file" accept=".xlsx" class="hidden" onchange="handleFileChange(event)">
+                            <input type="file" id="excel-file" accept=".xlsx,.csv" class="hidden" onchange="handleFileChange(event)">
                         </label>
                     </div>
 
@@ -401,70 +234,39 @@
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        
                         <div id="theme-pro" onclick="selectTheme('pro')" class="selection-card card-pro-premium group">
                             <div class="relative z-10 flex flex-col h-full">
                                 <div class="flex justify-between items-start mb-6">
-                                    <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center backdrop-blur-md shadow-[0_0_20px_rgba(236,72,153,0.4)]">
-                                        <i data-lucide="zap" class="w-6 h-6 text-pink-500 fill-pink-500/20"></i>
-                                    </div>
-                                    <div class="check-circle bg-blue-500 shadow-lg shadow-blue-500/50">
-                                        <i data-lucide="check" class="w-4 h-4 text-white"></i>
-                                    </div>
+                                    <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center backdrop-blur-md shadow-[0_0_20px_rgba(236,72,153,0.4)]"><i data-lucide="zap" class="w-6 h-6 text-pink-500 fill-pink-500/20"></i></div>
+                                    <div class="check-circle bg-blue-500 shadow-lg shadow-blue-500/50"><i data-lucide="check" class="w-4 h-4 text-white"></i></div>
                                 </div>
                                 <h3 class="text-2xl font-black text-white mb-2 tracking-tight group-hover:text-pink-200 transition-colors">DeepFlow Pro</h3>
-                                <p class="text-white/70 text-xs font-medium leading-relaxed mb-4">
-                                    集效率与美学于大成。内置多巴胺反馈算法，粒子特效与沉浸音效。
-                                </p>
-                                <div class="mt-auto flex items-center gap-2 text-[10px] font-mono text-white/50 uppercase">
-                                    <span class="bg-white/10 px-2 py-1 rounded">多巴胺光效</span>
-                                    <span class="bg-white/10 px-2 py-1 rounded">ASMR</span>
-                                </div>
+                                <p class="text-white/70 text-xs font-medium leading-relaxed mb-4">集效率与美学于大成。内置多巴胺反馈算法，粒子特效与沉浸音效。</p>
+                                <div class="mt-auto flex items-center gap-2 text-[10px] font-mono text-white/50 uppercase"><span class="bg-white/10 px-2 py-1 rounded">多巴胺光效</span><span class="bg-white/10 px-2 py-1 rounded">ASMR</span></div>
                             </div>
                         </div>
-
                         <div id="theme-zen" onclick="selectTheme('zen')" class="selection-card card-zen-matte group">
                             <div class="relative z-10 flex flex-col h-full">
                                 <div class="flex justify-between items-start mb-6">
-                                    <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center border border-zinc-200 shadow-lg">
-                                        <i data-lucide="moon" class="w-6 h-6 text-zinc-800"></i>
-                                    </div>
-                                    <div class="check-circle bg-zinc-900 shadow-lg">
-                                        <i data-lucide="check" class="w-4 h-4 text-white"></i>
-                                    </div>
+                                    <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center border border-zinc-200 shadow-lg"><i data-lucide="moon" class="w-6 h-6 text-zinc-800"></i></div>
+                                    <div class="check-circle bg-zinc-900 shadow-lg"><i data-lucide="check" class="w-4 h-4 text-white"></i></div>
                                 </div>
                                 <h3 class="text-2xl font-black text-zinc-900 mb-2 tracking-tight">Zen Mode</h3>
-                                <p class="text-zinc-500 text-xs font-medium leading-relaxed mb-4 zen-text">
-                                    极致的黑白灰度设计。去除所有色彩干扰，创造零焦虑的专注环境。
-                                </p>
-                                <div class="mt-auto flex items-center gap-2 text-[10px] font-mono text-zinc-400 uppercase">
-                                    <span class="bg-zinc-100 px-2 py-1 rounded border border-zinc-200">极简主义</span>
-                                    <span class="bg-zinc-100 px-2 py-1 rounded border border-zinc-200">墨水屏感</span>
-                                </div>
+                                <p class="text-zinc-500 text-xs font-medium leading-relaxed mb-4 zen-text">极致的黑白灰度设计。去除所有色彩干扰，创造零焦虑的专注环境。</p>
+                                <div class="mt-auto flex items-center gap-2 text-[10px] font-mono text-zinc-400 uppercase"><span class="bg-zinc-100 px-2 py-1 rounded border border-zinc-200">极简主义</span><span class="bg-zinc-100 px-2 py-1 rounded border border-zinc-200">墨水屏感</span></div>
                             </div>
                         </div>
-
                         <div id="theme-cyberpunk" onclick="selectTheme('cyberpunk')" class="selection-card card-cyber-neon group">
                             <div class="relative z-10 flex flex-col h-full">
                                 <div class="flex justify-between items-start mb-6">
-                                    <div class="w-12 h-12 rounded-2xl bg-transparent border border-fuchsia-500 text-fuchsia-500 flex items-center justify-center shadow-[0_0_15px_rgba(217,70,239,0.3)]">
-                                        <i data-lucide="gamepad-2" class="w-6 h-6"></i>
-                                    </div>
-                                    <div class="check-circle bg-fuchsia-500 shadow-[0_0_15px_rgba(217,70,239,0.5)]">
-                                        <i data-lucide="check" class="w-4 h-4 text-white"></i>
-                                    </div>
+                                    <div class="w-12 h-12 rounded-2xl bg-transparent border border-fuchsia-500 text-fuchsia-500 flex items-center justify-center shadow-[0_0_15px_rgba(217,70,239,0.3)]"><i data-lucide="gamepad-2" class="w-6 h-6"></i></div>
+                                    <div class="check-circle bg-fuchsia-500 shadow-[0_0_15px_rgba(217,70,239,0.5)]"><i data-lucide="check" class="w-4 h-4 text-white"></i></div>
                                 </div>
                                 <h3 class="text-2xl font-black text-white mb-2 tracking-wide" style="text-shadow: 0 0 10px rgba(217,70,239,0.5)">Cyberpunk</h3>
-                                <p class="text-fuchsia-200/60 text-xs font-medium leading-relaxed mb-4">
-                                    高对比度霓虹网络。将任务列表转化为战斗 HUD 界面。肾上腺素驱动。
-                                </p>
-                                <div class="mt-auto flex items-center gap-2 text-[10px] font-mono text-fuchsia-500/70 uppercase">
-                                    <span class="border border-fuchsia-900 px-2 py-1 rounded bg-fuchsia-900/10">故障艺术</span>
-                                    <span class="border border-fuchsia-900 px-2 py-1 rounded bg-fuchsia-900/10">HUD</span>
-                                </div>
+                                <p class="text-fuchsia-200/60 text-xs font-medium leading-relaxed mb-4">高对比度霓虹网络。将任务列表转化为战斗 HUD 界面。肾上腺素驱动。</p>
+                                <div class="mt-auto flex items-center gap-2 text-[10px] font-mono text-fuchsia-500/70 uppercase"><span class="border border-fuchsia-900 px-2 py-1 rounded bg-fuchsia-900/10">故障艺术</span><span class="border border-fuchsia-900 px-2 py-1 rounded bg-fuchsia-900/10">HUD</span></div>
                             </div>
                         </div>
-
                     </div>
                 </div>
 
@@ -474,7 +276,6 @@
                             <span class="text-4xl font-black text-emerald-500">3</span>
                             <h2 class="text-2xl font-bold">最终确认</h2>
                         </div>
-                        
                         <button id="generate-button" onclick="generateApp()" class="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-bold text-lg shadow-lg shadow-emerald-600/30 transition-all hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0" disabled>
                             <i data-lucide="sparkles" class="w-5 h-5 inline mr-2"></i> 生成我的 App
                         </button>
@@ -491,63 +292,182 @@
         <div id="modal-content" class="bg-slate-900 p-8 rounded-2xl shadow-2xl border border-white/10 max-w-md w-full transform scale-95 transition-transform duration-300">
             <h3 id="alert-title" class="text-xl font-black mb-4 flex items-center gap-2 text-white"></h3>
             <p id="alert-message" class="text-slate-300 mb-6 leading-relaxed"></p>
-            <button onclick="closeCustomAlert()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition-colors">
-                我明白了
-            </button>
+            <button onclick="closeCustomAlert()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition-colors">我明白了</button>
         </div>
     </div>
 
     <div id="title-input-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center modal-bg-enter transition-all duration-300">
         <div id="title-modal-panel" class="bg-slate-900/90 border border-blue-500/20 p-8 rounded-3xl shadow-[0_0_50px_rgba(59,130,246,0.15)] w-full max-w-lg modal-content-enter relative overflow-hidden">
             <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-[50px] pointer-events-none"></div>
-            
-            <h3 class="text-2xl font-black text-white mb-2 flex items-center gap-2">
-                <i data-lucide="edit-3" class="w-6 h-6 text-blue-400"></i> 为计划命名
-            </h3>
-            <p class="text-slate-400 text-sm mb-8 leading-relaxed">
-                给生成的 App 起一个专属名字。这将显示在浏览器的标题栏和应用首页。
-            </p>
-            
+            <h3 class="text-2xl font-black text-white mb-2 flex items-center gap-2"><i data-lucide="edit-3" class="w-6 h-6 text-blue-400"></i> 为计划命名</h3>
+            <p class="text-slate-400 text-sm mb-8 leading-relaxed">给生成的 App 起一个专属名字。这将显示在浏览器的标题栏和应用首页。</p>
             <div class="relative mb-8">
-                <input type="text" id="plan-title-input" 
-                    class="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-5 py-4 text-white text-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-slate-600 font-bold tracking-wide" 
-                    placeholder="DeepFlow 个人学习计划" 
-                    onkeydown="if(event.key === 'Enter') confirmTitleModal(); if(event.key === 'Escape') cancelTitleModal();"
-                >
+                <input type="text" id="plan-title-input" class="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-5 py-4 text-white text-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-slate-600 font-bold tracking-wide" placeholder="DeepFlow 个人学习计划" onkeydown="if(event.key === 'Enter') confirmTitleModal(); if(event.key === 'Escape') cancelTitleModal();">
                 <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 text-xs font-mono border border-slate-700 px-2 py-1 rounded">ENTER 确认</div>
             </div>
-
             <div class="flex justify-end gap-3">
-                <button onclick="cancelTitleModal()" class="px-6 py-3 text-slate-400 hover:text-white font-bold transition rounded-xl hover:bg-white/5">
-                    取消
-                </button>
-                <button onclick="confirmTitleModal()" class="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-bold shadow-lg shadow-blue-600/20 transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center gap-2">
-                    <i data-lucide="rocket" class="w-4 h-4"></i> 开始生成
-                </button>
+                <button onclick="cancelTitleModal()" class="px-6 py-3 text-slate-400 hover:text-white font-bold transition rounded-xl hover:bg-white/5">取消</button>
+                <button onclick="confirmTitleModal()" class="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-bold shadow-lg shadow-blue-600/20 transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center gap-2"><i data-lucide="rocket" class="w-4 h-4"></i> 开始生成</button>
             </div>
         </div>
     </div>
     
     <script>
-        // 初始化图标
         lucide.createIcons();
         
-        // 全局变量
         let currentMode = 'upload'; // 'upload' | 'builder'
         let uploadedData = null;
         let builderData = []; 
         let selectedTheme = null;
         let titlePromiseResolve = null;
 
+        // OSS 资源配置 (国内优化)
+        const OSS_RESOURCES = {
+            tailwind: "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/tailwind.js",
+            lucide: "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/lucide.min.js"
+        };
+
         // ============================================
-        // 模式切换与构建器逻辑 (NEW)
+        // 功能核心
+        // ============================================
+
+        // 1. 标准模版下载
+        function downloadSampleExcel() {
+            try {
+                const ws_data = [
+                    ["日期 (必填)", "标签 (可选)", "任务标题 (必填)", "任务描述 (可选)", "时间 (可选)", "时长 (可选)"],
+                    [new Date().toISOString().split('T')[0], "核心", "高等数学第一章", "完成课后习题 1-5 题", "09:00", 90],
+                    [new Date().toISOString().split('T')[0], "运动", "晨跑 5KM", "配速 6:00", "07:00", 40],
+                    [new Date().toISOString().split('T')[0], "英语", "背诵雅思词汇 List 1", "重点记忆动词", "14:30", 60]
+                ];
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(ws_data);
+                ws['!cols'] = [{wch:15}, {wch:10}, {wch:25}, {wch:30}, {wch:10}, {wch:10}];
+                XLSX.utils.book_append_sheet(wb, ws, "DeepFlow Plan");
+                XLSX.writeFile(wb, "DeepFlow_Standard_Template.xlsx");
+            } catch (e) {
+                console.error("模版生成失败", e);
+                customAlert("无法生成模版，请确保已加载 xlsx 库。", "错误", "alert-triangle");
+            }
+        }
+
+        // 2. 强壮的数据清洗 (Sample版逻辑移植)
+        function processTasksData(rawArray) {
+            console.log('开始处理Excel数据，行数:', rawArray.length);
+            if (!rawArray || rawArray.length < 2) { console.warn('数据行数不足'); return []; }
+
+            // 模糊匹配表头
+            let headerRowIndex = -1;
+            let colMap = { date: -1, title: -1, desc: -1, tag: -1, time: -1, duration: -1 };
+            
+            for (let r = 0; r < Math.min(rawArray.length, 5); r++) {
+                const rowStr = rawArray[r].map(c => String(c).trim().toLowerCase());
+                const clean = (s) => s.replace(/[\(\（].*?[\)\）]/g, "").trim(); // 去除括号内容
+
+                const dateIdx = rowStr.findIndex(c => clean(c).includes('date') || clean(c).includes('日期'));
+                const titleIdx = rowStr.findIndex(c => clean(c).includes('task') || clean(c).includes('标题') || clean(c).includes('任务'));
+
+                if (dateIdx !== -1 && titleIdx !== -1) {
+                    headerRowIndex = r;
+                    colMap.date = dateIdx; colMap.title = titleIdx;
+                    colMap.desc = rowStr.findIndex(c => clean(c).includes('desc') || clean(c).includes('描述'));
+                    colMap.tag = rowStr.findIndex(c => clean(c).includes('tag') || clean(c).includes('标签'));
+                    colMap.duration = rowStr.findIndex(c => clean(c).includes('duration') || clean(c).includes('时长'));
+                    colMap.time = rowStr.findIndex(c => (clean(c).includes('time') || clean(c).includes('时间')) && !clean(c).includes('时长'));
+                    break;
+                }
+            }
+
+            if (headerRowIndex === -1) { console.warn('未找到有效的表头行'); return []; }
+
+            const taskDataByDate = {};
+            const dataRows = rawArray.slice(headerRowIndex + 1);
+
+            dataRows.forEach((row, rowIndex) => {
+                const dateRaw = row[colMap.date];
+                const titleRaw = row[colMap.title];
+                if (!dateRaw || !titleRaw) return;
+
+                let dateStr = '';
+                try {
+                    if (typeof dateRaw === 'number') {
+                        const dateObj = XLSX.SSF.parse_date_code(dateRaw);
+                        dateStr = dateObj.y + '-' + String(dateObj.m).padStart(2, '0') + '-' + String(dateObj.d).padStart(2, '0');
+                    } else {
+                        // 兼容性极强的日期解析
+                        const dateString = String(dateRaw).trim();
+                        const d = new Date(dateString.replace(/-/g, '/').replace(/\./g, '/')); // 处理 2025.01.01 或 2025-01-01
+                        if (!isNaN(d.getTime())) {
+                            dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                        } else {
+                            dateStr = dateString.split(' ')[0]; // 兜底
+                        }
+                    }
+                } catch (e) { return; }
+
+                if (!taskDataByDate[dateStr]) taskDataByDate[dateStr] = { date: dateStr, dayNum: Object.keys(taskDataByDate).length + 1, tasks: [] };
+
+                const title = String(titleRaw).trim();
+                const desc = colMap.desc > -1 ? String(row[colMap.desc] || '').trim() : '';
+                const tag = colMap.tag > -1 ? String(row[colMap.tag] || '').trim() : '';
+                
+                // 时间处理
+                let time = '';
+                const timeRaw = colMap.time > -1 ? row[colMap.time] : '';
+                if (typeof timeRaw === 'number') {
+                    const totalSeconds = Math.round(timeRaw * 86400);
+                    const hours = Math.floor(totalSeconds / 3600);
+                    const minutes = Math.floor((totalSeconds % 3600) / 60);
+                    time = (hours<10?'0'+hours:hours) + ':' + (minutes<10?'0'+minutes:minutes);
+                } else { time = String(timeRaw).trim(); }
+
+                const duration = colMap.duration > -1 ? (parseInt(row[colMap.duration]) || null) : null;
+
+                taskDataByDate[dateStr].tasks.push({ title, desc, tag, time, duration });
+            });
+
+            return Object.keys(taskDataByDate).sort().map((date, index) => {
+                const dayData = taskDataByDate[date];
+                dayData.dayNum = index + 1;
+                return dayData;
+            });
+        }
+
+        // 3. 文件读取
+        function handleFileChange(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const status = document.getElementById('file-status');
+            status.innerHTML = '<span class="text-blue-400 animate-pulse">⚡ 正在解析...</span>';
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+                    uploadedData = json;
+                    const dataCount = json.length > 1 ? json.length - 1 : 0;
+                    status.innerHTML = `✅ 已加载: <span class="text-white font-bold">${file.name}</span> (共 ${dataCount} 行数据)`;
+                    updateSummary();
+                    customAlert(`成功读取 ${dataCount} 条任务数据！`, "解析成功", "check");
+                } catch (err) {
+                    console.error(err);
+                    status.innerHTML = '❌ 解析失败: ' + err.message;
+                    uploadedData = null;
+                    updateSummary();
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // ============================================
+        // 界面逻辑
         // ============================================
         
         function switchMode(mode) {
             currentMode = mode;
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById('tab-' + mode).classList.add('active');
-            
             if(mode === 'upload') {
                 document.getElementById('mode-upload').classList.remove('hidden');
                 document.getElementById('mode-builder').classList.add('hidden');
@@ -559,498 +479,163 @@
             updateSummary();
         }
 
-        // --- 核心修复：更强的构建器渲染 (包含所有字段) ---
         function renderBuilder() {
             const container = document.getElementById('builder-container');
             container.innerHTML = '';
-            
             if(builderData.length === 0) {
-                 container.innerHTML = '<div class="text-center text-slate-500 py-10 border border-dashed border-slate-700 rounded-xl">暂无数据，请使用上方智能解析或点击下方按钮添加</div>';
-                 return;
+                 container.innerHTML = '<div class="text-center text-slate-500 py-10 border border-dashed border-slate-700 rounded-xl">暂无数据，请使用上方智能解析或点击下方按钮添加</div>'; return;
             }
-
             builderData.forEach((day, dIdx) => {
-                const dayEl = document.createElement('div');
-                dayEl.className = 'builder-day group';
+                const dayEl = document.createElement('div'); dayEl.className = 'builder-day group';
                 dayEl.innerHTML = `
                     <div class="flex justify-between items-center mb-3 bg-slate-800/40 p-2.5 rounded-lg border border-white/5 hover:border-blue-500/30 transition-colors">
-                        <div class="flex items-center gap-3">
-                            <span class="text-[10px] font-bold text-slate-300 bg-slate-700/50 px-2 py-1 rounded shadow-sm">DAY ${dIdx + 1}</span>
-                            <div class="h-4 w-px bg-white/10"></div>
-                            <input type="text" value="${day.date || ''}" onchange="updateBuilderDate(${dIdx}, this.value)" class="bg-transparent border-none text-sm font-bold text-white focus:outline-none w-32 placeholder-slate-600" placeholder="YYYY-MM-DD">
-                        </div>
+                        <div class="flex items-center gap-3"><span class="text-[10px] font-bold text-slate-300 bg-slate-700/50 px-2 py-1 rounded shadow-sm">DAY ${dIdx + 1}</span><div class="h-4 w-px bg-white/10"></div><input type="text" value="${day.date || ''}" onchange="updateBuilderDate(${dIdx}, this.value)" class="bg-transparent border-none text-sm font-bold text-white focus:outline-none w-32 placeholder-slate-600" placeholder="YYYY-MM-DD"></div>
                         <button onclick="removeBuilderDay(${dIdx})" class="text-slate-500 hover:text-red-400 transition opacity-0 group-hover:opacity-100 p-1.5 hover:bg-white/5 rounded"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>
                     <div class="space-y-3 pl-2 border-l border-white/5 ml-4" id="tasks-container-${dIdx}">
-                        ${day.tasks.map((task, tIdx) => `
-                            <div class="bg-slate-900/30 p-2 rounded-lg border border-white/5">
-                                <div class="flex gap-2 items-center mb-2">
-                                    <input type="text" value="${task.tag || ''}" onchange="updateBuilderTask(${dIdx}, ${tIdx}, 'tag', this.value)" class="builder-input w-20 text-center text-xs text-blue-300 font-bold" placeholder="标签">
-                                    <input type="text" value="${task.title}" onchange="updateBuilderTask(${dIdx}, ${tIdx}, 'title', this.value)" class="builder-input flex-1 font-bold" placeholder="任务核心内容">
-                                    <button onclick="removeBuilderTask(${dIdx}, ${tIdx})" class="text-slate-600 hover:text-red-400 px-1"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
-                                </div>
-                                <div class="flex gap-2 items-center">
-                                    <input type="text" value="${task.time || ''}" onchange="updateBuilderTask(${dIdx}, ${tIdx}, 'time', this.value)" class="builder-input w-24 text-xs font-mono" placeholder="时间(09:00)">
-                                    <input type="text" value="${task.duration || ''}" onchange="updateBuilderTask(${dIdx}, ${tIdx}, 'duration', this.value)" class="builder-input w-20 text-xs font-mono" placeholder="时长(分)">
-                                    <input type="text" value="${task.desc || ''}" onchange="updateBuilderTask(${dIdx}, ${tIdx}, 'desc', this.value)" class="builder-input flex-1 text-xs text-slate-400" placeholder="备注/描述...">
-                                </div>
-                            </div>
-                        `).join('')}
+                        ${day.tasks.map((task, tIdx) => `<div class="bg-slate-900/30 p-2 rounded-lg border border-white/5"><div class="flex gap-2 items-center mb-2"><input type="text" value="${task.tag || ''}" onchange="updateBuilderTask(${dIdx}, ${tIdx}, 'tag', this.value)" class="builder-input w-20 text-center text-xs text-blue-300 font-bold" placeholder="标签"><input type="text" value="${task.title}" onchange="updateBuilderTask(${dIdx}, ${tIdx}, 'title', this.value)" class="builder-input flex-1 font-bold" placeholder="任务核心内容"><button onclick="removeBuilderTask(${dIdx}, ${tIdx})" class="text-slate-600 hover:text-red-400 px-1"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div><div class="flex gap-2 items-center"><input type="text" value="${task.time || ''}" onchange="updateBuilderTask(${dIdx}, ${tIdx}, 'time', this.value)" class="builder-input w-24 text-xs font-mono" placeholder="时间(09:00)"><input type="text" value="${task.duration || ''}" onchange="updateBuilderTask(${dIdx}, ${tIdx}, 'duration', this.value)" class="builder-input w-20 text-xs font-mono" placeholder="时长(分)"><input type="text" value="${task.desc || ''}" onchange="updateBuilderTask(${dIdx}, ${tIdx}, 'desc', this.value)" class="builder-input flex-1 text-xs text-slate-400" placeholder="备注/描述..."></div></div>`).join('')}
                         <button onclick="addBuilderTask(${dIdx})" class="mt-2 text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-1 opacity-60 hover:opacity-100 transition px-1 py-1"><i data-lucide="plus" class="w-3 h-3"></i> 添加任务</button>
-                    </div>
-                `;
+                    </div>`;
                 container.appendChild(dayEl);
             });
-            lucide.createIcons();
-            updateSummary();
+            lucide.createIcons(); updateSummary();
         }
 
-        // 构建器数据操作
-        function addBuilderDay() {
-            const today = new Date();
-            today.setDate(today.getDate() + builderData.length);
-            const dateStr = today.toISOString().split('T')[0];
-            // 完整字段初始化，防止生成报错
-            builderData.push({ date: dateStr, tasks: [{ title: '', tag: '', desc: '', time: '', duration: null }] });
-            renderBuilder();
-        }
-
-        function removeBuilderDay(idx) {
-            builderData.splice(idx, 1);
-            renderBuilder();
-        }
-
-        function addBuilderTask(dayIdx) {
-            builderData[dayIdx].tasks.push({ title: '', tag: '', desc: '', time: '', duration: null });
-            renderBuilder();
-        }
-
-        function removeBuilderTask(dayIdx, taskIdx) {
-            builderData[dayIdx].tasks.splice(taskIdx, 1);
-            renderBuilder();
-        }
-
+        function addBuilderDay() { const today = new Date(); today.setDate(today.getDate() + builderData.length); const dateStr = today.toISOString().split('T')[0]; builderData.push({ date: dateStr, tasks: [{ title: '', tag: '', desc: '', time: '', duration: null }] }); renderBuilder(); }
+        function removeBuilderDay(idx) { builderData.splice(idx, 1); renderBuilder(); }
+        function addBuilderTask(dayIdx) { builderData[dayIdx].tasks.push({ title: '', tag: '', desc: '', time: '', duration: null }); renderBuilder(); }
+        function removeBuilderTask(dayIdx, taskIdx) { builderData[dayIdx].tasks.splice(taskIdx, 1); renderBuilder(); }
         function updateBuilderDate(dIdx, val) { builderData[dIdx].date = val; }
         function updateBuilderTask(dIdx, tIdx, field, val) { builderData[dIdx].tasks[tIdx][field] = val; }
 
-        // --- 核心修复：智能解析 (识别 Tag Title Time Duration) ---
         function parseSmartText() {
             const text = document.getElementById('smart-text-input').value;
             if(!text.trim()) return;
-
-            const lines = text.split('\n');
-            const newPlan = [];
-            let currentDay = null;
-            let dayCount = 0;
-
+            const lines = text.split('\n'); const newPlan = []; let currentDay = null; let dayCount = 0;
             const datePatterns = [/day\s*(\d+)/i, /第\s*(\d+)\s*天/, /(\d{4}-\d{2}-\d{2})/, /今天/, /明天/];
-
             lines.forEach(line => {
-                line = line.trim();
-                if(!line) return;
-
-                // 1. 日期行检测
+                line = line.trim(); if(!line) return;
                 let isDateLine = false;
                 for(let p of datePatterns) {
                     if(p.test(line)) {
-                        isDateLine = true;
-                        if(currentDay) newPlan.push(currentDay);
-                        dayCount++;
-                        
-                        const today = new Date();
-                        today.setDate(today.getDate() + (dayCount-1));
-                        const dateStr = today.toISOString().split('T')[0];
-
-                        currentDay = { date: dateStr, tasks: [] };
-                        break; // 简单起见，日期行不包含任务
+                        isDateLine = true; if(currentDay) newPlan.push(currentDay); dayCount++;
+                        const today = new Date(); today.setDate(today.getDate() + (dayCount-1)); const dateStr = today.toISOString().split('T')[0];
+                        currentDay = { date: dateStr, tasks: [] }; break; 
                     }
                 }
-
                 if(!isDateLine) {
-                    if(!currentDay) {
-                        currentDay = { date: new Date().toISOString().split('T')[0], tasks: [] };
-                        dayCount++;
-                    }
-                    
-                    // 2. 任务行智能拆解 (格式：Tag Title... Time Duration)
-                    // 简单策略：按空格分割，并检测末尾的时间/时长
+                    if(!currentDay) { currentDay = { date: new Date().toISOString().split('T')[0], tasks: [] }; dayCount++; }
                     const parts = line.split(/\s+/);
                     if(parts.length > 0) {
                         let tag = '自动', title = '', time = '', duration = null, desc = '';
-                        
-                        // 尝试识别末尾的纯数字为 duration (如 90)
-                        let last = parts[parts.length-1];
-                        if(/^\d+$/.test(last) && parts.length > 1) {
-                            duration = parseInt(last);
-                            parts.pop();
-                        }
-                        
-                        // 尝试识别末尾的时间 (如 0900 or 09:00)
-                        if(parts.length > 1) {
-                             last = parts[parts.length-1];
-                             if(/^(\d{4}|\d{1,2}:\d{2})$/.test(last)) {
-                                 // 格式化时间 0900 -> 09:00
-                                 if(last.length === 4 && !last.includes(':')) {
-                                     time = last.substring(0,2) + ":" + last.substring(2);
-                                 } else {
-                                     time = last;
-                                 }
-                                 parts.pop();
-                             }
-                        }
-
-                        // 尝试识别第一个词为 Tag (长度小于5，且不是纯数字)
-                        if(parts.length > 1 && parts[0].length < 6 && !/^\d+$/.test(parts[0])) {
-                            tag = parts[0];
-                            parts.shift();
-                        }
-
-                        title = parts.join(' ');
-                        
-                        currentDay.tasks.push({ title, tag, time, duration, desc });
+                        let last = parts[parts.length-1]; if(/^\d+$/.test(last) && parts.length > 1) { duration = parseInt(last); parts.pop(); }
+                        if(parts.length > 1) { last = parts[parts.length-1]; if(/^(\d{4}|\d{1,2}:\d{2})$/.test(last)) { if(last.length === 4 && !last.includes(':')) { time = last.substring(0,2) + ":" + last.substring(2); } else { time = last; } parts.pop(); } }
+                        if(parts.length > 1 && parts[0].length < 6 && !/^\d+$/.test(parts[0])) { tag = parts[0]; parts.shift(); }
+                        title = parts.join(' '); currentDay.tasks.push({ title, tag, time, duration, desc });
                     }
                 }
             });
             if(currentDay) newPlan.push(currentDay);
-
-            if(newPlan.length > 0) {
-                builderData = newPlan;
-                renderBuilder();
-                customAlert(`解析成功！生成 ${newPlan.length} 天计划`, '解析成功', 'sparkles');
-            }
+            if(newPlan.length > 0) { builderData = newPlan; renderBuilder(); customAlert(`解析成功！生成 ${newPlan.length} 天计划`, '解析成功', 'sparkles'); }
         }
         
         function loadPreset(type) {
-            const today = new Date();
-            const getDate = (offset) => {
-                const d = new Date(today); d.setDate(today.getDate() + offset);
-                return d.toISOString().split('T')[0];
-            };
-
-            if(type === 'ielts') {
-                builderData = [
-                    { date: getDate(0), tasks: [{title:'背诵雅思核心词汇 List 1', tag:'词汇', desc:'', time:'08:00', duration:45}, {title:'剑桥雅思 14 Test 1 听力', tag:'听力', desc:'错题整理', time:'09:00', duration:40}] },
-                    { date: getDate(1), tasks: [{title:'复习错题本', tag:'复习', desc:'', time:'08:00', duration:30}, {title:'阅读长难句分析 5 句', tag:'阅读', desc:'', time:'', duration:null}] }
-                ];
-            } else if (type === 'code') {
-                builderData = [
-                    { date: getDate(0), tasks: [{title:'LeetCode: Two Sum', tag:'Array', desc:'', time:'', duration:null}, {title:'LeetCode: Valid Parentheses', tag:'Stack', desc:'', time:'', duration:null}] },
-                    { date: getDate(1), tasks: [{title:'学习二叉树遍历算法', tag:'Tree', desc:'', time:'', duration:null}, {title:'实现快速排序', tag:'Sort', desc:'', time:'', duration:null}] }
-                ];
-            } else if (type === 'habit') {
-                builderData = [];
-                for(let i=0; i<3; i++) builderData.push({ date: getDate(i), tasks: [{title:'冥想 10 分钟', tag:'Mind', desc:'', time:'', duration:null}, {title:'阅读 30 分钟', tag:'Read', desc:'', time:'', duration:null}] });
-            }
+            const today = new Date(); const getDate = (offset) => { const d = new Date(today); d.setDate(today.getDate() + offset); return d.toISOString().split('T')[0]; };
+            if(type === 'ielts') builderData = [{ date: getDate(0), tasks: [{title:'背诵雅思核心词汇 List 1', tag:'词汇', desc:'', time:'08:00', duration:45}, {title:'剑桥雅思 14 Test 1 听力', tag:'听力', desc:'错题整理', time:'09:00', duration:40}] }, { date: getDate(1), tasks: [{title:'复习错题本', tag:'复习', desc:'', time:'08:00', duration:30}, {title:'阅读长难句分析 5 句', tag:'阅读', desc:'', time:'', duration:null}] }];
+            else if (type === 'code') builderData = [{ date: getDate(0), tasks: [{title:'LeetCode: Two Sum', tag:'Array', desc:'', time:'', duration:null}, {title:'LeetCode: Valid Parentheses', tag:'Stack', desc:'', time:'', duration:null}] }, { date: getDate(1), tasks: [{title:'学习二叉树遍历算法', tag:'Tree', desc:'', time:'', duration:null}, {title:'实现快速排序', tag:'Sort', desc:'', time:'', duration:null}] }];
+            else if (type === 'habit') { builderData = []; for(let i=0; i<3; i++) builderData.push({ date: getDate(i), tasks: [{title:'冥想 10 分钟', tag:'Mind', desc:'', time:'', duration:null}, {title:'阅读 30 分钟', tag:'Read', desc:'', time:'', duration:null}] }); }
             renderBuilder();
         }
 
-        // ============================================
-        // 核心工具函数
-        // ============================================
-
-        // 新增：Base64 编码函数，用于将生成的 HTML 转换为 Data URI
-        function base64Encode(str) {
-            try {
-                return btoa(unescape(encodeURIComponent(str)));
-            } catch (e) {
-                console.error("Base64 Encoding Failed:", e);
-                return "";
-            }
-        }
-
-        function formatExcelTime(val) {
-            if (val === undefined || val === null || val === '') return '';
-            
-            if (typeof val === 'number') {
-                const totalSeconds = Math.round(val * 86400);
-                const hours = Math.floor(totalSeconds / 3600);
-                const minutes = Math.floor((totalSeconds % 3600) / 60);
-                const pad = (n) => n < 10 ? '0' + n : n;
-                return pad(hours) + ':' + pad(minutes);
-            }
-            
-            return String(val).trim();
-        }
-
-        // 处理Excel数据 (完整逻辑)
-        function processTasksData(rawArray) {
-            console.log('开始处理Excel数据，行数:', rawArray.length);
-            
-            if (!rawArray || rawArray.length < 2) {
-                console.warn('数据行数不足');
-                return [];
-            }
-
-            // 查找表头行
-            let headerRowIndex = -1;
-            let colMap = {
-                date: -1, 
-                title: -1, 
-                desc: -1, 
-                tag: -1, 
-                time: -1, 
-                duration: -1
-            };
-
-            for (let r = 0; r < Math.min(rawArray.length, 5); r++) {
-                const rowStr = rawArray[r].map(c => String(c).trim().toLowerCase());
-                
-                const dateIdx = rowStr.findIndex(c => c.includes('date') || c.includes('日期'));
-                const titleIdx = rowStr.findIndex(c => c.includes('task') || c.includes('标题') || c.includes('任务'));
-
-                if (dateIdx !== -1 && titleIdx !== -1) {
-                    headerRowIndex = r;
-                    colMap.date = dateIdx;
-                    colMap.title = titleIdx;
-                    colMap.desc = rowStr.findIndex(c => c.includes('desc') || c.includes('描述'));
-                    colMap.tag = rowStr.findIndex(c => c.includes('tag') || c.includes('标签'));
-                    colMap.duration = rowStr.findIndex(c => c.includes('duration') || c.includes('时长'));
-                    colMap.time = rowStr.findIndex(c => (c.includes('time') || c.includes('时间')) && !c.includes('时长'));
-                    break;
-                }
-            }
-
-            if (headerRowIndex === -1) {
-                console.warn('未找到有效的表头行');
-                return [];
-            }
-
-            console.log('找到表头行:', headerRowIndex, '列映射:', colMap);
-
-            const taskDataByDate = {};
-            const dataRows = rawArray.slice(headerRowIndex + 1);
-            let processedRows = 0;
-
-            dataRows.forEach((row, rowIndex) => {
-                const dateRaw = row[colMap.date];
-                const titleRaw = row[colMap.title];
-
-                if (!dateRaw || !titleRaw) {
-                    console.log('跳过第 ' + rowIndex + ' 行：日期或标题为空');
-                    return;
-                }
-
-                let dateStr = '';
-                try {
-                    if (typeof dateRaw === 'number') {
-                        // Excel日期序列号
-                        const dateObj = XLSX.SSF.parse_date_code(dateRaw);
-                        dateStr = dateObj.y + '-' + 
-                                 String(dateObj.m).padStart(2, '0') + '-' + 
-                                 String(dateObj.d).padStart(2, '0');
-                    } else {
-                        // 字符串日期
-                        const dateString = String(dateRaw).trim();
-                        const d = new Date(dateString.replace(/-/g, '/').replace(/\./g, '/'));
-                        
-                        if (!isNaN(d.getTime())) {
-                            dateStr = d.getFullYear() + '-' + 
-                                     String(d.getMonth() + 1).padStart(2, '0') + '-' + 
-                                     String(d.getDate()).padStart(2, '0');
-                        } else {
-                            dateStr = dateString.split(' ')[0];
-                        }
-                    }
-                } catch (e) {
-                    console.warn('日期解析失败，行 ' + rowIndex + ':', dateRaw, e);
-                    return;
-                }
-
-                if (!taskDataByDate[dateStr]) {
-                    taskDataByDate[dateStr] = {
-                        date: dateStr,
-                        dayNum: Object.keys(taskDataByDate).length + 1,
-                        tasks: []
-                    };
-                }
-
-                const title = String(titleRaw).trim();
-                const desc = colMap.desc > -1 ? String(row[colMap.desc] || '').trim() : '';
-                const tag = colMap.tag > -1 ? String(row[colMap.tag] || '').trim() : '';
-                const timeRaw = colMap.time > -1 ? row[colMap.time] : '';
-                const time = formatExcelTime(timeRaw);
-                const duration = colMap.duration > -1 ? (parseInt(row[colMap.duration]) || null) : null;
-
-                taskDataByDate[dateStr].tasks.push({
-                    title: title,
-                    desc: desc,
-                    tag: tag,
-                    time: time,
-                    duration: duration
-                });
-                
-                processedRows++;
-            });
-
-            const sortedDates = Object.keys(taskDataByDate).sort();
-            return sortedDates.map((date, index) => {
-                const dayData = taskDataByDate[date];
-                dayData.dayNum = index + 1;
-                return dayData;
-            });
-        }
-
-        // --- 核心修复：强制刷新缓存 (添加 ?t=时间戳) ---
         async function getTemplateContent(theme) {
-            const timestamp = new Date().getTime(); // 获取当前时间戳
-            // 在请求 URL 后添加 ?t=timestamp，强制浏览器请求服务器上的最新文件，而不是缓存
-            const templatePath = 'templates/template_' + theme + '.html?t=' + timestamp;
-            
+            const templatePath = 'templates/template_' + theme + '.html';
             try {
                 const response = await fetch(templatePath);
-                if (!response.ok) {
-                    // 备用路径也要加时间戳
-                    const rootResponse = await fetch('template_' + theme + '.html?t=' + timestamp);
-                    if(rootResponse.ok) return await rootResponse.text();
-                    throw new Error('HTTP错误: ' + response.status);
-                }
+                if (!response.ok) { const rootResponse = await fetch('template_' + theme + '.html'); if(rootResponse.ok) return await rootResponse.text(); throw new Error('HTTP错误: ' + response.status); }
                 return await response.text();
-            } catch (error) {
-                console.error('模板加载错误:', error);
-                throw new Error('无法加载模板文件，请确保模板文件与生成器在同一目录下');
-            }
+            } catch (error) { throw new Error('无法加载模板文件，请确保 template_' + theme + '.html 存在。'); }
         }
 
         async function getRulesDbContent() {
+            try { const response = await fetch('templates/rules_db.js'); if (!response.ok) { const fallbackResponse = await fetch('rules_db.js'); if (!fallbackResponse.ok) return ''; return await fallbackResponse.text(); } return await response.text(); } catch (e) { return ''; }
+        }
+
+        // ============================================
+        // 生成逻辑 (国内优化 & 离线内嵌)
+        // ============================================
+
+        async function fetchResourceContent(url) {
             try {
-                const response = await fetch('templates/rules_db.js');
-                if (!response.ok) {
-                    const fallbackResponse = await fetch('rules_db.js');
-                    if (!fallbackResponse.ok) return '';
-                    return await fallbackResponse.text();
-                }
-                return await response.text();
-            } catch (e) {
-                return '';
-            }
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000); // 4秒超时
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if(response.ok) return await response.text();
+            } catch (e) { console.warn("Resource fetch failed for inline:", url); }
+            return null;
         }
-
-        // ============================================
-        // 模态框逻辑
-        // ============================================
-
-        function getPlanTitle() {
-            return new Promise((resolve) => {
-                titlePromiseResolve = resolve;
-                const modal = document.getElementById('title-input-modal');
-                const panel = document.getElementById('title-modal-panel');
-                const input = document.getElementById('plan-title-input');
-                
-                modal.classList.remove('modal-bg-enter');
-                panel.classList.remove('modal-content-enter');
-                modal.classList.add('modal-bg-enter-active');
-                panel.classList.add('modal-content-enter-active');
-                
-                input.value = 'DeepFlow 个人学习计划';
-                setTimeout(() => input.select(), 100);
-            });
-        }
-
-        function confirmTitleModal() {
-            const val = document.getElementById('plan-title-input').value;
-            closeTitleModal();
-            if (titlePromiseResolve) titlePromiseResolve(val || 'DeepFlow 计划');
-        }
-
-        function cancelTitleModal() {
-            closeTitleModal();
-            if (titlePromiseResolve) titlePromiseResolve(null);
-        }
-
-        function closeTitleModal() {
-            const modal = document.getElementById('title-input-modal');
-            const panel = document.getElementById('title-modal-panel');
-            modal.classList.remove('modal-bg-enter-active');
-            panel.classList.remove('modal-content-enter-active');
-            modal.classList.add('modal-bg-enter');
-            panel.classList.add('modal-content-enter');
-            document.getElementById('plan-title-input').blur();
-        }
-
-        function customAlert(msg, title, iconName) {
-            const modal = document.getElementById('custom-alert-modal');
-            const content = document.getElementById('modal-content');
-            document.getElementById('alert-message').textContent = msg;
-            document.getElementById('alert-title').innerHTML = '<i data-lucide="' + iconName + '" class="w-5 h-5"></i> ' + title;
-            lucide.createIcons();
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.style.opacity = '1';
-                content.classList.remove('scale-95');
-                content.classList.add('scale-100');
-            }, 10);
-        }
-
-        function closeCustomAlert() {
-            const modal = document.getElementById('custom-alert-modal');
-            const content = document.getElementById('modal-content');
-            modal.style.opacity = '0';
-            content.classList.remove('scale-100');
-            content.classList.add('scale-95');
-            setTimeout(() => modal.classList.add('hidden'), 300);
-        }
-
-        // ============================================
-        // 主生成逻辑
-        // ============================================
 
         async function generateApp() {
             if (!selectedTheme) { customAlert('请选择主题！', '提示', 'info'); return; }
-
-            // 数据源检查
             if (currentMode === 'upload' && !uploadedData) { customAlert('请先上传 Excel 文件！', '提示', 'info'); return; }
             if (currentMode === 'builder' && builderData.length === 0) { customAlert('请添加至少一天任务！', '提示', 'info'); return; }
 
             const btn = document.getElementById('generate-button');
             const originalText = btn.innerText;
             btn.disabled = true;
-            btn.innerText = '正在生成...';
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin inline mr-2"></i> 正在处理...';
+            lucide.createIcons();
 
             try {
                 let structuredData = [];
-
                 if (currentMode === 'upload') {
                     console.log('处理Excel数据...');
                     structuredData = processTasksData(uploadedData);
                 } else {
                     console.log('处理构建器数据...');
-                    // 数据清洗：移除无标题任务，确保字段完整
                     structuredData = builderData.map((d, i) => ({
-                        date: d.date,
-                        dayNum: i + 1,
-                        tasks: d.tasks.filter(t => t.title.trim() !== '').map(t => ({
-                            title: t.title,
-                            tag: t.tag || '',
-                            desc: t.desc || '', 
-                            time: t.time || '',
-                            duration: t.duration || null
-                        }))
+                        date: d.date, dayNum: i + 1,
+                        tasks: d.tasks.filter(t => t.title.trim() !== '').map(t => ({ title: t.title, tag: t.tag || '', desc: t.desc || '', time: t.time || '', duration: t.duration || null }))
                     })).filter(d => d.tasks.length > 0);
                 }
                 
-                if (structuredData.length === 0) {
-                    throw new Error('有效数据为空，无法生成');
-                }
+                if (structuredData.length === 0) throw new Error('有效数据为空。请检查 Excel 表头是否包含“日期”和“任务”。');
 
                 const planTitle = await getPlanTitle();
-                if (!planTitle) {
-                    btn.disabled = false;
-                    btn.innerText = originalText;
-                    return;
-                }
+                if (!planTitle) { btn.disabled = false; btn.innerText = originalText; return; }
 
-                const templateContent = await getTemplateContent(selectedTheme);
+                let templateContent = await getTemplateContent(selectedTheme);
                 const rulesDbContent = await getRulesDbContent();
                 const planId = selectedTheme + '_' + Date.now();
-
-                // 安全转义，防止破坏HTML结构
-                const escapedData = JSON.stringify(structuredData)
-                    .replace(/</g, '\\u003c')
-                    .replace(/>/g, '\\u003e')
-                    .replace(/&/g, '\\u0026')
-                    .replace(/'/g, '\\u0027');
-
                 const safeTitle = planTitle.replace(/[<>"]/g, '');
+
+                // === 离线化资源处理 (Core Fix: 强制使用 OSS) ===
+                btn.innerHTML = '<i data-lucide="download-cloud" class="w-4 h-4 animate-bounce inline mr-2"></i> 尝试内嵌资源...';
+                lucide.createIcons();
+
+                // 🔴 修正：严格使用 OSS 地址下载资源，不使用任何国外 CDN
+                const [twContent, lucideContent] = await Promise.all([
+                    fetchResourceContent(OSS_RESOURCES.tailwind),
+                    fetchResourceContent(OSS_RESOURCES.lucide)
+                ]);
+
+                // 替换 Tailwind 引用
+                if (twContent) {
+                    // 如果下载成功，直接内嵌代码（离线可用）
+                    templateContent = templateContent.replace(/<script[^>]*src=".*tailwindcss.*"[^>]*><\/script>/i, `<script>${twContent}<\/script>`);
+                } else {
+                    // 如果下载失败，回退使用 OSS 链接（国内可用）
+                    templateContent = templateContent.replace(/<script[^>]*src=".*tailwindcss.*"[^>]*><\/script>/i, `<script src="${OSS_RESOURCES.tailwind}"><\/script>`);
+                }
+
+                // 替换 Lucide 引用
+                if (lucideContent) {
+                    templateContent = templateContent.replace(/<script[^>]*src=".*lucide.*"[^>]*><\/script>/i, `<script>${lucideContent}<\/script>`);
+                } else {
+                    templateContent = templateContent.replace(/<script[^>]*src=".*lucide.*"[^>]*><\/script>/i, `<script src="${OSS_RESOURCES.lucide}"><\/script>`);
+                }
+
+                const escapedData = JSON.stringify(structuredData).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026').replace(/'/g, '\\u0027');
 
                 let finalHtml = templateContent
                     .replace(/{{TASKS_DATA}}/g, escapedData)
@@ -1058,27 +643,14 @@
                     .replace(/{{PLAN_ID}}/g, planId)
                     .replace(/{{BODY_CLASS}}/g, '');
                 
-                if (rulesDbContent) {
-                    finalHtml = finalHtml.replace('<script src="rules_db.js"><\/script>', '<script>' + rulesDbContent + '<\/script>');
-                    }
-                const safeFileName = safeTitle.replace(/[<>:"/\\|?*]/g, '_') + '_' + selectedTheme + '.html';
-                
-                // --- 1. 生成 Base64 URI 供预览 (这是 Android 的 Plan B) ---
-                const base64Content = base64Encode(finalHtml);
-                const previewDataUri = 'data:text/html;base64,' + base64Content;
+                if (rulesDbContent) finalHtml = finalHtml.replace('<script src="rules_db.js"><\/script>', '<script>' + rulesDbContent + '<\/script>');
 
-                // --- 2. 重新生成 Blob URL 仅供下载 (Blob URL 在下载文件时更稳定) ---
+                const safeFileName = safeTitle.replace(/[<>:"/\\|?*]/g, '_') + '_' + selectedTheme + '.html';
                 const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-8' });
-                const downloadBlobUrl = URL.createObjectURL(blob);
+                const blobUrl = URL.createObjectURL(blob);
                 
-                // --- 3. 唤起结果弹窗 (传递两个不同的 URL) ---
-                displayResultOptions(previewDataUri, downloadBlobUrl, safeFileName);
-                
-                customAlert(
-                    '✅ 生成成功！\n\n包含 ' + structuredData.length + ' 天计划。',
-                    '成功',
-                    'check-circle'
-                );
+                displayResultOptions(blobUrl, safeFileName);
+                customAlert(`✅ 生成成功！\n包含 ${structuredData.length} 天，共 ${structuredData.reduce((acc, d)=>acc+d.tasks.length, 0)} 个任务。`, '构建完成', 'check-circle');
 
             } catch (error) {
                 console.error('生成失败:', error);
@@ -1089,161 +661,43 @@
             }
         }
 
-        // ============================================
-        // 页面事件
-        // ============================================
+        // 基础交互
+        function getPlanTitle() { return new Promise((resolve) => { titlePromiseResolve = resolve; const m = document.getElementById('title-input-modal'); const p = document.getElementById('title-modal-panel'); const i = document.getElementById('plan-title-input'); m.classList.remove('modal-bg-enter'); p.classList.remove('modal-content-enter'); m.classList.add('modal-bg-enter-active'); p.classList.add('modal-content-enter-active'); i.value = 'DeepFlow 个人学习计划'; setTimeout(() => i.select(), 100); }); }
+        function confirmTitleModal() { const val = document.getElementById('plan-title-input').value; closeTitleModal(); if (titlePromiseResolve) titlePromiseResolve(val || 'DeepFlow 计划'); }
+        function cancelTitleModal() { closeTitleModal(); if (titlePromiseResolve) titlePromiseResolve(null); }
+        function closeTitleModal() { const m = document.getElementById('title-input-modal'); const p = document.getElementById('title-modal-panel'); m.classList.remove('modal-bg-enter-active'); p.classList.remove('modal-content-enter-active'); m.classList.add('modal-bg-enter'); p.classList.add('modal-content-enter'); document.getElementById('plan-title-input').blur(); }
+        function customAlert(msg, title, iconName) { const m = document.getElementById('custom-alert-modal'); document.getElementById('alert-message').textContent = msg; document.getElementById('alert-title').innerHTML = '<i data-lucide="' + iconName + '" class="w-5 h-5"></i> ' + title; lucide.createIcons(); m.classList.remove('hidden'); setTimeout(() => { m.style.opacity = '1'; document.getElementById('modal-content').classList.remove('scale-95'); document.getElementById('modal-content').classList.add('scale-100'); }, 10); }
+        function closeCustomAlert() { const m = document.getElementById('custom-alert-modal'); m.style.opacity = '0'; document.getElementById('modal-content').classList.remove('scale-100'); document.getElementById('modal-content').classList.add('scale-95'); setTimeout(() => m.classList.add('hidden'), 300); }
+        function selectTheme(theme) { selectedTheme = theme; document.querySelectorAll('.selection-card').forEach(el => el.classList.remove('selected')); const current = document.getElementById('theme-' + theme); if(current) current.classList.add('selected'); updateSummary(); }
+        function updateSummary() { const s = document.getElementById('generation-summary'); const btn = document.getElementById('generate-button'); const m = { 'pro': 'DeepFlow Pro', 'zen': 'Zen Mode', 'cyberpunk': 'Cyberpunk' }; let ready = false; let info = ""; if (currentMode === 'upload' && uploadedData) { info = `Excel (${uploadedData.length > 1 ? uploadedData.length - 1 : 0} 行)`; ready = true; } else if (currentMode === 'builder' && builderData.length > 0) { info = `在线构建 (${builderData.length} 天)`; ready = true; } if (ready && selectedTheme) { s.innerHTML = `🎉 就绪！数据：${info}，主题：${m[selectedTheme]}`; btn.disabled = false; } else { s.innerHTML = ready ? `数据 OK (${info})，请选择主题` : (selectedTheme ? `主题 ${m[selectedTheme]}，请准备数据` : "等待配置..."); btn.disabled = true; } }
 
-        function handleFileChange(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const status = document.getElementById('file-status');
-            status.innerHTML = '<span class="text-blue-400">正在解析...</span>';
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
-                    uploadedData = json;
-                    const dataCount = json.length > 1 ? json.length - 1 : 0;
-                    status.innerHTML = '✅ 已加载: <span class="text-white font-bold">' + file.name + '</span> (共 ' + dataCount + ' 行数据)';
-                    updateSummary();
-                } catch (err) {
-                    console.error(err);
-                    status.innerHTML = '❌ 解析失败: ' + err.message;
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
-        function selectTheme(theme) {
-            selectedTheme = theme;
-            document.querySelectorAll('.selection-card').forEach(el => el.classList.remove('selected'));
-            const current = document.getElementById('theme-' + theme);
-            if(current) current.classList.add('selected');
-            updateSummary();
-        }
-
-        function updateSummary() {
-            const summary = document.getElementById('generation-summary');
-            const btn = document.getElementById('generate-button');
-            const themeMap = { 'pro': 'DeepFlow Pro', 'zen': 'Zen Mode', 'cyberpunk': 'Cyberpunk' };
-            
-            let dataReady = false;
-            let info = "";
-
-            if (currentMode === 'upload' && uploadedData) {
-                const count = uploadedData.length > 1 ? uploadedData.length - 1 : 0;
-                info = `Excel (${count} 行)`;
-                dataReady = true;
-            } else if (currentMode === 'builder' && builderData.length > 0) {
-                info = `在线构建 (${builderData.length} 天)`;
-                dataReady = true;
-            }
-
-            if (dataReady && selectedTheme) {
-                summary.innerHTML = `🎉 就绪！数据：${info}，主题：${themeMap[selectedTheme]}`;
-                btn.disabled = false;
-            } else {
-                let status = "等待配置...";
-                if (dataReady) status = `数据 OK (${info})，请选择主题`;
-                else if (selectedTheme) status = `主题 ${themeMap[selectedTheme]}，请准备数据`;
-                summary.innerHTML = status;
-                btn.disabled = true;
-            }
-        }
-
-        function downloadSampleExcel() {
-            const a = document.createElement('a');
-            a.href = 'DeepFlow_Standard_Template.xlsx';
-            a.download = 'DeepFlow_Standard_Template.xlsx';
-            a.click();
-        }
-
-        // 初始化
         window.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
             const theme = urlParams.get('theme');
             if (theme) selectTheme(theme);
-            
-            // 拖拽支持
             const dropArea = document.querySelector('label[for="excel-file"]');
             if (dropArea) {
                 dropArea.addEventListener('dragover', (e) => { e.preventDefault(); dropArea.classList.add('border-blue-500', 'bg-white/10'); });
                 dropArea.addEventListener('dragleave', () => { dropArea.classList.remove('border-blue-500', 'bg-white/10'); });
-                dropArea.addEventListener('drop', (e) => {
-                    e.preventDefault(); dropArea.classList.remove('border-blue-500', 'bg-white/10');
-                    const file = e.dataTransfer.files[0];
-                    if (file && file.name.endsWith('.xlsx')) {
-                        const input = document.getElementById('excel-file');
-                        const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files;
-                        handleFileChange({ target: input });
-                    } else { customAlert('请上传 .xlsx 文件', '错误', 'file-x'); }
-                });
+                dropArea.addEventListener('drop', (e) => { e.preventDefault(); dropArea.classList.remove('border-blue-500', 'bg-white/10'); const file = e.dataTransfer.files[0]; if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.csv'))) { const input = document.getElementById('excel-file'); const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files; handleFileChange({ target: input }); } else { customAlert('请上传 .xlsx 或 .csv 文件', '错误', 'file-x'); } });
             }
         });
         
-        // 修改后的 displayResultOptions 函数
-        // previewUrl: 用于预览的 Base64 链接
-        // downloadUrl: 用于下载的 Blob 链接
-        function displayResultOptions(previewUrl, downloadUrl, fileName) {
-            const previewButton = document.getElementById('previewButton');
-            const downloadButton = document.getElementById('downloadButton');
-            const modal = document.getElementById('resultModalOverlay');
-            
-            // 1. 配置预览按钮 (使用 Base64 Data URI)
-            previewButton.href = previewUrl;
-            previewButton.onclick = (e) => {
-                e.preventDefault();
-                // 直接打开 Base64 链接，不使用 Blob，避免 Android 拦截
-                window.open(previewUrl, '_blank');
-            };
-            
-            // 2. 配置下载按钮 (使用 Blob URL)
-            downloadButton.href = downloadUrl;
-            downloadButton.download = fileName; 
-            
-            downloadButton.onclick = () => {
-                setTimeout(closeResultModal, 50); 
-            };
-            
-            modal.style.display = 'flex';
-            setTimeout(() => {
-                modal.classList.add('active');
-            }, 10);
-        }
-
-        function closeResultModal() {
-            const modal = document.getElementById('resultModalOverlay');
-            modal.classList.remove('active');
-            setTimeout(() => {
-                modal.style.display = 'none';
-            }, 300);
-        }
+        function displayResultOptions(blobUrl, fileName) { const p = document.getElementById('previewButton'); const d = document.getElementById('downloadButton'); const m = document.getElementById('resultModalOverlay'); p.href = blobUrl; d.href = blobUrl; d.download = fileName; d.onclick = () => { setTimeout(closeResultModal, 50); }; m.style.display = 'flex'; setTimeout(() => { m.classList.add('active'); }, 10); }
+        function closeResultModal() { const m = document.getElementById('resultModalOverlay'); m.classList.remove('active'); setTimeout(() => { m.style.display = 'none'; }, 300); }
     </script>
+    
     <div id="resultModalOverlay" class="df-modal-overlay">
-    <div class="df-modal-card">
-        <div class="df-icon-circle">
-            <i data-lucide="check" style="color: white; width: 32px; height: 32px; stroke-width: 3px;"></i>
+        <div class="df-modal-card">
+            <div class="df-icon-circle"><i data-lucide="check" style="color: white; width: 32px; height: 32px; stroke-width: 3px;"></i></div>
+            <h3 class="df-modal-title">计划已生成 (Ready)</h3>
+            <p class="df-modal-desc">您的 DeepFlow 计划已准备就绪。<br>请根据您的设备选择打开方式。</p>
+            <div class="df-actions">
+                <a id="previewButton" target="_blank" class="df-btn df-btn-primary"><i data-lucide="eye" style="width: 18px; height: 18px;"></i> <span>实时预览 (iOS / 手机推荐)</span></a>
+                <a id="downloadButton" class="df-btn df-btn-secondary"><i data-lucide="download" style="width: 18px; height: 18px;"></i> <span>下载文件 (电脑推荐)</span></a>
+            </div>
+            <button onclick="closeResultModal()" class="df-close">关闭窗口</button>
         </div>
-        
-        <h3 class="df-modal-title">计划已生成 (Ready)</h3>
-        <p class="df-modal-desc">您的 DeepFlow 计划已准备就绪。<br>请根据您的设备选择打开方式。</p>
-        
-        <div class="df-actions">
-            <a id="previewButton" target="_blank" class="df-btn df-btn-primary">
-                <i data-lucide="eye" style="width: 18px; height: 18px;"></i>
-                <span>实时预览 (iOS / 手机推荐)</span>
-            </a>
-            
-            <a id="downloadButton" class="df-btn df-btn-secondary">
-                <i data-lucide="download" style="width: 18px; height: 18px;"></i>
-                <span>下载文件 (电脑推荐)</span>
-            </a>
-        </div>
-
-        <button onclick="closeResultModal()" class="df-close">关闭窗口</button>
     </div>
-</div>
 </body>
 </html>

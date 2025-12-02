@@ -3,56 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zen - {{PLAN_TITLE}}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <title>DeepFlow Zen - {{PLAN_TITLE}}</title>
+    
+    <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/tailwind.js"></script>
+    <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/lucide.min.js"></script>
+    
     <style>
-        /* 保持原有 Zen CSS 不变，维持极简质感 */
-        :root { --paper-bg: #fafaf9; --ink-black: #1c1917; --ink-gray: #78716c; --line-color: #e7e5e4; --focus-highlight: #f5f5f4; --seal-red: #D83B3B; }
+        /* 2. [修正] 字体栈：移除 Google Fonts，全平台兼容宋体 */
+        :root { 
+            --paper-bg: #f7f7f5; 
+            --ink-black: #1c1917; 
+            --ink-gray: #78716c; 
+            --line-color: #e7e5e4; 
+            --focus-highlight: #f0f0ee; 
+            --seal-red: #D83B3B; 
+        }
         
-        body { font-family: 'Noto Serif SC', 'Songti SC', serif; background-color: var(--paper-bg); color: var(--ink-black); background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E"); }
-        .sans-font { font-family: 'Inter', sans-serif; }
+        body { 
+            /* 优先调用 iOS/Mac 宋体 -> 安卓/Win 宋体 -> 通用衬线 */
+            font-family: "Songti SC", "Noto Serif SC", "STSong", "SimSun", "Times New Roman", serif;
+            background-color: var(--paper-bg); 
+            color: var(--ink-black); 
+            /* 纸张噪点纹理 */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E"); 
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .sans-font { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        
+        /* Zen 卡片样式 */
         .zen-card { background: white; border: 1px solid var(--line-color); border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); border-left: 4px solid var(--line-color); transition: all 0.3s ease; }
         .zen-card:hover { border-left-color: var(--ink-black); box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
+        
+        /* 侧边栏样式 */
         .sidebar-item { border-left: 2px solid transparent; transition: all 0.2s; }
         .sidebar-item.active { border-left-color: var(--ink-black); background: var(--focus-highlight); font-weight: 700; color: var(--ink-black); }
+        
+        /* 任务列表 */
         .task-row { border-bottom: 1px solid var(--line-color); transition: background-color 0.2s; position: relative; } 
         .task-row:last-child { border-bottom: none; } 
         .task-row:hover { background-color: var(--focus-highlight); }
+        
+        /* 复选框 */
         .zen-checkbox { width: 20px; height: 20px; border: 1.5px solid var(--ink-gray); border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; }
         .task-completed .zen-checkbox { background-color: var(--ink-black); border-color: var(--ink-black); transform: scale(0.9); }
         .task-completed h4 { text-decoration: line-through; color: #a8a29e; transition: color 0.3s; }
-        .zen-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(250, 250, 249, 0.9); backdrop-filter: blur(4px); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; transition: opacity 0.6s ease; }
+        
+        /* 遮罩层 */
+        .zen-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(247, 247, 245, 0.9); backdrop-filter: blur(4px); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; transition: opacity 0.6s ease; }
         .zen-btn { background: var(--ink-black); color: white; padding: 12px 36px; border-radius: 2px; letter-spacing: 0.1em; transition: transform 0.2s, box-shadow 0.2s; }
         .zen-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         .zen-btn:active { transform: scale(0.95); }
-        .zen-note-area { width: 100%; background: transparent; border: none; background-image: linear-gradient(transparent 95%, var(--line-color) 95%); background-size: 100% 2.4em; line-height: 2.4em; padding: 0; resize: none; color: var(--ink-gray); outline: none; transition: color 0.3s; font-size: 0.95rem; }
+        
+        /* 笔记区域 */
+        .zen-note-area { width: 100%; background: transparent; border: none; background-image: linear-gradient(transparent 95%, var(--line-color) 95%); background-size: 100% 2.4em; line-height: 2.4em; padding: 0; resize: none; color: var(--ink-gray); outline: none; transition: color 0.3s; font-size: 0.95rem; font-family: inherit; }
         .zen-note-area:focus { color: var(--ink-black); }
         .zen-note-area::placeholder { color: #d6d3d1; font-style: italic; }
         
+        /* 印章特效 */
         .stamp-wrapper { position: absolute; bottom: 30px; right: 30px; pointer-events: none; z-index: 10; opacity: 0; transform: scale(1.5) rotate(-10deg); transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); mix-blend-mode: multiply; }
         .stamp-wrapper.show { opacity: 0.9; transform: scale(1) rotate(-5deg); }
         .stamp-inner { width: 90px; height: 90px; border: 4px solid var(--seal-red); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: var(--seal-red); font-weight: 900; font-size: 2rem; box-shadow: inset 0 0 0 2px var(--seal-red), inset 0 0 12px rgba(185, 28, 28, 0.1); letter-spacing: 0.1em; background: rgba(185, 28, 28, 0.02); }
 
         .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        @media (max-width: 768px) { .mobile-select-wrapper { position: relative; margin: 0 16px; } .mobile-select-wrapper select { appearance: none; padding-right: 30px; font-family: 'Noto Serif SC', serif; } .mobile-select-icon { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; } }
+        
+        /* 移动端适配 */
+        @media (max-width: 768px) { 
+            .mobile-select-wrapper { position: relative; } 
+            .mobile-select-wrapper select { appearance: none; padding-right: 30px; font-family: "Songti SC", "Noto Serif SC", serif; } 
+            .mobile-select-icon { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; } 
+        }
+        
+        /* 番茄钟悬浮窗 */
         #zenDockWrapper { position: fixed; bottom: 32px; right: 32px; z-index: 100; transition: none; }
         #zenOrb { width: 56px; height: 56px; border-radius: 50%; background: #1a1a1a; color: #f4f4f0; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.15); cursor: pointer; transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1); }
         #zenOrb:active { transform: scale(0.9); }
-        #zenTooltip { position: absolute; right: 70px; top: 50%; transform: translateY(-50%) translateX(10px); background: var(--ink-black); color: var(--paper-bg); padding: 6px 12px; border-radius: 2px; font-family: 'Noto Serif SC', serif; font-size: 12px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.8s ease; letter-spacing: 0.05em; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        #zenTooltip { position: absolute; right: 70px; top: 50%; transform: translateY(-50%) translateX(10px); background: var(--ink-black); color: var(--paper-bg); padding: 6px 12px; border-radius: 2px; font-family: "Songti SC", "Noto Serif SC", serif; font-size: 12px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.8s ease; letter-spacing: 0.05em; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         #zenTooltip.show { opacity: 1; }
         #zenPanel { position: absolute; width: 280px; background: #fff; border: 2px solid #1a1a1a; padding: 24px; opacity: 0; pointer-events: none; transform: translateY(15px); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         #zenPanel.open { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        
+        /* 时间输入框 */
         #zenTimeInputModal { position: absolute; inset: 0; background: rgba(255,255,255,0.98); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 20; }
         #zenTimeInputModal.show { opacity: 1; pointer-events: auto; }
-        .zen-input { background: transparent; border: none; border-bottom: 2px solid #1a1a1a; font-family: 'Noto Serif SC', serif; font-size: 2rem; text-align: center; color: #1a1a1a; width: 80%; outline: none; margin-bottom: 1rem; }
+        .zen-input { background: transparent; border: none; border-bottom: 2px solid #1a1a1a; font-family: "Songti SC", "Noto Serif SC", serif; font-size: 2rem; text-align: center; color: #1a1a1a; width: 80%; outline: none; margin-bottom: 1rem; }
+        
+        /* 沉浸模式 */
         #zenImmersive { position: fixed; inset: 0; z-index: 999; background: var(--paper-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.8s ease; }
         #zenImmersive.active { opacity: 1; pointer-events: auto; }
         .serif-num { font-family: 'Times New Roman', serif; font-variant-numeric: tabular-nums; }
         .ink-ripple { position: absolute; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(28,25,23,0.03) 0%, rgba(28,25,23,0) 70%); animation: ink-breathe 8s infinite ease-in-out; z-index: 0; pointer-events: none; }
         .ink-ripple:nth-child(2) { animation-delay: 2s; width: 450px; height: 450px; opacity: 0.6; }
         @keyframes ink-breathe { 0% { transform: scale(0.8); opacity: 0; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1.3); opacity: 0; } }
+        
+        /* 按钮组件 */
         .zen-circle-btn { width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--ink-black); display: flex; align-items: center; justify-content: center; color: var(--ink-black); transition: all 0.3s ease; background: transparent; }
         .zen-circle-btn:hover { background: var(--ink-black); color: var(--paper-bg); transform: scale(1.05); }
         .zen-circle-btn:active { transform: scale(0.95); }
@@ -61,20 +105,80 @@
         #zenTimeDisplay { cursor: pointer; border-bottom: 1px solid transparent; transition: border-color 0.3s; }
         #zenTimeDisplay:hover { border-bottom-color: var(--ink-black); }
 
+        /* 模态框 */
         #zenDialogOverlay { position: fixed; inset: 0; z-index: 9999; background: rgba(250, 250, 249, 0.8); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         #zenDialogOverlay.show { opacity: 1; pointer-events: auto; }
         .zen-dialog { background: #fff; width: 340px; padding: 40px; border: 1px solid var(--ink-black); box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; transform: translateY(10px); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         #zenDialogOverlay.show .zen-dialog { transform: translateY(0); }
         .zen-dialog-icon { margin-bottom: 20px; color: var(--ink-black); }
-        .zen-dialog-title { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 700; margin-bottom: 12px; }
-        .zen-dialog-desc { font-family: 'Noto Serif SC', serif; font-size: 14px; color: var(--ink-gray); margin-bottom: 30px; line-height: 1.6; }
-        .zen-dialog-input { width: 100%; border: none; border-bottom: 1px solid var(--ink-gray); font-family: 'Noto Serif SC', serif; font-size: 16px; text-align: center; padding: 8px; margin-bottom: 30px; outline: none; background: transparent; color: var(--ink-black); }
+        .zen-dialog-title { font-family: "Songti SC", "Noto Serif SC", serif; font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+        .zen-dialog-desc { font-family: "Songti SC", "Noto Serif SC", serif; font-size: 14px; color: var(--ink-gray); margin-bottom: 30px; line-height: 1.6; }
+        .zen-dialog-input { width: 100%; border: none; border-bottom: 1px solid var(--ink-gray); font-family: "Songti SC", "Noto Serif SC", serif; font-size: 16px; text-align: center; padding: 8px; margin-bottom: 30px; outline: none; background: transparent; color: var(--ink-black); }
         .zen-dialog-input:focus { border-bottom-color: var(--ink-black); }
         .zen-dialog-btns { display: flex; justify-content: center; gap: 20px; }
-        .zen-dialog-btn { background: transparent; border: 1px solid transparent; cursor: pointer; font-size: 14px; padding: 8px 24px; letter-spacing: 0.05em; font-family: 'Noto Serif SC', serif; transition: all 0.3s; }
+        .zen-dialog-btn { background: transparent; border: 1px solid transparent; cursor: pointer; font-size: 14px; padding: 8px 24px; letter-spacing: 0.05em; font-family: "Songti SC", "Noto Serif SC", serif; transition: all 0.3s; }
         .zen-dialog-btn:hover { text-decoration: underline; }
         .zen-dialog-btn.primary { border-color: var(--ink-black); color: var(--ink-black); }
         .zen-dialog-btn.primary:hover { background: var(--ink-black); color: #fff; text-decoration: none; }
+        /* --- Zen Theme Noise UI --- */
+#noiseOrb {
+    background: #fff;
+    border: 2px solid #1c1917;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+    color: #1c1917;
+}
+#noiseOrb:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 rgba(0,0,0,0.1); }
+#noisePanel {
+    background: #fff;
+    border: 2px solid #1c1917;
+    box-shadow: 8px 8px 0 rgba(0,0,0,0.05);
+    color: #1c1917;
+    transform: scale(0.9);
+}
+.noise-card {
+    height: 44px;
+    border: 1px solid #e5e5e5;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s;
+    border-radius: 2px;
+}
+.noise-card:hover { border-color: #1c1917; }
+.noise-card.active {
+    background: #1c1917; color: #fff; border-color: #1c1917;
+}
+#noiseRipple { background-color: #d6d3d1; }
+/* === [Zen CSS 新增] === */
+/* Logo 基础样式 */
+#noiseOrb {
+    background: #fff; border: 2px solid #1c1917; color: #1c1917;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.1); overflow: visible !important;
+}
+/* 播放状态：变为实心黑 */
+#noiseOrb.is-playing {
+    background: #1c1917; color: #fff; box-shadow: none;
+}
+/* 水墨涟漪动画 */
+.zen-ripple {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 100%; height: 100%; border-radius: 50%; border: 1px solid #1c1917;
+    opacity: 0; pointer-events: none; z-index: -1;
+}
+#noiseOrb.is-playing .zen-ripple-1 { animation: zen-ripple 4s ease-out infinite; }
+#noiseOrb.is-playing .zen-ripple-2 { animation: zen-ripple 4s ease-out infinite; animation-delay: 2s; }
+@keyframes zen-ripple {
+    0% { width: 100%; height: 100%; opacity: 0.6; border-width: 2px; }
+    100% { width: 300%; height: 300%; opacity: 0; border-width: 0px; }
+}
+/* 停止按钮激活态 (对勾) */
+.stop-active {
+    background: #1c1917 !important; color: #fff !important; border-color: #1c1917 !important; opacity: 1 !important;
+}
+/* 变体小红点 */
+.variant-badge {
+    position: absolute; top: -5px; right: -5px; width: 14px; height: 14px;
+    background: #b91c1c; color: white; border-radius: 50%; font-size: 9px;
+    display: flex; align-items: center; justify-content: center; border: 1px solid #fff;
+}
     </style>
 </head>
 <body class="h-screen flex flex-col {{BODY_CLASS}}">
@@ -99,8 +203,18 @@
             <div class="px-4 mb-4 flex justify-between items-center"><span class="text-xs font-bold text-stone-400 uppercase tracking-widest">时光轴</span><span class="text-xs text-stone-300 sans-font" id="totalDaysLabel"></span></div>
             <div id="dateList" class="space-y-0.5"></div>
         </aside>
+        
         <main class="flex-1 overflow-y-auto no-scrollbar relative w-full" id="mainScroll">
-            <div class="md:hidden sticky top-0 bg-white/95 backdrop-blur z-20 py-3 border-b border-stone-100"><div class="mobile-select-wrapper"><select id="mobileDateSelect" class="w-full bg-stone-50 border border-stone-200 text-stone-800 text-sm font-bold py-2 px-3 rounded outline-none focus:ring-1 focus:ring-stone-400"></select><i data-lucide="chevron-down" class="mobile-select-icon w-4 h-4 text-stone-400"></i></div></div>
+            <div class="md:hidden sticky top-0 bg-[#f7f7f5]/95 backdrop-blur z-20 py-3 border-b border-stone-200 px-4">
+                <div class="mobile-select-wrapper">
+                    <select id="mobileDateSelect" 
+                        onchange="loadDay(parseInt(this.value))" 
+                        class="w-full bg-white border border-stone-300 text-stone-800 text-sm font-bold py-2.5 px-3 rounded-sm outline-none focus:border-stone-500 shadow-sm font-serif">
+                    </select>
+                    <i data-lucide="chevron-down" class="mobile-select-icon w-4 h-4 text-stone-400"></i>
+                </div>
+            </div>
+
             <div class="max-w-2xl mx-auto py-8 md:py-12 px-4 md:px-6 min-h-[80vh]">
                 <div class="mb-10 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
                     <span class="inline-block border border-stone-300 px-3 py-1 text-xs rounded-full text-stone-500 mb-4 tracking-wide">第 <span id="dayNumDisplay" class="sans-font">1</span> 天</span>
@@ -120,7 +234,10 @@
             </div>
         </main>
     </div>
-    <div id="zenToast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-stone-900 text-white px-5 py-2.5 rounded shadow-xl text-xs tracking-wide opacity-0 transition-all duration-500 pointer-events-none z-50 flex items-center gap-2"><i data-lucide="pen-tool" class="w-3 h-3"></i> <span>已记录</span></div>
+    
+<div id="zenToast" style="position: fixed; bottom: 100px; left: 50%; transform: translate(-50%, 20px); background: #1c1917; color: #f7f7f5; padding: 10px 24px; border-radius: 4px; font-size: 13px; letter-spacing: 1px; opacity: 0; pointer-events: none; transition: all 0.4s ease; z-index: 20005; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+    <i data-lucide="feather" class="w-4 h-4"></i> <span id="zenToastMsg">已记录</span>
+</div>
 
     <div id="zenDialogOverlay">
         <div class="zen-dialog">
@@ -162,68 +279,63 @@
             </div>
         </div>
     </div>
-<script src="rules_db.js"></script>
+    
+    <script src="rules_db.js"></script>
     <script>
-
         const RAW_DATA_STR = '{{TASKS_DATA}}';
         const RAW_ID = '{{PLAN_ID}}';
         const RAW_TITLE = '{{PLAN_TITLE}}';
         
-        // --- 统一音频系统 (已加入播放失败即时回退机制) ---
         const OSS_BASE = "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com";
         const AUDIO_SYSTEM = {
+            // 读取本地存储，记住用户的静音偏好
+            sfxEnabled: localStorage.getItem('zen_sfx_enabled') !== 'false', 
             pools: {
-                check: [ 
-                    OSS_BASE + '/audio/pencil/pencil_1.MP3', 
-                    OSS_BASE + '/audio/pencil/pencil_2.MP3', 
-                    OSS_BASE + '/audio/pencil/pencil_3.MP3', 
-                    OSS_BASE + '/audio/pencil/pencil_4.MP3', 
-                    OSS_BASE + '/audio/pencil/pencil_5.MP3', 
-                    OSS_BASE + '/audio/pencil/pencil_6.MP3' 
-                ],
+                check: [ OSS_BASE + '/audio/pencil/pencil_1.MP3', OSS_BASE + '/audio/pencil/pencil_2.MP3', OSS_BASE + '/audio/pencil/pencil_3.MP3', OSS_BASE + '/audio/pencil/pencil_4.MP3', OSS_BASE + '/audio/pencil/pencil_5.MP3', OSS_BASE + '/audio/pencil/pencil_6.MP3' ],
                 start: [ OSS_BASE + "/audio/pencil/start_1.MP3" ],
                 finish: [ OSS_BASE + "/audio/pencil/seal.MP3" ]
             },
             cache: {}, 
-            
-            // 预加载功能
             preload: function() {
-                console.log("Starting robust audio preload...");
                 Object.keys(this.pools).forEach(key => {
                     this.cache[key] = this.pools[key].map(src => {
-                        const audio = new Audio();
-                        audio.src = src;
-                        audio.preload = 'auto';
-                        audio.volume = 1.0; 
-                        return audio;
+                        const audio = new Audio(); audio.src = src; audio.preload = 'auto'; audio.volume = 1.0; return audio;
                     });
                 });
+                this.updateBtn();
             },
-
+            toggle: function() {
+                this.sfxEnabled = !this.sfxEnabled;
+                localStorage.setItem('zen_sfx_enabled', this.sfxEnabled);
+                this.updateBtn();
+                if(typeof showToast === 'function') showToast(this.sfxEnabled ? "界面音效: 开启" : "界面音效: 静音");
+            },
+            updateBtn: function() {
+                const btn = document.getElementById('sfxToggleBtn');
+                if(!btn) return;
+                if(this.sfxEnabled) {
+                    btn.innerHTML = `<i data-lucide="bell" class="w-3 h-3"></i> <span>开</span>`;
+                    btn.style.opacity = "1";
+                    btn.classList.remove('line-through', 'opacity-50');
+                } else {
+                    btn.innerHTML = `<i data-lucide="bell-off" class="w-3 h-3"></i> <span>关</span>`;
+                    btn.style.opacity = "0.5";
+                    btn.classList.add('line-through', 'opacity-50');
+                }
+                lucide.createIcons();
+            },
             play: function(type) {
+                if (!this.sfxEnabled) return; // 🔴
+                
                 if (!this.cache[type] || this.cache[type].length === 0) return;
                 const audios = this.cache[type];
                 const audio = audios[Math.floor(Math.random() * audios.length)];
-                
-                audio.volume = 1.0; 
-                audio.currentTime = 0;
-                
-                const playPromise = audio.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        // 🔴 关键修复点：如果预加载的音频播放失败 (Autoplay Policy)，
-                        // 我们立即创建一个新的 Audio 实例来播放，利用用户点击的即时性
-                        const freshSrc = audio.src;
-                        console.log(`Fallback: ${type} failed to play from cache. Creating fresh instance.`);
-                        const freshAudio = new Audio(freshSrc);
-                        freshAudio.volume = 1.0;
-                        freshAudio.play().catch(e => console.log(`Fallback failed for ${type}.`, e));
-                    });
-                }
+                audio.volume = 1.0; audio.currentTime = 0;
+                audio.play().catch(e => console.log('Silent play'));
             }
         };
+        function toggleSFX() { AUDIO_SYSTEM.toggle(); }
         
-        // 立即执行预加载
         AUDIO_SYSTEM.preload();
         let tasksData = []; let planId = 'zen_demo'; let planTitle = 'Zen Demo';
         try { if (RAW_DATA_STR.includes('{{')) { planId = 'zen_' + new Date().getTime(); for(let i=0; i<5; i++) { let d = new Date(); d.setDate(d.getDate() + i); tasksData.push({ date: d.toISOString().split('T')[0], dayNum: i+1, tasks: [{ title: '深度阅读', desc: '阅读 20 页经典著作', tag: '输入' }, { title: '正念冥想', desc: '15 分钟专注呼吸', tag: '修心' }] }); } } else { tasksData = JSON.parse(RAW_DATA_STR); planId = RAW_ID; planTitle = RAW_TITLE; } } catch (e) { console.error("Data parse error:", e); tasksData = []; }
@@ -248,7 +360,10 @@
             currentIndex = idx; 
             const task = tasksData[idx]; 
             if(!task) return; 
-            document.getElementById('mobileDateSelect').value = idx; 
+            // 确保更新手机下拉菜单的值
+            const mobSelect = document.getElementById('mobileDateSelect');
+            if(mobSelect) mobSelect.value = idx;
+            
             document.getElementById('dayNumDisplay').innerText = task.dayNum; 
             document.getElementById('dateDisplay').innerText = task.date; 
             document.getElementById('dailyNote').value = dailyNotes[task.date] || ''; 
@@ -277,7 +392,7 @@
                 
                 // --- 智能识别 ---
                 const aiInfo = typeof autoDetectTag === 'function' ? autoDetectTag(task.title + " " + (task.desc||"")) : {category:'日常'};
-                const displayTag = task.tag || (aiInfo.category !== '日常' ? aiInfo.label : '');
+                const displayTag = task.tag || (aiInfo.category !== '日常' ? aiInfo.label : ''); 
                 
                 // --- Zen 风格特殊处理 ---
                 let indicatorStyle = 'border-left-color: transparent;'; 
@@ -474,7 +589,34 @@
                 }, 0);
             }
             el.appendChild(div); }); }
-        function showToast(text) { const t = document.getElementById('zenToast'); t.innerHTML = `<i data-lucide="feather" class="w-3 h-3"></i> <span>${text}</span>`; lucide.createIcons(); t.style.opacity = '1'; t.style.transform = 'translate(-50%, -10px)'; setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translate(-50%, 0)'; }, 1500); }
+            // === [Zen 修复：防闪烁 + 强制显示] ===
+    let zenToastTimer = null;
+
+    function showToast(text) { 
+        const t = document.getElementById('zenToast');
+        // 如果找不到元素（比如ID变了），尝试找旧ID
+        const target = t || document.getElementById('zenToastMsg')?.parentElement;
+        if(!target) return;
+
+        const msgSpan = target.querySelector('span') || document.getElementById('zenToastMsg');
+
+        // 1. 清除旧定时器
+        if (zenToastTimer) clearTimeout(zenToastTimer);
+
+        // 2. 更新内容
+        if(msgSpan) msgSpan.innerText = text;
+        
+        // 3. 强制重置状态 (修正位置和透明度)
+        target.style.opacity = '1'; 
+        target.style.transform = 'translate(-50%, 0)'; // 上浮效果
+        
+        // 4. 重新开始倒计时
+        zenToastTimer = setTimeout(() => { 
+            target.style.opacity = '0'; 
+            target.style.transform = 'translate(-50%, 20px)'; // 下沉消失
+            zenToastTimer = null;
+        }, 2000); 
+    }
         function init() { 
             if (!RAW_DATA_STR.includes('{{')) { 
                 const st = localStorage.getItem(TITLE_KEY); 
@@ -491,19 +633,46 @@
                     initialDayIdx = 0;
                 }
             }
+            // 4. [修正] 初始化手机下拉菜单选项
             const mobileSelect = document.getElementById('mobileDateSelect'); 
-            tasksData.forEach((task, index) => { 
-                const opt = document.createElement('option'); 
-                opt.value = index; 
-                opt.text = `Day ${task.dayNum} · ${task.date}`; 
-                mobileSelect.appendChild(opt); 
-            }); 
-            mobileSelect.addEventListener('change', (e) => loadDay(parseInt(e.target.value))); 
+            if (mobileSelect) {
+                mobileSelect.innerHTML = '';
+                tasksData.forEach((task, index) => { 
+                    const opt = document.createElement('option'); 
+                    opt.value = index; 
+                    // Zen 风格文案: Chapter 1 · 12-01
+                    opt.text = `Chapter ${task.dayNum} · ${task.date.substring(5)}`; 
+                    mobileSelect.appendChild(opt); 
+                }); 
+                // 监听切换
+                mobileSelect.addEventListener('change', (e) => loadDay(parseInt(e.target.value))); 
+            }
+            
             loadDay(initialDayIdx); 
             updateProgress(); 
             lucide.createIcons(); 
             setTimeout(() => { const tip = document.getElementById('zenTooltip'); if(tip) tip.style.opacity = '0'; }, 4000); 
         }
+        // === [新增] 新手引导：交错提示 ===
+    setTimeout(() => {
+        // 1. 先显示右下角番茄钟提示
+        const zenTip = document.getElementById('zenTooltip');
+        if(zenTip) zenTip.classList.add('show');
+
+        // 2. 4秒后，隐藏番茄钟，显示左下角白噪音提示
+        setTimeout(() => {
+            if(zenTip) zenTip.classList.remove('show');
+            
+            const noiseTip = document.getElementById('noiseTooltip');
+            if(noiseTip) {
+                noiseTip.style.opacity = '1';
+                // 3. 再过4秒，隐藏白噪音提示
+                setTimeout(() => {
+                    noiseTip.style.opacity = '0';
+                }, 4000);
+            }
+        }, 4000);
+    }, 1000); // 进场1秒后开始
         window.addEventListener('DOMContentLoaded', init);
 
         // --- 番茄钟逻辑 ---
@@ -565,5 +734,351 @@ s = Math.max(0, Math.min(59, parseInt(parts[1]) || 0)); } else { m = parseInt(in
         function enterImmersive() { document.getElementById('zenImmersive').classList.add('active'); document.getElementById('zenPanel').classList.remove('open'); if(!isRunning) toggleTimer(); }
         function exitImmersive() { document.getElementById('zenImmersive').classList.remove('active'); }
     </script>
+    <div id="noiseDockWrapper" style="position: fixed; bottom: 100px; left: 20px; z-index: 20000; touch-action: none;">
+    <div id="noiseOrb" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: grab; transition: transform 0.1s; position: relative; z-index: 20002;">
+        <div id="noiseTooltip" style="position: absolute; left: 70px; top: 50%; transform: translateY(-50%); background: #1c1917; color: #f7f7f5; padding: 6px 12px; border-radius: 2px; font-size: 12px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.5s ease; box-shadow: 2px 2px 10px rgba(0,0,0,0.1);">
+        白噪音 | 音效设置
+    </div>
+        <i data-lucide="headphones" class="w-6 h-6 pointer-events-none relative z-10"></i>
+        <div class="zen-ripple zen-ripple-1"></div>
+        <div class="zen-ripple zen-ripple-2"></div>
+    </div>
+    
+    <div id="noisePanel" style="position: absolute; bottom: 0; width: 260px; padding: 20px; border-radius: 20px; display: none; opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 20001;">
+        <div class="flex justify-between items-center mb-4">
+    <div class="flex items-center gap-3">
+        <span class="text-[10px] font-bold uppercase tracking-widest opacity-60">自然白噪</span>
+        <button id="sfxToggleBtn" onclick="toggleSFX()" class="text-[10px] border border-stone-300 px-2 py-0.5 rounded-full text-stone-500 hover:bg-stone-100 transition-colors flex items-center gap-1" title="开启/关闭 界面音效">
+            <i data-lucide="bell" class="w-3 h-3"></i> <span>开</span>
+        </button>
+    </div>
+    <input type="range" min="0" max="1" step="0.1" value="0.6" oninput="changeNoiseVolume(this.value)" class="w-20 h-1 rounded-lg appearance-none bg-gray-500/30 cursor-pointer accent-current">
+</div>
+        
+        <div class="grid grid-cols-4 gap-3 mb-4">
+            <div class="noise-card relative" onclick="playNoise('rain')" title="雨声"><i data-lucide="cloud-rain"></i></div>
+            <div class="noise-card relative" onclick="playNoise('ocean')" title="海浪"><i data-lucide="waves"></i></div>
+            <div class="noise-card relative" onclick="playNoise('forest')" title="森林"><i data-lucide="trees"></i></div>
+            <div class="noise-card relative" onclick="playNoise('fire')" title="篝火"><i data-lucide="flame"></i></div>
+            <div class="noise-card relative" onclick="playNoise('cafe')" title="咖啡馆"><i data-lucide="coffee"></i></div>
+            <div class="noise-card relative" onclick="playNoise('train')" title="列车"><i data-lucide="train"></i></div>
+            <div class="noise-card relative" onclick="playNoise('night')" title="夏夜"><i data-lucide="moon"></i></div>
+            <div class="noise-card relative" onclick="playNoise('keyboard')" title="键盘"><i data-lucide="keyboard"></i></div>
+        </div>
+        
+        <button id="noiseStopBtn" onclick="stopAllNoise()" class="w-full text-xs py-2 rounded-lg font-bold opacity-60 hover:opacity-100 transition border border-current flex items-center justify-center gap-2">
+            <i data-lucide="square" class="w-3 h-3"></i> 静音 / 停止
+        </button>
+    </div>
+</div>
+    
+    <div id="noisePanel" style="position: absolute; bottom: 0; width: 260px; padding: 20px; border-radius: 20px; display: none; opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 20001;">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-[10px] font-bold uppercase tracking-widest opacity-60">音量</span>
+            <input type="range" min="0" max="1" step="0.1" value="0.6" oninput="changeNoiseVolume(this.value)" class="w-20 h-1 rounded-lg appearance-none bg-gray-500/30 cursor-pointer accent-current">
+        </div>
+        
+        <div class="grid grid-cols-4 gap-3 mb-4">
+            <div class="noise-card" onclick="playNoise('rain')" title="雨声"><i data-lucide="cloud-rain"></i></div>
+            <div class="noise-card" onclick="playNoise('ocean')" title="海浪"><i data-lucide="waves"></i></div>
+            <div class="noise-card" onclick="playNoise('forest')" title="森林"><i data-lucide="trees"></i></div>
+            <div class="noise-card" onclick="playNoise('fire')" title="篝火"><i data-lucide="flame"></i></div>
+            <div class="noise-card" onclick="playNoise('cafe')" title="咖啡馆"><i data-lucide="coffee"></i></div>
+            <div class="noise-card" onclick="playNoise('train')" title="列车"><i data-lucide="train"></i></div>
+            <div class="noise-card" onclick="playNoise('night')" title="夏夜"><i data-lucide="moon"></i></div>
+            <div class="noise-card" onclick="playNoise('keyboard')" title="键盘"><i data-lucide="keyboard"></i></div>
+        </div>
+        
+        <button onclick="stopAllNoise()" class="w-full text-xs py-2 rounded-lg font-bold opacity-60 hover:opacity-100 transition border border-current flex items-center justify-center gap-2">
+            <i data-lucide="square" class="w-3 h-3"></i> 静音 / 停止
+        </button>
+    </div>
+</div>
+
+<script>
+    // --- 1. 音频引擎 ---
+    // === [Zen JS 终极修复：完整变体 + 汉化] ===
+    // === [Zen JS 升级：支持暂停/继续] ===
+    const NOISE_BASE = "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/audio/ambience/";
+    
+    const noiseConfig = {
+        'rain': [ {n:'檐下细雨', f:'rain.mp3'}, {n:'山中雷雨', f:'rain_2.mp3'}, {n:'竹林雨声', f:'rain_3.mp3'} ],
+        'ocean': [ {n:'远方海浪', f:'ocean.mp3'}, {n:'深海冥想', f:'ocean.mp3?v=2'} ],
+        'forest': [ {n:'清晨森林', f:'forest.mp3'}, {n:'夏日蝉鸣', f:'forest.mp3?v=2'}, {n:'林间风声', f:'forest.mp3?v=3'} ],
+        'fire': [ {n:'炉边篝火', f:'fire.mp3'} ],
+        'cafe': [ {n:'午后茶馆', f:'cafe.mp3'} ],
+        'train': [ {n:'归乡列车', f:'train.mp3'} ],
+        'night': [ {n:'静谧夏夜', f:'night.mp3'} ],
+        'keyboard': [ {n:'书写声', f:'keyboard.mp3'} ]
+    };
+    
+    let currentCat = null; 
+    let currentVarIdx = 0; 
+    let currentAudio = null; 
+    let masterVol = 0.6;
+    let isPaused = false; // 新增状态标记
+
+    function playNoise(cat) {
+        // 智能逻辑：
+        // 1. 如果点击的是当前分类，且处于暂停状态 -> 继续播放
+        if (currentCat === cat && isPaused) {
+            togglePlayback();
+            return;
+        }
+
+        // 2. 如果点击的是当前分类，且正在播放 -> 切换变体
+        if (currentCat === cat) {
+            currentVarIdx = (currentVarIdx + 1) % noiseConfig[cat].length;
+        } else {
+            // 3. 如果点击新分类 ->以此为准
+            currentCat = cat; 
+            currentVarIdx = 0;
+        }
+        
+        loadAndPlay();
+    }
+
+    // 内部函数：加载并播放
+    function loadAndPlay() {
+        if(currentAudio) currentAudio.pause();
+        const item = noiseConfig[currentCat][currentVarIdx];
+        
+        currentAudio = new Audio(NOISE_BASE + item.f); 
+        currentAudio.loop = true; 
+        currentAudio.volume = masterVol;
+        currentAudio.play().catch(e=>console.log(e));
+        
+        isPaused = false;
+        updateNoiseUI();
+        showToast("正在聆听: " + item.n);
+    }
+
+    // 新增：全局播放/暂停切换
+    function togglePlayback() {
+        if (!currentAudio && !currentCat) return; // 还没选过
+
+        const btn = document.getElementById('noiseStopBtn');
+        const item = noiseConfig[currentCat][currentVarIdx];
+
+        if (isPaused) {
+            // 执行：继续播放
+            currentAudio.play();
+            isPaused = false;
+            showToast("继续聆听: " + item.n);
+        } else {
+            // 执行：暂停
+            currentAudio.pause();
+            isPaused = true;
+        }
+        updateNoiseUI();
+    }
+
+    // 替代原来的 stopAllNoise，现在不仅停止，还负责 UI 切换
+    function stopAllNoise() {
+        togglePlayback();
+    }
+
+    function changeNoiseVolume(v) { masterVol = v; if(currentAudio) currentAudio.volume = masterVol; }
+
+    function updateNoiseUI() {
+        const orb = document.getElementById('noiseOrb');
+        const btn = document.getElementById('noiseStopBtn');
+        
+        // 1. 呼吸灯：只有播放时才动
+        if(currentCat && !isPaused) orb.classList.add('is-playing');
+        else orb.classList.remove('is-playing');
+        
+        // 2. 按钮状态 (修正版)
+        if (!currentCat) {
+            // [初始]：暗
+            btn.className = "w-full text-xs py-2 rounded-lg font-bold opacity-60 hover:opacity-100 transition border border-current flex items-center justify-center gap-2";
+            btn.innerHTML = `<i data-lucide="headphones" class="w-3 h-3"></i> 点击卡片播放`;
+        } else if (isPaused) {
+            // [暂停]：暗 (空心，等待唤醒)
+            // 移除 stop-active 类，回归默认空心样式
+            btn.classList.remove('stop-active');
+            // 增加 opacity 让它看起来像在休息
+            btn.style.opacity = "0.7"; 
+            btn.innerHTML = `<i data-lucide="play" class="w-3 h-3"></i> 继续: ${noiseConfig[currentCat][currentVarIdx].n}`;
+        } else {
+            // [播放中]：亮 (实心，高亮显示)
+            btn.classList.add('stop-active'); 
+            btn.style.opacity = "1";
+            btn.innerHTML = `<i data-lucide="pause" class="w-3 h-3"></i> 暂停播放`;
+        }
+
+        // 3. 卡片激活状态
+        document.querySelectorAll('.noise-card').forEach(el => {
+            el.classList.remove('active');
+            const oldB = el.querySelector('.variant-badge'); if(oldB) oldB.remove();
+            if(el.getAttribute('onclick').includes(`'${currentCat}'`)) {
+                el.classList.add('active');
+                if(noiseConfig[currentCat].length > 1) {
+                    el.insertAdjacentHTML('beforeend', `<span class="variant-badge">${currentVarIdx+1}</span>`);
+                }
+            }
+        });
+        lucide.createIcons();
+    }
+    setTimeout(updateNoiseUI, 500);
+// --- 2. 物理拖拽与吸附引擎 (修复版：智能避让) ---
+    const nWrapper = document.getElementById('noiseDockWrapper');
+    const nOrb = document.getElementById('noiseOrb');
+    const nPanel = document.getElementById('noisePanel');
+    
+    let noise_isDragging = false;
+    let noise_hasMoved = false; 
+    let noise_startX, noise_startY, noise_initialLeft, noise_initialTop;
+
+    // 绑定事件
+    nOrb.addEventListener('mousedown', noiseDragStart);
+    nOrb.addEventListener('touchstart', noiseDragStart, {passive: false});
+
+    function noiseDragStart(e) {
+        if(e.target.closest('#noisePanel')) return;
+
+        noise_isDragging = true;
+        noise_hasMoved = false;
+        
+        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        
+        noise_startX = clientX;
+        noise_startY = clientY;
+        
+        const rect = nWrapper.getBoundingClientRect();
+        noise_initialLeft = rect.left;
+        noise_initialTop = rect.top;
+        
+        nWrapper.style.transition = 'none'; 
+        nOrb.style.cursor = 'grabbing';
+        nOrb.style.transform = 'scale(0.95)';
+
+        document.addEventListener('mousemove', noiseDragMove);
+        document.addEventListener('touchmove', noiseDragMove, {passive: false});
+        document.addEventListener('mouseup', noiseDragEnd);
+        document.addEventListener('touchend', noiseDragEnd);
+    }
+
+    function noiseDragMove(e) {
+        if (!noise_isDragging) return;
+        e.preventDefault(); 
+
+        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        
+        const dx = clientX - noise_startX;
+        const dy = clientY - noise_startY;
+
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+            noise_hasMoved = true;
+            // 拖拽时自动收起面板，防止挡视野
+            if(nPanel.style.display !== 'none') {
+                nPanel.style.opacity = '0';
+                nPanel.style.pointerEvents = 'none';
+                setTimeout(() => { nPanel.style.display = 'none'; }, 200);
+            }
+        }
+
+        nWrapper.style.left = `${noise_initialLeft + dx}px`;
+        nWrapper.style.top = `${noise_initialTop + dy}px`;
+        nWrapper.style.bottom = 'auto'; 
+    }
+
+    function noiseDragEnd() {
+        if (!noise_isDragging) return;
+        noise_isDragging = false;
+        nOrb.style.cursor = 'grab';
+        nOrb.style.transform = 'scale(1)';
+
+        document.removeEventListener('mousemove', noiseDragMove);
+        document.removeEventListener('touchmove', noiseDragMove);
+        document.removeEventListener('mouseup', noiseDragEnd);
+        document.removeEventListener('touchend', noiseDragEnd);
+
+        if (noise_hasMoved) {
+            // 吸附逻辑：松手后自动贴边
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            const rect = nWrapper.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            
+            nWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
+            
+            let targetLeft;
+            // 左右吸附
+            if (centerX < winW / 2) {
+                targetLeft = 20; 
+            } else {
+                targetLeft = winW - 70; // 50px宽 + 20px距
+            }
+            
+            // 上下边界限制
+            let targetTop = rect.top;
+            if (targetTop < 50) targetTop = 50;
+            if (targetTop > winH - 100) targetTop = winH - 100;
+
+            nWrapper.style.left = `${targetLeft}px`;
+            nWrapper.style.top = `${targetTop}px`;
+            
+        } else {
+            // 点击事件：触发智能展开
+            toggleNoisePanel();
+        }
+    }
+
+    // === 核心修复：智能避让展开逻辑 ===
+    function toggleNoisePanel() {
+        const isOpen = nPanel.style.display === 'block' && nPanel.style.opacity !== '0';
+        
+        if (isOpen) {
+            // 关闭逻辑
+            nPanel.style.opacity = '0';
+            nPanel.style.transform = 'scale(0.9)';
+            setTimeout(() => { nPanel.style.display = 'none'; }, 200);
+        } else {
+            // 开启逻辑
+            nPanel.style.display = 'block';
+            nPanel.style.pointerEvents = 'auto';
+            
+            // 1. 获取位置信息
+            const wrapperRect = nWrapper.getBoundingClientRect();
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            
+            // 2. 清除旧定位
+            nPanel.style.top = ''; nPanel.style.bottom = '';
+            nPanel.style.left = ''; nPanel.style.right = '';
+            
+            // 3. 智能判断水平方向 (左/右)
+            // 如果球在屏幕右半边，面板往左弹；反之往右弹
+            if (wrapperRect.left > winW / 2) {
+                nPanel.style.right = '0px';  // 对齐右侧
+                nPanel.style.transformOrigin = 'bottom right'; 
+            } else {
+                nPanel.style.left = '0px';   // 对齐左侧
+                nPanel.style.transformOrigin = 'bottom left'; 
+            }
+
+            // 4. 智能判断垂直方向 (上/下)
+            // 如果球在屏幕下半边，面板往上弹；反之往下弹
+            if (wrapperRect.top > winH / 2) {
+                nPanel.style.bottom = '65px'; // 向上展开
+                nPanel.style.transformOrigin = nPanel.style.transformOrigin.replace('top', 'bottom');
+            } else {
+                nPanel.style.top = '65px';    // 向下展开
+                nPanel.style.transformOrigin = nPanel.style.transformOrigin.replace('bottom', 'top');
+            }
+
+            // 5. 触发动画
+            nPanel.offsetHeight; // 强制重绘
+            nPanel.style.opacity = '1';
+            nPanel.style.transform = 'scale(1)';
+        }
+    }
+    
+    // 初始化图标
+    setTimeout(lucide.createIcons, 500);
+</script>
 </body>
 </html>

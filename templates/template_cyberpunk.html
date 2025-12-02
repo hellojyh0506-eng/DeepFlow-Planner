@@ -1,24 +1,73 @@
+--- START OF FILE template_cyberpunk.html ---
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>DeepFlow System</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/lucide@latest"></script>
+<title>DeepFlow 系统终端</title>
+
+<script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/tailwind.js"></script>
+<script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/lucide.min.js"></script>
+
 <style>
-/* ================= 0. 全局基础 ================= */
-body { margin: 0; padding: 0; overflow: hidden; background: #000; height: 100vh; width: 100vw; user-select: none; font-family: 'Noto Sans SC', sans-serif; }
+/* 2. [修正] 赛博字体栈：无 Google Fonts，秒开且硬核 */
+:root { 
+    --font-display: "Impact", "Arial Black", "Heiti SC", "SimHei", sans-serif; 
+    --font-mono: "Consolas", "Monaco", "Menlo", "Courier New", monospace; 
+    --font-tech: "Segoe UI", "Roboto", "Helvetica Neue", "Microsoft YaHei", sans-serif; 
+    --active-color: #00f3ff; 
+    --secondary-color: #ff00ff; 
+}
+
+/* 强制覆盖 Tailwind 字体类 */
+.font-\[\'Orbitron\'\] { font-family: var(--font-display) !important; letter-spacing: 1px; }
+.font-\[\'Share_Tech_Mono\'\] { font-family: var(--font-mono) !important; }
+.font-\[\'JetBrains_Mono\'\] { font-family: var(--font-mono) !important; }
+.font-\[\'Rajdhani\'\] { font-family: var(--font-tech) !important; text-transform: uppercase; }
+
+/* 基础设置 */
+body { margin: 0; padding: 0; overflow: hidden; background: #000; height: 100vh; width: 100vw; user-select: none; font-family: var(--font-tech); }
 .hidden-core { display: none !important; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
-:root { --active-color: #00f3ff; --secondary-color: #ff00ff; }
 body.theme-b { --active-color: #00fff9; --secondary-color: #9600ff; }
+
+/* 3. [新增] 战术下拉菜单样式 (手机端专属) */
+.cyber-select-wrapper {
+    position: relative;
+    border: 1px solid var(--active-color);
+    background: rgba(0, 20, 40, 0.9);
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+}
+.cyber-select {
+    width: 100%;
+    background: transparent;
+    color: var(--active-color);
+    font-family: var(--font-mono);
+    font-weight: bold;
+    border: none;
+    padding: 10px 40px 10px 15px;
+    appearance: none;
+    outline: none;
+    text-transform: uppercase;
+}
+.cyber-select-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--active-color);
+    pointer-events: none;
+}
+
+/* 噪点层 */
 #noise-layer {
 position: fixed; inset: 0; pointer-events: none; z-index: 8000; opacity: 0.03;
 background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
-/* ================= 1. 底部切换台 ================= */
+
+/* 底部切换台 */
 #system-control-deck {
 position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
 z-index: 9000; display: flex; justify-content: center;
@@ -27,14 +76,15 @@ padding-bottom: 10px; pointer-events: none;
 .cyber-lever-btn {
 pointer-events: auto;
 background: rgba(10, 15, 20, 0.95); border: 1px solid #444; color: #888;
-padding: 12px 36px; font-family: 'Orbitron'; font-weight: bold; font-size: 12px;
+padding: 12px 36px; font-family: var(--font-display); font-weight: bold; font-size: 12px;
 cursor: pointer; display: flex; align-items: center; gap: 10px;
 clip-path: polygon(15px 0, 100% 0, 100% 100%, 0 100%, 0 15px);
 transition: all 0.3s; box-shadow: 0 -5px 30px rgba(0,0,0,0.8);
 text-transform: uppercase; letter-spacing: 2px; border-top: 3px solid var(--active-color);
 }
 .cyber-lever-btn:hover { color: #fff; box-shadow: 0 -5px 40px var(--active-color); text-shadow: 0 0 8px var(--active-color); }
-/* ================= 2. 全局悬浮番茄钟 ================= */
+
+/* 悬浮番茄钟 */
 #globalDockWrapper { position: fixed; bottom: 100px; right: 40px; z-index: 10000; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
 #dockOrb {
 width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
@@ -65,7 +115,8 @@ display: none; opacity: 0; transform: scale(0.9); transition: all 0.2s;
 box-shadow: 0 0 50px rgba(0,0,0,0.9); z-index: 10002;
 }
 #dockPanel.open { display: block; opacity: 1; transform: scale(1); }
-/* ================= 3. 沉浸模式 ================= */
+
+/* 沉浸模式 */
 #immersiveLayer {
 position: fixed; inset: 0; z-index: 99999; background: #000;
 display: none; flex-direction: column; align-items: center; justify-content: center;
@@ -77,10 +128,11 @@ opacity: 0; transition: opacity 0.5s;
 .imm-btn:hover { transform: scale(1.15); background: #fff; color: #000; box-shadow: 0 0 30px #fff; }
 .imm-btn.danger { border-color: #ff2a2a; color: #ff2a2a; }
 .imm-btn.danger:hover { background: #ff2a2a; color: #000; box-shadow: 0 0 30px #ff2a2a; }
-/* ================= 4. THEME A: QUANTUM HIVE ================= */
+
+/* THEME A: QUANTUM HIVE */
 #core_A {
 --a-bg: #020408; --a-panel: rgba(5, 15, 30, 0.85); --a-accent: #00f3ff;
-font-family: 'Noto Sans SC', sans-serif; color: #fff; background-color: var(--a-bg);
+color: #fff; background-color: var(--a-bg);
 height: 100vh; width: 100vw; display: flex; flex-direction: column; position: relative;
 overflow: hidden;
 }
@@ -121,7 +173,7 @@ clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100
 #core_A .a-card::after { content: ''; position: absolute; bottom: 0; right: 0; width: 20px; height: 20px; border-bottom: 2px solid var(--a-accent); border-right: 2px solid var(--a-accent); }
 #core_A .nav-item {
 padding: 12px 16px; margin-bottom: 4px; cursor: pointer;
-font-family: 'Share Tech Mono', monospace; font-size: 14px;
+font-family: var(--font-mono); font-size: 14px;
 color: #64748b; border-right: 2px solid transparent; border-left: 2px solid transparent;
 transition: all 0.3s; display: flex; align-items: center; justify-content: space-between;
 }
@@ -134,7 +186,7 @@ border-right-color: var(--a-accent); text-shadow: 0 0 8px rgba(0,243,255,0.5);
 color: #fff; text-shadow: 0 0 5px var(--a-accent);
 border-left-color: var(--a-accent); background: linear-gradient(90deg, rgba(0,243,255,0.1), transparent);
 }
-.task-data-line { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: #555; display: flex; gap: 12px; margin-bottom: 4px; text-transform: uppercase; }
+.task-data-line { font-family: var(--font-mono); font-size: 10px; color: #555; display: flex; gap: 12px; margin-bottom: 4px; text-transform: uppercase; }
 #core_A .task-row {
 position: relative; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
 padding: 16px; margin-bottom: 12px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -158,9 +210,10 @@ background: var(--a-accent); transform: scaleY(0); transition: transform 0.2s;
 .energy-cell { flex: 1; background: #1a2530; transform: skewX(-20deg); transition: 0.3s; }
 .energy-cell.active { background: var(--a-accent); box-shadow: 0 0 8px var(--a-accent); }
 .text-glow { text-shadow: 0 0 10px var(--a-accent); }
-/* ================= 5. THEME B: CYBER DECK ================= */
+
+/* THEME B: CYBER DECK */
 #core_B {
-font-family: 'Rajdhani', 'JetBrains Mono', sans-serif; background-color: #050508; color: #00fff9;
+font-family: var(--font-tech); background-color: #050508; color: #00fff9;
 height: 100vh; width: 100vw; overflow: hidden; display: flex; position: relative;
 }
 #core_B .b-grid-flow {
@@ -182,10 +235,10 @@ animation: grid-down 2s linear infinite;
 .heatmap-cell.active { border-color: #fff; }
 .heatmap-cell.current { border: 2px solid #fff; animation: blink-border 1.5s infinite; }
 @keyframes blink-border { 50% { border-color: transparent; } }
-.heatmap-nav { display: flex; justify-content: space-between; margin-top: 10px; font-family: 'Share Tech Mono'; font-size: 10px; color: #888; }
+.heatmap-nav { display: flex; justify-content: space-between; margin-top: 10px; font-family: var(--font-mono); font-size: 10px; color: #888; }
 .heatmap-btn { cursor: pointer; transition: 0.2s; }
 .heatmap-btn:hover { color: #fff; text-shadow: 0 0 5px #fff; }
-.b-task-data-line { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: #00fff9; display: flex; gap: 16px; margin-bottom: 4px; align-items: center; }
+.b-task-data-line { font-family: var(--font-mono); font-size: 11px; color: #00fff9; display: flex; gap: 16px; margin-bottom: 4px; align-items: center; }
 #core_B .b-task-item {
 background: rgba(13, 20, 26, 0.7); backdrop-filter: blur(5px);
 border: 1px solid rgba(0, 255, 249, 0.1); border-left: 4px solid #00fff9;
@@ -198,9 +251,10 @@ border-color: rgba(0, 255, 249, 0.6); background: rgba(0, 255, 249, 0.05);
 transform: translateX(4px) scale(1.005); box-shadow: 0 0 25px rgba(0, 255, 249, 0.1);
 }
 #core_B .b-task-item.checked { opacity: 0.5; filter: grayscale(1); border-left-color: #444; background: rgba(0,0,0,0.4); }
-#core_B .b-task-item h4 { color: #fff; text-shadow: 0 0 5px rgba(0,0,0,0.5); font-family: 'Rajdhani'; letter-spacing: 1px; }
+#core_B .b-task-item h4 { color: #fff; text-shadow: 0 0 5px rgba(0,0,0,0.5); font-family: var(--font-tech); letter-spacing: 1px; }
 #core_B .b-task-item.checked h4 { text-decoration: line-through; color: #666; }
-/* ================= 6. 终极加载层 SYSTEM LOADER ================= */
+
+/* 终极加载层 */
 #loader-layer { position: fixed; inset: 0; z-index: 60000; background: #000; display: none; align-items: center; justify-content: center; overflow: hidden; }
 #loader-layer.show { display: flex; }
 .loader-mode-a { position: absolute; inset: 0; background: #000508; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -208,15 +262,15 @@ transform: translateX(4px) scale(1.005); box-shadow: 0 0 25px rgba(0, 255, 249, 
 .iris-blade { position: absolute; width: 100%; height: 100%; border: 1px solid #00f3ff; border-radius: 50%; border-top-color: transparent; border-bottom-color: transparent; animation: iris-spin 2s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite; }
 .iris-center { width: 10px; height: 10px; background: #00f3ff; border-radius: 50%; box-shadow: 0 0 20px #00f3ff; animation: pulse-light 0.5s infinite alternate; }
 .iris-scan-line { position: absolute; width: 100%; height: 2px; background: #00f3ff; top: 0; animation: scan-down 1.5s ease-in-out infinite; opacity: 0.5; box-shadow: 0 0 10px #00f3ff; }
-.iris-text { margin-top: 30px; font-family: 'Orbitron'; color: #00f3ff; letter-spacing: 5px; font-size: 14px; text-shadow: 0 0 10px #00f3ff; }
+.iris-text { margin-top: 30px; font-family: var(--font-display); color: #00f3ff; letter-spacing: 5px; font-size: 14px; text-shadow: 0 0 10px #00f3ff; }
 @keyframes iris-spin { 0% { transform: rotate(0deg) scale(0.8); } 50% { transform: rotate(180deg) scale(1.1); } 100% { transform: rotate(360deg) scale(0.8); } }
 @keyframes scan-down { 0% { top: 0%; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
 .loader-mode-b-neural { position: absolute; inset: 0; background: radial-gradient(circle, #0a0514 0%, #000 90%); display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; perspective: 1000px; }
 .neural-hex { position: relative; width: 140px; height: 160px; background: rgba(10, 0, 20, 0.8); clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(150, 0, 255, 0.1); animation: hex-breath 3s ease-in-out infinite; z-index: 10; }
 .neural-hex::before { content: ''; position: absolute; inset: 4px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); border: 2px solid #9600ff; opacity: 0.6; }
 .neural-hex-inner { width: 80px; height: 92px; background: #9600ff; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); opacity: 0.2; animation: inner-pulse 0.5s infinite alternate; }
-.neural-text { margin-top: 40px; font-family: 'Rajdhani'; font-weight: 700; color: #b026ff; font-size: 20px; letter-spacing: 4px; text-transform: uppercase; z-index: 10; text-shadow: 0 0 10px rgba(176, 38, 255, 0.5); }
-.neural-sub { margin-top: 5px; font-family: 'Share Tech Mono'; color: #008b8b; font-size: 12px; opacity: 0.7; z-index: 10; }
+.neural-text { margin-top: 40px; font-family: var(--font-tech); font-weight: 700; color: #b026ff; font-size: 20px; letter-spacing: 4px; text-transform: uppercase; z-index: 10; text-shadow: 0 0 10px rgba(176, 38, 255, 0.5); }
+.neural-sub { margin-top: 5px; font-family: var(--font-mono); color: #008b8b; font-size: 12px; opacity: 0.7; z-index: 10; }
 .scan-beam { position: absolute; width: 100%; height: 4px; background: #9600ff; box-shadow: 0 0 20px #9600ff; opacity: 0.3; top: 0; animation: soft-scan 2s ease-in-out infinite; z-index: 5; }
 @keyframes hex-breath { 0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(150, 0, 255, 0.1); } 50% { transform: scale(1.05); box-shadow: 0 0 50px rgba(150, 0, 255, 0.3); } }
 @keyframes inner-pulse { from { opacity: 0.1; } to { opacity: 0.4; } }
@@ -224,12 +278,96 @@ transform: translateX(4px) scale(1.005); box-shadow: 0 0 25px rgba(0, 255, 249, 
 .modal-overlay { position: fixed; inset: 0; z-index: 30000; background: rgba(0,0,0,0.95); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; }
 .modal-overlay.show { display: flex; }
 .modal-box { width: 450px; border: 2px solid var(--active-color); background: #050508; padding: 30px; box-shadow: 0 0 60px rgba(0,0,0,0.8); }
-.modal-input { width: 100%; background: rgba(255,255,255,0.1); border: 1px solid #555; color: white; padding: 10px; font-family: 'Share Tech Mono'; outline: none; margin-top: 10px; }
+.modal-input { width: 100%; background: rgba(255,255,255,0.1); border: 1px solid #555; color: white; padding: 10px; font-family: var(--font-mono); outline: none; margin-top: 10px; }
 .modal-input:focus { border-color: var(--active-color); }
-.modal-btn { background: transparent; border: 1px solid var(--active-color); color: var(--active-color); padding: 8px 20px; font-family: 'Orbitron'; cursor: pointer; margin: 0 10px; transition: 0.2s; }
+.modal-btn { background: transparent; border: 1px solid var(--active-color); color: var(--active-color); padding: 8px 20px; font-family: var(--font-display); cursor: pointer; margin: 0 10px; transition: 0.2s; }
 .modal-btn:hover { background: var(--active-color); color: #000; box-shadow: 0 0 15px var(--active-color); }
-#holo-toast { position: fixed; top: 40px; left: 50%; transform: translateX(-50%) translateY(-100px); background: rgba(0,0,0,0.9); border: 1px solid var(--active-color); color: #fff; padding: 12px 40px; font-family: 'Orbitron'; z-index: 60000; transition: 0.3s; opacity: 0; box-shadow: 0 0 30px var(--active-color); }
+#holo-toast {position: fixed; top: 40px; left: 50%; transform: translateX(-50%) translateY(-100px); 
+    background: rgba(0, 5, 10, 0.95); 
+    border: 1px solid var(--active-color); 
+    border-left: 4px solid var(--active-color); /* 左侧加粗强调 */
+    color: #fff; 
+    padding: 10px 30px; 
+    font-family: var(--font-mono); 
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    z-index: 100001; 
+    transition: 0.4s cubic-bezier(0.22, 1, 0.36, 1); 
+    opacity: 0; 
+    box-shadow: 0 0 20px rgba(0, 243, 255, 0.15), inset 0 0 10px rgba(0, 243, 255, 0.05); 
+    text-transform: uppercase;
+    white-space: nowrap;
+    clip-path: polygon(0 0, 100% 0, 100% 80%, 95% 100%, 0 100%); /* 切角设计 */
+}
 #holo-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+/* 添加一个微小的扫描线动画 */
+#holo-toast::after {
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+    background: var(--active-color); opacity: 0.5;
+    animation: scan-toast 2s infinite linear;
+}
+@keyframes scan-toast { 0% {top:0;} 100% {top:100%;} }
+#holo-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+/* --- Cyber Theme Noise UI --- */
+#noiseOrb {
+    background: rgba(0, 10, 15, 0.9);
+    border: 1px solid var(--active-color);
+    box-shadow: 0 0 15px var(--active-color);
+    color: var(--active-color);
+}
+#noisePanel {
+    background: rgba(5, 5, 10, 0.95);
+    border: 1px solid var(--active-color);
+    box-shadow: 0 0 30px rgba(0,0,0,0.8);
+    color: #fff;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
+    transform: scale(0.9);
+}
+.noise-card {
+    height: 40px;
+    border: 1px solid rgba(0, 243, 255, 0.2);
+    background: rgba(0,0,0,0.3);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s;
+    color: #aaa;
+}
+.noise-card:hover { border-color: var(--active-color); color: #fff; box-shadow: inset 0 0 10px rgba(0,243,255,0.2); }
+.noise-card.active {
+    background: var(--active-color); color: #000; box-shadow: 0 0 15px var(--active-color); font-weight: bold;
+}
+#noiseRipple { background-color: var(--active-color); }
+/* === [Cyber CSS 新增] === */
+#noiseOrb {
+    background: rgba(0, 10, 15, 0.9); border: 1px solid var(--active-color);
+    box-shadow: 0 0 15px var(--active-color); color: var(--active-color); overflow: visible !important;
+}
+/* 能量环动画 */
+.cyber-ring {
+    position: absolute; inset: -4px; border: 1px dashed var(--active-color);
+    border-radius: 50%; opacity: 0; pointer-events: none; transition: 0.3s;
+}
+#noiseOrb.is-playing .cyber-ring-1 {
+    animation: cyber-spin 3s linear infinite; inset: -5px; border-width: 2px; opacity: 1;
+}
+#noiseOrb.is-playing .cyber-ring-2 {
+    animation: cyber-spin-rev 5s linear infinite; inset: -10px; border-style: dotted; opacity: 0.5;
+}
+@keyframes cyber-spin { 100% { transform: rotate(360deg); } }
+@keyframes cyber-spin-rev { 100% { transform: rotate(-360deg); } }
+
+/* 停止按钮 (高亮对勾) */
+.stop-active {
+    background: var(--active-color) !important; color: #000 !important;
+    box-shadow: 0 0 10px var(--active-color); opacity: 1 !important; font-weight: 900;
+}
+/* 赛博角标 */
+.variant-badge {
+    position: absolute; top: -5px; right: -5px; width: 14px; height: 14px;
+    background: var(--active-color); color: #000; font-weight: bold;
+    font-size: 9px; display: flex; align-items: center; justify-content: center;
+    clip-path: polygon(20% 0, 100% 0, 100% 80%, 80% 100%, 0 100%, 0 20%);
+}
 </style>
 </head>
 <body class="theme-a">
@@ -239,7 +377,7 @@ transform: translateX(4px) scale(1.005); box-shadow: 0 0 25px rgba(0, 255, 249, 
 <div id="system-control-deck">
 <button onclick="switchArchitecture()" class="cyber-lever-btn">
 <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-<span>切换构型 (SWITCH ARCH)</span>
+<span>切换构型 / SWITCH</span>
 </button>
 </div>
 <div id="globalDockWrapper">
@@ -253,20 +391,20 @@ transform: translateX(4px) scale(1.005); box-shadow: 0 0 25px rgba(0, 255, 249, 
 </div>
 <div id="dockPanel">
 <div class="text-center text-white">
-<div class="flex justify-between items-center mb-4">
-<div class="text-xs font-bold tracking-widest text-gray-400">FOCUS CORE</div>
-<button onclick="toggleDock()" class="text-gray-500 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+<div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+    <span class="text-[10px] font-bold uppercase tracking-widest opacity-80">专注引擎</span>
+    <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
 </div>
 <div id="dockTime" class="text-5xl font-['Orbitron'] font-bold mb-4 cursor-pointer hover:text-cyan-300" onclick="showTimeInput()">25:00</div>
 <div class="flex justify-center gap-4 text-xs font-mono text-gray-500 mb-4">
-<span class="cursor-pointer hover:text-white" onclick="adjTime(-5)">[-5M]</span>
-<span class="cursor-pointer hover:text-white" onclick="adjTime(5)">[+5M]</span>
+<span class="cursor-pointer hover:text-white" onclick="adjTime(-5)">[-5分]</span>
+<span class="cursor-pointer hover:text-white" onclick="adjTime(5)">[+5分]</span>
 </div>
 <div id="timeInputRow" style="display:none; margin-bottom:10px; justify-content:center;">
 <input type="text" id="customTimeInput" class="bg-transparent border-b border-white text-center text-white w-20 outline-none font-mono" placeholder="25">
-<button onclick="submitTime()" class="text-xs border px-2 ml-2 hover:bg-white hover:text-black">OK</button>
+<button onclick="submitTime()" class="text-xs border px-2 ml-2 hover:bg-white hover:text-black">确认</button>
 </div>
-<button id="timerBtn" onclick="toggleTimer()" class="w-full py-3 border border-white font-bold hover:bg-white hover:text-black transition">启动 (START)</button>
+<button id="timerBtn" onclick="toggleTimer()" class="w-full py-3 border border-white font-bold hover:bg-white hover:text-black transition">启动任务 (START)</button>
 <button onclick="enterImmersive()" class="w-full py-2 mt-2 text-xs text-gray-500 hover:text-white font-bold">>> 沉浸模式 <<</button>
 </div>
 </div>
@@ -299,18 +437,18 @@ transform: translateX(4px) scale(1.005); box-shadow: 0 0 25px rgba(0, 255, 249, 
 <i data-lucide="aperture" class="text-cyan-400 w-6 h-6 animate-[spin_10s_linear_infinite]"></i>
 </div>
 <div>
-<div class="text-[10px] text-cyan-600 tracking-[0.4em] font-black mb-1 font-['Orbitron']">OPERATING SYSTEM</div>
+<div class="text-[10px] text-cyan-600 tracking-[0.4em] font-black mb-1 font-['Orbitron']">操作系统 (OS)</div>
 <div class="flex items-center gap-3">
-<h1 id="title_A" class="text-4xl text-white font-black font-['Orbitron'] tracking-wide text-glow">LOADING</h1>
+<h1 id="title_A" class="text-4xl text-white font-black font-['Orbitron'] tracking-wide text-glow">系统初始化...</h1>
 <i data-lucide="edit-3" class="w-4 h-4 text-cyan-400 opacity-0 group-hover:opacity-100 transition"></i>
 </div>
 </div>
 </div>
 <div class="flex flex-col items-end gap-2">
 <div class="flex items-center gap-4">
-<button onclick="openResetModal()" class="text-[10px] text-red-500 hover:text-red-400 font-mono tracking-wider border-b border-red-900 pb-1">RESET_PROTOCOL</button>
+<button onclick="openResetModal()" class="text-[10px] text-red-500 hover:text-red-400 font-mono tracking-wider border-b border-red-900 pb-1">重置协议 (RESET)</button>
 <div class="text-right pl-4 border-l border-cyan-900/50">
-<div class="text-[10px] text-gray-500 font-mono">SYNC RATE</div>
+<div class="text-[10px] text-gray-500 font-mono">同步率 (SYNC)</div>
 <div class="text-2xl font-['Orbitron'] text-cyan-400 font-bold" id="sync_A">0%</div>
 </div>
 </div>
@@ -318,22 +456,32 @@ transform: translateX(4px) scale(1.005); box-shadow: 0 0 25px rgba(0, 255, 249, 
 </header>
 <div class="flex flex-1 overflow-hidden px-8 pb-8 gap-8 z-10">
 <aside class="hidden md:flex flex-col w-64 a-card p-4 overflow-y-auto no-scrollbar">
-<div class="text-[10px] text-cyan-800 font-black tracking-widest mb-4 pl-2 font-['Orbitron']">TIMELINE NAVIGATION</div>
+<div class="text-[10px] text-cyan-800 font-black tracking-widest mb-4 pl-2 font-['Orbitron']">时间轴导航</div>
 <div id="sidebar_A" class="space-y-1"></div>
 </aside>
 <main class="flex-1 overflow-y-auto no-scrollbar relative">
+<div class="md:hidden mb-6 px-1">
+    <div class="cyber-select-wrapper">
+        <select id="mobileDateSelect" 
+            onchange="gotoDay(parseInt(this.value))" 
+            class="cyber-select">
+        </select>
+        <i data-lucide="chevron-down" class="cyber-select-icon w-4 h-4"></i>
+    </div>
+</div>
+
 <div class="max-w-5xl mx-auto pb-32">
 <div class="a-card p-8 mb-6 flex flex-col md:flex-row justify-between items-center relative overflow-hidden group">
 <div class="absolute right-0 top-0 w-64 h-full bg-gradient-to-l from-cyan-900/10 to-transparent pointer-events-none"></div>
 <div class="relative z-10 w-full md:w-auto">
 <div class="flex items-center gap-3 mb-2">
-<span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-2 py-0.5 text-[10px] font-mono font-bold">SECTOR <span id="dayNum_A">01</span></span>
+<span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-2 py-0.5 text-[10px] font-mono font-bold">扇区 <span id="dayNum_A">01</span></span>
 <div class="h-px flex-1 bg-cyan-900/50"></div>
 </div>
 <h2 id="dateStr_A" class="text-5xl font-['Orbitron'] font-bold text-white tracking-tight mb-4">--</h2>
 <div class="w-full md:w-80">
 <div class="flex justify-between text-[10px] text-gray-400 font-mono mb-1">
-<span>ENERGY OUTPUT</span>
+<span>能量产出</span>
 <span id="progressText_A" class="text-cyan-400">0/0</span>
 </div>
 <div class="energy-cells" id="energy_bar_A"></div>
@@ -341,7 +489,7 @@ transform: translateX(4px) scale(1.005); box-shadow: 0 0 25px rgba(0, 255, 249, 
 </div>
 <div id="stamp_A" class="opacity-10 grayscale mt-6 md:mt-0 transition-all duration-700 transform scale-95">
 <i data-lucide="hexagon" class="w-32 h-32 text-cyan-400 stroke-[0.5]"></i>
-<div class="absolute inset-0 flex items-center justify-center font-['Orbitron'] text-xs text-cyan-400 font-bold tracking-widest mt-1">COMPLETED</div>
+<div class="absolute inset-0 flex items-center justify-center font-['Orbitron'] text-xs text-cyan-400 font-bold tracking-widest mt-1">任务完成</div>
 </div>
 </div>
 <div id="list_A" class="space-y-2"></div>
@@ -352,19 +500,19 @@ transform: translateX(4px) scale(1.005); box-shadow: 0 0 25px rgba(0, 255, 249, 
 <div id="core_B" class="hidden-core">
 <div class="b-grid-flow"></div>
 <aside class="b-sidebar">
-<h2 class="text-xl font-bold mb-8 text-yellow-300 tracking-widest font-['Rajdhani'] border-b-2 border-purple-500/50 pb-4">MONITOR V4.5</h2>
+<h2 class="text-xl font-bold mb-8 text-yellow-300 tracking-widest font-['Rajdhani'] border-b-2 border-purple-500/50 pb-4">系统监控 V4.5</h2>
 <div class="space-y-6 opacity-90 text-sm font-['Share_Tech_Mono']">
-<div class="flex justify-between border-b border-purple-900 pb-2"><span>STATUS:</span> <span class="text-cyan-400">OK</span></div>
-<div class="flex justify-between border-b border-purple-900 pb-2"><span>RAM:</span> <span class="text-pink-500" id="ram_B">--</span></div>
-<div class="flex justify-between border-b border-purple-900 pb-2"><span>NET:</span> <span class="text-cyan-400">CONNECTED</span></div>
+<div class="flex justify-between border-b border-purple-900 pb-2"><span>运行状态:</span> <span class="text-cyan-400">正常</span></div>
+<div class="flex justify-between border-b border-purple-900 pb-2"><span>内存占用:</span> <span class="text-pink-500" id="ram_B">--</span></div>
+<div class="flex justify-between border-b border-purple-900 pb-2"><span>网络连接:</span> <span class="text-cyan-400">已连接</span></div>
 </div>
 <div class="mt-8">
-<div class="text-xs text-gray-500 mb-2 font-bold">DATA HEATMAP (28 DAYS)</div>
+<div class="text-xs text-gray-500 mb-2 font-bold">数据热力图 (28天)</div>
 <div class="heatmap-grid" id="heatmap_B"></div>
 <div class="heatmap-nav">
-<span class="heatmap-btn hover:text-cyan-400" onclick="heatmapPage(-1)">< PREV</span>
-<span id="heatmap_page">PAGE 1</span>
-<span class="heatmap-btn hover:text-cyan-400" onclick="heatmapPage(1)">NEXT ></span>
+<span class="heatmap-btn hover:text-cyan-400" onclick="heatmapPage(-1)">< 上一页</span>
+<span id="heatmap_page">第 1 页</span>
+<span class="heatmap-btn hover:text-cyan-400" onclick="heatmapPage(1)">下一页 ></span>
 </div>
 </div>
 <div class="mt-auto h-32 overflow-hidden border-t-2 border-purple-900 pt-2 text-[10px] text-green-500 font-mono opacity-70 bg-black/50 p-2" id="sys_log_B"></div>
@@ -372,30 +520,30 @@ transform: translateX(4px) scale(1.005); box-shadow: 0 0 25px rgba(0, 255, 249, 
 <main class="b-main">
 <header class="flex justify-between items-end mb-8 border-b-2 border-purple-900 pb-4">
 <div>
-<div class="text-xs text-purple-400 mb-1 font-mono">> TERMINAL_ACCESS</div>
+<div class="text-xs text-purple-400 mb-1 font-mono">> 终端接入 (TERMINAL_ACCESS)</div>
 <div class="flex items-center gap-4 cursor-pointer group" onclick="openRenameModal()">
-<h1 id="title_B" class="text-6xl font-['Rajdhani'] font-bold text-white tracking-tighter shadow-pink-500">LOADING</h1>
+<h1 id="title_B" class="text-6xl font-['Rajdhani'] font-bold text-white tracking-tighter shadow-pink-500">初始化中...</h1>
 <i data-lucide="wrench" class="w-5 h-5 text-purple-500 opacity-50 group-hover:opacity-100"></i>
 </div>
 </div>
-<div class="text-right"><div class="text-xs text-gray-500">CYCLE</div><div id="dateStr_B" class="text-3xl text-yellow-300 font-bold">--</div></div>
+<div class="text-right"><div class="text-xs text-gray-500">当前周期</div><div id="dateStr_B" class="text-3xl text-yellow-300 font-bold">--</div></div>
 </header>
 <div class="mb-8">
-<div class="flex justify-between text-xs text-cyan-400 font-mono mb-1"><span>SYNC_STATUS</span><span id="sync_B">0%</span></div>
+<div class="flex justify-between text-xs text-cyan-400 font-mono mb-1"><span>同步状态</span><span id="sync_B">0%</span></div>
 <div class="h-4 w-full bg-gray-900 border border-cyan-500"><div id="bar_B" class="h-full bg-gradient-to-r from-cyan-500 to-purple-500 w-0 transition-all duration-500"></div></div>
 </div>
 <div class="flex justify-between mb-6">
-<button onclick="changeDay(-1)" class="text-xs border border-cyan-500 text-cyan-500 px-3 py-1 hover:bg-cyan-500 hover:text-black transition font-mono">< PREV</button>
-<button onclick="changeDay(1)" class="text-xs border border-cyan-500 text-cyan-500 px-3 py-1 hover:bg-cyan-500 hover:text-black transition font-mono">NEXT ></button>
+<button onclick="changeDay(-1)" class="text-xs border border-cyan-500 text-cyan-500 px-3 py-1 hover:bg-cyan-500 hover:text-black transition font-mono">< 上一日</button>
+<button onclick="changeDay(1)" class="text-xs border border-cyan-500 text-cyan-500 px-3 py-1 hover:bg-cyan-500 hover:text-black transition font-mono">下一日 ></button>
 </div>
 <div id="list_B" class="space-y-4 pb-32"></div>
 <footer class="mt-auto border-t border-purple-900 pt-4 flex justify-between items-center">
 <span class="text-xs text-gray-600 font-mono">ID: 0X9EE7</span>
-<button onclick="openResetModal()" class="text-xs text-red-500 hover:bg-red-900/20 px-3 py-2 border border-transparent hover:border-red-900 transition font-bold">>> SYSTEM_RESET <<</button>
+<button onclick="openResetModal()" class="text-xs text-red-500 hover:bg-red-900/20 px-3 py-2 border border-transparent hover:border-red-900 transition font-bold">>> 系统重置 <<</button>
 </footer>
 </main>
 </div>
-<div id="modalOverlay" class="modal-overlay"><div class="modal-box"><div class="modal-inner"><h3 id="modalTitle" class="text-2xl font-['Orbitron'] text-white font-bold mb-4">TITLE</h3><p id="modalDesc" class="text-gray-400 text-sm font-mono mb-6">Desc</p><input type="text" id="modalInput" class="modal-input" style="display:none;"><div class="flex justify-center mt-8"><button id="modalBtnCancel" class="modal-btn" style="border-color:#666; color:#999" onclick="closeModal()">取消</button><button id="modalBtnConfirm" class="modal-btn">确认</button></div></div></div></div>
+<div id="modalOverlay" class="modal-overlay"><div class="modal-box"><div class="modal-inner"><h3 id="modalTitle" class="text-2xl font-['Orbitron'] text-white font-bold mb-4">标题</h3><p id="modalDesc" class="text-gray-400 text-sm font-mono mb-6">描述</p><input type="text" id="modalInput" class="modal-input" style="display:none;"><div class="flex justify-center mt-8"><button id="modalBtnCancel" class="modal-btn" style="border-color:#666; color:#999" onclick="closeModal()">取消</button><button id="modalBtnConfirm" class="modal-btn">确认</button></div></div></div></div>
 <script src="rules_db.js"></script>
 <script>
 const NEON_PALETTE = ['#ff00ff', '#00fff9', '#ffe600', '#ff3366', '#b026ff', '#00ff66'];
@@ -454,50 +602,52 @@ let heatmapOffset = 0;
 // --- 核心音频系统重构 (修复刷新音效/路径问题) ---
 const OSS_BASE = "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com";
 const AUDIO_SYSTEM = {
-pools: {
-check: [
-OSS_BASE + "/audio/cyber/check.MP3",
-OSS_BASE + "/audio/cyber/check1.MP3",
-OSS_BASE + "/audio/cyber/check2.MP3",
-OSS_BASE + "/audio/cyber/check4.MP3"
-],
-switch: [
-OSS_BASE + "/audio/cyber/switch1.MP3",
-OSS_BASE + "/audio/cyber/switch2.MP3"
-],
-finish: [
-OSS_BASE + "/audio/cyber/finish1.MP3",
-OSS_BASE + "/audio/cyber/finish2.MP3"
-]
-},
-cache: {},
-preload: function() {
-Object.keys(this.pools).forEach(key => {
-this.cache[key] = this.pools[key].map(src => {
-const audio = new Audio();
-audio.src = src;
-audio.preload = 'auto';
-audio.volume = 0.8;
-return audio;
-});
-});
-},
-play: function(type) {
-if (!this.cache[type] || this.cache[type].length === 0) return;
-const audios = this.cache[type];
-const audio = audios[Math.floor(Math.random() * audios.length)];
-audio.currentTime = 0;
-// 回退机制
-const playPromise = audio.play();
-if (playPromise !== undefined) {
-playPromise.catch(() => {
-const freshAudio = new Audio(audio.src);
-freshAudio.volume = 0.8;
-freshAudio.play().catch(e => console.log('Audio fail', e));
-});
-}
-}
+    sfxEnabled: localStorage.getItem('cyber_sfx_enabled') !== 'false',
+    pools: {
+        check: [ OSS_BASE + "/audio/cyber/check.MP3", OSS_BASE + "/audio/cyber/check1.MP3", OSS_BASE + "/audio/cyber/check2.MP3", OSS_BASE + "/audio/cyber/check4.MP3" ],
+        switch: [ OSS_BASE + "/audio/cyber/switch1.MP3", OSS_BASE + "/audio/cyber/switch2.MP3" ],
+        finish: [ OSS_BASE + "/audio/cyber/finish1.MP3", OSS_BASE + "/audio/cyber/finish2.MP3" ]
+    },
+    cache: {},
+    preload: function() {
+        Object.keys(this.pools).forEach(key => {
+            this.cache[key] = this.pools[key].map(src => { const audio = new Audio(); audio.src = src; audio.preload = 'auto'; audio.volume = 0.8; return audio; });
+        });
+        this.updateBtn();
+    },
+    toggle: function() {
+        this.sfxEnabled = !this.sfxEnabled;
+        localStorage.setItem('cyber_sfx_enabled', this.sfxEnabled);
+        this.updateBtn();
+        if(typeof showToast === 'function') showToast(this.sfxEnabled ? ">> 界面音效: 已开启" : ">> 界面音效: 已静音");
+    },
+    updateBtn: function() {
+        const btn = document.getElementById('sfxToggleBtn');
+        if(!btn) return;
+        const icon = btn.querySelector('i');
+        if(this.sfxEnabled) {
+            btn.innerHTML = `<i data-lucide="volume-2" class="w-3 h-3"></i> 界面音效: ON`;
+            btn.style.opacity = "1";
+            btn.style.borderColor = "var(--active-color)";
+            btn.style.color = "var(--active-color)";
+        } else {
+            btn.innerHTML = `<i data-lucide="volume-x" class="w-3 h-3"></i> 界面音效: OFF`;
+            btn.style.opacity = "0.5";
+            btn.style.borderColor = "#555";
+            btn.style.color = "#555";
+        }
+        lucide.createIcons();
+    },
+    play: function(type) {
+        if (!this.sfxEnabled) return; // 🔴 静音拦截
+        if (!this.cache[type]) return;
+        const audios = this.cache[type];
+        const audio = audios[Math.floor(Math.random() * audios.length)];
+        audio.currentTime = 0;
+        audio.play().catch(e => console.log('Audio fail', e));
+    }
 };
+function toggleSFX() { AUDIO_SYSTEM.toggle(); }
 AUDIO_SYSTEM.preload();
 function init() {
 document.documentElement.style.setProperty('--active-color', currentTheme === 'A' ? '#00f3ff' : '#00fff9');
@@ -508,6 +658,19 @@ renderAll();
 renderHeatmap();
 setInterval(updateLog, 1500);
 setTimeout(lucide.createIcons, 100);
+// 初始化下拉菜单数据
+const mobSelect = document.getElementById('mobileDateSelect');
+if(mobSelect) {
+    mobSelect.innerHTML = ''; // 清空旧选项
+    tasksData.forEach((task, index) => {
+        const opt = document.createElement('option');
+        opt.value = index;
+        // 赛博风格文案: SECTOR 01 | 2077-01-01
+        opt.text = `扇区 ${String(task.dayNum).padStart(2,'0')} | ${task.date}`;
+        mobSelect.appendChild(opt);
+    });
+    mobSelect.value = currentDayIdx; // 恢复选中状态
+}
 setTimeout(() => {
 const tip = document.getElementById('dockTooltip');
 if(tip) {
@@ -523,9 +686,9 @@ const loader = document.getElementById('loader-layer');
 const target = currentTheme === 'A' ? 'B' : 'A';
 loader.className = 'show';
 if (target === 'A') {
-loader.innerHTML = `<div class="loader-mode-a"><div class="iris-aperture"><div class="iris-scan-line"></div><div class="iris-blade"></div><div class="iris-center"></div></div><div class="iris-text">BIOMETRIC VERIFIED // SYSTEM_A</div></div>`;
+loader.innerHTML = `<div class="loader-mode-a"><div class="iris-aperture"><div class="iris-scan-line"></div><div class="iris-blade"></div><div class="iris-center"></div></div><div class="iris-text">生物特征识别通过 // 接入系统 A</div></div>`;
 } else {
-loader.innerHTML = `<div class="loader-mode-b-neural"><div class="neural-hex"><div class="neural-hex-inner"></div></div><div class="neural-text">System Reconstruct</div><div class="neural-sub">Decrypting...</div><div class="scan-beam"></div></div>`;
+loader.innerHTML = `<div class="loader-mode-b-neural"><div class="neural-hex"><div class="neural-hex-inner"></div></div><div class="neural-text">系统重构中</div><div class="neural-sub">正在解密神经元数据...</div><div class="scan-beam"></div></div>`;
 }
 setTimeout(() => {
 currentTheme = target;
@@ -549,6 +712,9 @@ renderListA(day); renderSidebarA(); updateStatsA(day);
 document.getElementById('dateStr_B').innerText = day.date;
 renderListB(day); updateStatsB(day);
 updateGlobalSync(); lucide.createIcons();
+// 同步更新手机下拉菜单的值
+const mobSelect = document.getElementById('mobileDateSelect');
+if(mobSelect) mobSelect.value = currentDayIdx;
 }
 function renderListA(day) {
 const el = document.getElementById('list_A'); el.innerHTML = '';
@@ -572,7 +738,7 @@ ${timeInfoHtml}
 <h4 class="text-white text-sm font-bold tracking-wide">${aiPrefix}${t.title}</h4>
 <div class="flex items-center gap-2 mt-1">
 ${displayTag ? `<span class="text-[10px] bg-cyan-900/50 text-cyan-400 px-1 border border-cyan-800 tracking-wider">${displayTag.toUpperCase()}</span>` : ''}
-<p class="text-xs text-gray-500 font-mono">${t.desc||'NO DESCRIPTION'}</p>
+<p class="text-xs text-gray-500 font-mono">${t.desc||'暂无数据描述'}</p>
 </div>
 </div>
 </div>`;
@@ -647,17 +813,38 @@ const neonColor = NEON_PALETTE[i % NEON_PALETTE.length];
 style = `background:${neonColor}; box-shadow:0 0 15px ${neonColor}; border-color:#fff;`;
 }
 if(isCurrent) cls += " current";
-el.innerHTML += `<div class="${cls}" style="${style}" onclick="gotoDay(${i}); showToast('ACCESSING: ${day.date}')" title="${day.date}"></div>`;
+el.innerHTML += `<div class="${cls}" style="${style}" onclick="gotoDay(${i}); showToast('正在访问扇区: ${day.date}')" title="${day.date}"></div>`;
 }
 for(let i=end; i<start+28; i++) { el.innerHTML += `<div class="heatmap-cell" style="background:#111; cursor:default"></div>`; }
-document.getElementById('heatmap_page').innerText = `PAGE ${heatmapOffset+1}`;
+document.getElementById('heatmap_page').innerText = `第 ${heatmapOffset+1} 页`;
 }
 function heatmapPage(d) { const max=Math.ceil(tasksData.length/28)-1; heatmapOffset+=d; if(heatmapOffset<0)heatmapOffset=0; if(heatmapOffset>max)heatmapOffset=max; renderHeatmap(); }
-function showToast(msg) { const t = document.getElementById('holo-toast'); t.innerText = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 1500); }
+// === [Cyber 修复：防闪烁逻辑] ===
+    let cyberToastTimer = null;
+
+    function showToast(msg) { 
+        const t = document.getElementById('holo-toast'); 
+        if(!t) return;
+        
+        // 1. 清除旧定时器 (关键)
+        if (cyberToastTimer) clearTimeout(cyberToastTimer);
+
+        // 2. 更新内容
+        t.innerText = msg; 
+        
+        // 3. 强制显示
+        t.classList.add('show'); 
+        
+        // 4. 重置倒计时
+        cyberToastTimer = setTimeout(() => { 
+            t.classList.remove('show'); 
+            cyberToastTimer = null;
+        }, 2000); 
+    }
 function updateLog() {
 const el = document.getElementById('sys_log_B');
 if(currentTheme === 'B' && el) {
-const logs = ["> PING: 14ms", "> DATA_PACKET_RCVD", "> MEMORY_OPTIMIZED", "> ENCRYPTION_OK"];
+const logs = ["> 延迟: 14ms", "> 数据包接收完毕", "> 内存整理完成", "> 加密连接建立"];
 el.innerHTML += `<br>${logs[Math.floor(Math.random()*logs.length)]}`;
 el.scrollTop = el.scrollHeight;
 }
@@ -694,7 +881,7 @@ const d = document.createElement('div');
 d.className = `energy-cell ${i < filledCount ? 'active' : ''}`;
 cellContainer.appendChild(d);
 }
-document.getElementById('progressText_A').innerText = `${done}/${total} UNIT`;
+document.getElementById('progressText_A').innerText = `${done}/${total} 单元`;
 document.getElementById('sync_A').innerText = Math.round(pct*100) + '%';
 // 纯视觉逻辑，不播放声音
 const stamp = document.getElementById('stamp_A');
@@ -759,7 +946,7 @@ currentDayIdx = 0;
 currentTheme = 'A';
 renderAll();
 closeModal();
-showToast("SYSTEM RESET COMPLETE");
+showToast("系统重置完毕");
 document.documentElement.style.setProperty('--active-color', '#00f3ff');
 document.body.className = 'theme-a';
 document.getElementById('core_A').classList.remove('hidden-core');
@@ -853,6 +1040,303 @@ c.appendChild(d);
 }
 document.head.insertAdjacentHTML("beforeend", `<style>@keyframes fall { to { transform: translateY(110vh); } }</style>`)
 window.addEventListener('DOMContentLoaded', init);
+</script>
+<div id="noiseDockWrapper" style="position: fixed; bottom: 100px; left: 20px; z-index: 100000; touch-action: none;">
+    <div id="noiseOrb" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: grab; transition: transform 0.1s; position: relative; z-index: 20002;">
+        <i data-lucide="headphones" class="w-6 h-6 pointer-events-none relative z-10"></i>
+        <div class="cyber-ring cyber-ring-1"></div>
+        <div class="cyber-ring cyber-ring-2"></div>
+    </div>
+    
+    <div id="noisePanel" style="position: absolute; bottom: 0; width: 260px; padding: 20px; border-radius: 2px; display: none; opacity: 0; transition: all 0.3s; z-index: 20001;">
+        <div class="flex justify-between items-center mb-4">
+            <div class="flex items-center gap-2">
+                <span class="text-[10px] font-bold uppercase tracking-widest opacity-60">声景系统</span>
+                <button id="sfxToggleBtn" onclick="toggleSFX()" class="text-[9px] border border-current px-2 py-0.5 text-cyan-400 hover:bg-cyan-900/50 transition font-mono tracking-wider flex items-center gap-1">
+                    <i data-lucide="volume-2" class="w-3 h-3"></i> UI音效
+                </button>
+            </div>
+            <input type="range" min="0" max="1" step="0.1" value="0.6" oninput="changeNoiseVolume(this.value)" class="w-20 h-1 rounded-lg appearance-none bg-gray-500/30 cursor-pointer accent-current">
+        </div>
+        
+        <div class="grid grid-cols-4 gap-3 mb-4">
+            <div class="noise-card relative" onclick="playNoise('rain')"><i data-lucide="cloud-rain"></i></div>
+            <div class="noise-card relative" onclick="playNoise('ocean')"><i data-lucide="waves"></i></div>
+            <div class="noise-card relative" onclick="playNoise('forest')"><i data-lucide="trees"></i></div>
+            <div class="noise-card relative" onclick="playNoise('fire')"><i data-lucide="flame"></i></div>
+            <div class="noise-card relative" onclick="playNoise('cafe')"><i data-lucide="coffee"></i></div>
+            <div class="noise-card relative" onclick="playNoise('train')"><i data-lucide="train"></i></div>
+            <div class="noise-card relative" onclick="playNoise('night')"><i data-lucide="moon"></i></div>
+            <div class="noise-card relative" onclick="playNoise('keyboard')"><i data-lucide="keyboard"></i></div>
+        </div>
+        
+        <button id="noiseStopBtn" onclick="stopAllNoise()" class="w-full text-xs py-2 font-bold opacity-60 hover:opacity-100 transition border border-current flex items-center justify-center gap-2">
+            <i data-lucide="square" class="w-3 h-3"></i> 切断信号 (CUT_SIGNAL)
+        </button>
+    </div>
+</div>
+
+<script>
+    // --- 1. 音频引擎 ---
+    // === [Cyber JS 升级：支持暂停/继续] ===
+    const NOISE_BASE = "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/audio/ambience/";
+    
+    const noiseConfig = {
+        'rain': [ {n:'霓虹雨夜', f:'rain.mp3'}, {n:'雷暴轰鸣', f:'rain_2.mp3'}, {n:'涓涓雨滴', f:'rain_3.mp3'} ],
+        'ocean': [ {n:'数据之海', f:'ocean.mp3'}, {n:'深潜模式', f:'ocean.mp3?v=2'} ],
+        'forest': [ {n:'全息森林', f:'forest.mp3'}, {n:'电子蝉鸣', f:'forest.mp3?v=2'}, {n:'故障风声', f:'forest.mp3?v=3'} ],
+        'fire': [ {n:'数字篝火', f:'fire.mp3'} ],
+        'cafe': [ {n:'网络终端', f:'cafe.mp3'} ],
+        'train': [ {n:'超导列车', f:'train.mp3'} ],
+        'night': [ {n:'夜之城', f:'night.mp3'} ],
+        'keyboard': [ {n:'黑客入侵', f:'keyboard.mp3'} ]
+    };
+    
+    let currentCat = null; let currentVarIdx = 0; let currentAudio = null; let masterVol = 0.6;
+    let isPaused = false;
+
+    function playNoise(cat) {
+        // 点击当前已暂停的 -> 恢复信号
+        if (currentCat === cat && isPaused) {
+            togglePlayback();
+            return;
+        }
+        if (currentCat === cat) currentVarIdx = (currentVarIdx + 1) % noiseConfig[cat].length;
+        else { currentCat = cat; currentVarIdx = 0; }
+        
+        loadAndPlay();
+    }
+
+    function loadAndPlay() {
+        if(currentAudio) currentAudio.pause();
+        const item = noiseConfig[currentCat][currentVarIdx];
+        
+        currentAudio = new Audio(NOISE_BASE + item.f); 
+        currentAudio.loop = true; currentAudio.volume = masterVol;
+        currentAudio.play().catch(e=>console.log(e));
+        
+        isPaused = false;
+        updateNoiseUI();
+        showToast(">> 信号接入: " + item.n); 
+    }
+
+    function togglePlayback() {
+        if (!currentAudio && !currentCat) return;
+        const item = noiseConfig[currentCat][currentVarIdx];
+
+        if (isPaused) {
+            currentAudio.play();
+            isPaused = false;
+            showToast(">> 信号恢复: " + item.n);
+        } else {
+            currentAudio.pause();
+            isPaused = true;
+        }
+        updateNoiseUI();
+    }
+
+    function stopAllNoise() { togglePlayback(); }
+
+    function changeNoiseVolume(v) { masterVol = v; if(currentAudio) currentAudio.volume = masterVol; }
+
+    function updateNoiseUI() {
+        const orb = document.getElementById('noiseOrb');
+        const btn = document.getElementById('noiseStopBtn');
+        
+        // 1. 能量环：播放时旋转
+        if(currentCat && !isPaused) orb.classList.add('is-playing');
+        else orb.classList.remove('is-playing');
+        
+        // 2. 按钮状态 (修正版)
+        if (!currentCat) {
+            // [无信号]
+            btn.className = "w-full text-xs py-2 font-bold opacity-60 hover:opacity-100 transition border border-current flex items-center justify-center gap-2";
+            btn.innerHTML = `<i data-lucide="radio" class="w-3 h-3"></i> 等待输入 (WAITING)`;
+        } else if (isPaused) {
+            // [暂停]：暗 (低功耗模式)
+            btn.classList.remove('stop-active');
+            btn.style.opacity = "0.6";
+            btn.style.boxShadow = "none";
+            btn.innerHTML = `<i data-lucide="play" class="w-3 h-3"></i> 恢复连接 (RESUME)`;
+        } else {
+            // [播放中]：亮 (全功率输出)
+            btn.classList.add('stop-active');
+            btn.style.opacity = "1";
+            btn.innerHTML = `<i data-lucide="pause" class="w-3 h-3"></i> 暂停传输 (PAUSE)`;
+        }
+
+        // 3. 卡片高亮
+        document.querySelectorAll('.noise-card').forEach(el => {
+            el.classList.remove('active');
+            const oldB = el.querySelector('.variant-badge'); if(oldB) oldB.remove();
+            if(el.getAttribute('onclick').includes(`'${currentCat}'`)) {
+                el.classList.add('active');
+                if(noiseConfig[currentCat].length > 1) {
+                    el.insertAdjacentHTML('beforeend', `<span class="variant-badge">${currentVarIdx+1}</span>`);
+                }
+            }
+        });
+        lucide.createIcons();
+    }
+    setTimeout(updateNoiseUI, 500);
+    // --- 2. 物理拖拽与吸附引擎 (修复版：智能避让) ---
+    const nWrapper = document.getElementById('noiseDockWrapper');
+    const nOrb = document.getElementById('noiseOrb');
+    const nPanel = document.getElementById('noisePanel');
+    
+    let noise_isDragging = false;
+    let noise_hasMoved = false; 
+    let noise_startX, noise_startY, noise_initialLeft, noise_initialTop;
+
+    // 绑定事件
+    nOrb.addEventListener('mousedown', noiseDragStart);
+    nOrb.addEventListener('touchstart', noiseDragStart, {passive: false});
+
+    function noiseDragStart(e) {
+        if(e.target.closest('#noisePanel')) return;
+
+        noise_isDragging = true;
+        noise_hasMoved = false;
+        
+        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        
+        noise_startX = clientX;
+        noise_startY = clientY;
+        
+        const rect = nWrapper.getBoundingClientRect();
+        noise_initialLeft = rect.left;
+        noise_initialTop = rect.top;
+        
+        nWrapper.style.transition = 'none'; 
+        nOrb.style.cursor = 'grabbing';
+        nOrb.style.transform = 'scale(0.95)';
+
+        document.addEventListener('mousemove', noiseDragMove);
+        document.addEventListener('touchmove', noiseDragMove, {passive: false});
+        document.addEventListener('mouseup', noiseDragEnd);
+        document.addEventListener('touchend', noiseDragEnd);
+    }
+
+    function noiseDragMove(e) {
+        if (!noise_isDragging) return;
+        e.preventDefault(); 
+
+        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        
+        const dx = clientX - noise_startX;
+        const dy = clientY - noise_startY;
+
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+            noise_hasMoved = true;
+            // 拖拽时自动收起面板，防止挡视野
+            if(nPanel.style.display !== 'none') {
+                nPanel.style.opacity = '0';
+                nPanel.style.pointerEvents = 'none';
+                setTimeout(() => { nPanel.style.display = 'none'; }, 200);
+            }
+        }
+
+        nWrapper.style.left = `${noise_initialLeft + dx}px`;
+        nWrapper.style.top = `${noise_initialTop + dy}px`;
+        nWrapper.style.bottom = 'auto'; 
+    }
+
+    function noiseDragEnd() {
+        if (!noise_isDragging) return;
+        noise_isDragging = false;
+        nOrb.style.cursor = 'grab';
+        nOrb.style.transform = 'scale(1)';
+
+        document.removeEventListener('mousemove', noiseDragMove);
+        document.removeEventListener('touchmove', noiseDragMove);
+        document.removeEventListener('mouseup', noiseDragEnd);
+        document.removeEventListener('touchend', noiseDragEnd);
+
+        if (noise_hasMoved) {
+            // 吸附逻辑：松手后自动贴边
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            const rect = nWrapper.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            
+            nWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
+            
+            let targetLeft;
+            // 左右吸附
+            if (centerX < winW / 2) {
+                targetLeft = 20; 
+            } else {
+                targetLeft = winW - 70; // 50px宽 + 20px距
+            }
+            
+            // 上下边界限制
+            let targetTop = rect.top;
+            if (targetTop < 50) targetTop = 50;
+            if (targetTop > winH - 100) targetTop = winH - 100;
+
+            nWrapper.style.left = `${targetLeft}px`;
+            nWrapper.style.top = `${targetTop}px`;
+            
+        } else {
+            // 点击事件：触发智能展开
+            toggleNoisePanel();
+        }
+    }
+
+    // === 核心修复：智能避让展开逻辑 ===
+    function toggleNoisePanel() {
+        const isOpen = nPanel.style.display === 'block' && nPanel.style.opacity !== '0';
+        
+        if (isOpen) {
+            // 关闭逻辑
+            nPanel.style.opacity = '0';
+            nPanel.style.transform = 'scale(0.9)';
+            setTimeout(() => { nPanel.style.display = 'none'; }, 200);
+        } else {
+            // 开启逻辑
+            nPanel.style.display = 'block';
+            nPanel.style.pointerEvents = 'auto';
+            
+            // 1. 获取位置信息
+            const wrapperRect = nWrapper.getBoundingClientRect();
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            
+            // 2. 清除旧定位
+            nPanel.style.top = ''; nPanel.style.bottom = '';
+            nPanel.style.left = ''; nPanel.style.right = '';
+            
+            // 3. 智能判断水平方向 (左/右)
+            // 如果球在屏幕右半边，面板往左弹；反之往右弹
+            if (wrapperRect.left > winW / 2) {
+                nPanel.style.right = '0px';  // 对齐右侧
+                nPanel.style.transformOrigin = 'bottom right'; 
+            } else {
+                nPanel.style.left = '0px';   // 对齐左侧
+                nPanel.style.transformOrigin = 'bottom left'; 
+            }
+
+            // 4. 智能判断垂直方向 (上/下)
+            // 如果球在屏幕下半边，面板往上弹；反之往下弹
+            if (wrapperRect.top > winH / 2) {
+                nPanel.style.bottom = '65px'; // 向上展开
+                nPanel.style.transformOrigin = nPanel.style.transformOrigin.replace('top', 'bottom');
+            } else {
+                nPanel.style.top = '65px';    // 向下展开
+                nPanel.style.transformOrigin = nPanel.style.transformOrigin.replace('bottom', 'top');
+            }
+
+            // 5. 触发动画
+            nPanel.offsetHeight; // 强制重绘
+            nPanel.style.opacity = '1';
+            nPanel.style.transform = 'scale(1)';
+        }
+    }
+    
+    // 初始化图标
+    setTimeout(lucide.createIcons, 500);
 </script>
 </body>
 </html>

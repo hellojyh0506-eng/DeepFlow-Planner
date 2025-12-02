@@ -4,13 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>DeepFlow Pro - {{PLAN_TITLE}}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/tailwind.js"></script>
+    <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/lucide.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
     <style>
+        /* 2. 字体修复：系统原生字体栈 */
         :root { --primary: #007AFF; --primary-dark: #0056b3; --primary-light: rgba(0, 122, 255, 0.08); --text-on-primary: #ffffff; --surface: #f5f5f7; --glass-border: rgba(255, 255, 255, 0.6); --seal-red: #b91c1c;  }
-        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Noto Sans SC', sans-serif; background-color: var(--surface); color: #1d1d1f; transition: background-color 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); -webkit-font-smoothing: antialiased; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; background-color: var(--surface); color: #1d1d1f; transition: background-color 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); -webkit-font-smoothing: antialiased; }
+        
         .bg-spotlight { position: fixed; top: -20%; left: -20%; width: 140vw; height: 140vh; z-index: -1; background: radial-gradient(circle at 50% 30%, var(--primary-light), transparent 70%); opacity: 1; transition: background 0.8s ease; pointer-events: none; }
         .ios-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); box-shadow: 0 4px 24px rgba(0,0,0,0.04); transition: all 0.3s; }
         .ios-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.08); border-color: rgba(255,255,255,0.9); }
@@ -37,7 +39,7 @@
         #customPickerInput { opacity: 0; position: absolute; pointer-events: none; }
         .theme-transition { transition: all 0.6s ease; }
 
-        /* --- 番茄钟 UI 优化 --- */
+        /* --- 番茄钟 UI --- */
         #focusDockWrapper { position: fixed; bottom: 32px; right: 32px; z-index: 100; transition: none; }
         #dockOrb {
             width: 64px; height: 64px; border-radius: 22px; 
@@ -50,24 +52,14 @@
         }
         #dockOrb:hover { transform: scale(1.05); box-shadow: 0 15px 40px var(--primary-light); }
         #dockOrb:active { transform: scale(0.95); }
-        #dockOrb::before { content: none; } 
-        
-        .dock-icon { 
-            animation: flowPulse 3s ease-in-out infinite alternate; 
-        } 
-
-        @keyframes flowPulse {
-            from { filter: drop-shadow(0 0 0 var(--primary)); opacity: 0.85; }
-            to { filter: drop-shadow(0 0 8px var(--primary)); opacity: 1; }
-        }
-
+        .dock-icon { animation: flowPulse 3s ease-in-out infinite alternate; } 
+        @keyframes flowPulse { from { filter: drop-shadow(0 0 0 var(--primary)); opacity: 0.85; } to { filter: drop-shadow(0 0 8px var(--primary)); opacity: 1; } }
         #dockTooltip {
             position: absolute; right: 80px; top: 50%; transform: translateY(-50%) translateX(10px);
             background: rgba(29, 29, 31, 0.9); color: white; padding: 8px 14px;
             border-radius: 12px; font-size: 12px; font-weight: 700; white-space: nowrap; pointer-events: none; opacity: 0;
             transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 4px 20px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 6px;
-            border: 1px solid var(--primary); 
-            text-shadow: 0 0 3px var(--primary); 
+            border: 1px solid var(--primary); text-shadow: 0 0 3px var(--primary); 
         }
         #dockTooltip.show { opacity: 1; transform: translateY(-50%) translateX(0); }
         #dockTooltip::after { content: ''; position: absolute; right: -4px; top: 50%; transform: translateY(-50%); border-width: 5px 0 5px 6px; border-color: transparent transparent transparent rgba(29, 29, 31, 0.9); }
@@ -93,40 +85,130 @@
         #dockTime { cursor: pointer; transition: color 0.2s; }
         #dockTime:hover { color: var(--primary); opacity: 0.8; }
 
-        /* --- iOS 风格自定义 Modal --- */
-        #proModalOverlay {
-            position: fixed; inset: 0; z-index: 9999;
-            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px);
-            display: flex; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
-        }
+        /* --- iOS Modal --- */
+        #proModalOverlay { position: fixed; inset: 0; z-index: 9999; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
         #proModalOverlay.show { opacity: 1; pointer-events: auto; }
-        .ios-modal {
-            width: 280px; background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(20px); border-radius: 14px;
-            text-align: center; overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            transform: scale(1.1); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
+        .ios-modal { width: 280px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px); border-radius: 14px; text-align: center; overflow: hidden; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2); transform: scale(1.1); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
         #proModalOverlay.show .ios-modal { transform: scale(1); }
         .ios-modal-header { padding: 20px 16px 10px; }
         .ios-modal-title { font-weight: 700; font-size: 17px; color: #000; margin-bottom: 4px; }
         .ios-modal-desc { font-size: 13px; color: #666; line-height: 1.4; }
-        .ios-modal-input {
-            margin: 10px 0 0; width: 100%; padding: 6px; font-size: 14px;
-            border: 1px solid #ccc; border-radius: 6px; background: #fff;
-            outline: none; text-align: center;
-        }
+        .ios-modal-input { margin: 10px 0 0; width: 100%; padding: 6px; font-size: 14px; border: 1px solid #ccc; border-radius: 6px; background: #fff; outline: none; text-align: center; }
         .ios-modal-input:focus { border-color: var(--primary); }
         .ios-modal-actions { display: flex; border-top: 0.5px solid rgba(60, 60, 67, 0.29); }
-        .ios-modal-btn {
-            flex: 1; padding: 12px 0; font-size: 17px; color: #007AFF;
-            background: transparent; border: none; cursor: pointer;
-            border-right: 0.5px solid rgba(60, 60, 67, 0.29); font-weight: 400;
-        }
+        .ios-modal-btn { flex: 1; padding: 12px 0; font-size: 17px; color: #007AFF; background: transparent; border: none; cursor: pointer; border-right: 0.5px solid rgba(60, 60, 67, 0.29); font-weight: 400; }
         .ios-modal-btn:last-child { border-right: none; font-weight: 600; }
         .ios-modal-btn:active { background: rgba(0,0,0,0.1); }
         .ios-modal-btn.destructive { color: #FF3B30; }
+        /* --- Pro Theme Noise UI --- */
+#noiseOrb {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255,255,255,0.6);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    color: #1d1d1f;
+}
+#noisePanel {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(25px);
+    border: 1px solid rgba(255,255,255,0.5);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    color: #1d1d1f;
+    transform: scale(0.9); /* 初始缩放 */
+}
+/* 网格卡片 */
+.noise-card {
+    height: 40px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s;
+    color: #666;
+}
+.noise-card:hover { background: #fff; transform: scale(1.05); color: #007AFF; }
+.noise-card.active {
+    background: #007AFF; color: white; box-shadow: 0 4px 10px rgba(0,122,255,0.3);
+}
+#noiseRipple { background-color: #007AFF; }
+/* === [Pro CSS 新增] === */
+#noiseOrb {
+    background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.5); color: #1d1d1f;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: visible !important;
+}
+/* 呼吸光晕 */
+#noiseOrb::before, #noiseOrb::after {
+    content: ''; position: absolute; inset: 0; border-radius: 50%;
+    background: var(--primary); z-index: -1; opacity: 0; transform: scale(0.8); transition: 0.5s;
+}
+#noiseOrb.is-playing {
+    background: #fff; color: var(--primary); border-color: var(--primary);
+}
+#noiseOrb.is-playing::before { animation: pro-breath 3s ease-in-out infinite; }
+#noiseOrb.is-playing::after { animation: pro-breath 3s ease-in-out infinite; animation-delay: 1.5s; }
+@keyframes pro-breath {
+    0% { transform: scale(0.9); opacity: 0.3; }
+    50% { transform: scale(1.4); opacity: 0; }
+    100% { transform: scale(0.9); opacity: 0; }
+}
+
+/* 停止按钮 (iOS绿色成功态) */
+.stop-active {
+    background: #34C759 !important; border-color: #34C759 !important; color: white !important; opacity: 1 !important;
+}
+/* iOS 红点 */
+.variant-badge {
+    position: absolute; top: -5px; right: -5px; width: 16px; height: 16px;
+    background: #FF3B30; color: white; border-radius: 50%; font-size: 10px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}/* === [Pro 修复：强制提示框置顶] === */
+#toast {
+    z-index: 20005 !important; /* 必须比白噪音(20000)高 */
+    bottom: 120px !important; /* 稍微抬高，避开底部 */
+    top: auto !important;     /* 覆盖原有的 top定位 */
+    opacity: 0; 
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+#toast.show-toast-active {
+    opacity: 1 !important;
+    transform: translate(-50%, 0) !important;
+}
+/* === [Pro 视觉升级：跟随主题色] === */
+
+/* 1. 选中卡片：背景色跟随主题 */
+.noise-card.active {
+    background: var(--primary) !important; 
+    color: #fff !important; 
+    box-shadow: 0 4px 12px var(--primary-light) !important;
+    border-color: transparent !important;
+}
+
+/* 2. 停止/暂停按钮（激活态）：跟随主题 */
+.stop-active {
+    background: var(--primary) !important; 
+    border-color: var(--primary) !important; 
+    color: #fff !important; /* 确保文字是白色 */
+    opacity: 1 !important;
+}
+
+/* 3. 悬浮球：播放时边框和图标跟随主题 */
+#noiseOrb.is-playing {
+    color: var(--primary) !important; 
+    border-color: var(--primary) !important;
+    background: #fff !important;
+}
+
+/* 4. 呼吸光晕：必须跟随主题 */
+#noiseOrb.is-playing::before, 
+#noiseOrb.is-playing::after {
+    background: var(--primary) !important; /* 核心修改：光晕变色 */
+}
+
+/* 5. 变体角标：改为更协调的红色或跟随主题 (这里保留红色作为通知色，更显眼) */
+.variant-badge {
+    background: #ff3b30; 
+    color: white;
+}
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden {{BODY_CLASS}}">
@@ -157,20 +239,13 @@
         </aside>
         <main class="flex-1 overflow-y-auto relative no-scrollbar rounded-2xl" id="mainScroll">
             <div class="max-w-3xl mx-auto py-2 md:py-4 min-h-[80vh]">
-                
                 <div class="md:hidden mb-4 px-1">
                     <div class="relative">
-                        <select id="mobileDateSelect" onchange="window.location.hash='day='+this.value" class="w-full appearance-none bg-white/80 backdrop-blur-xl border border-white/60 text-slate-800 font-bold text-sm py-3 px-10 rounded-2xl shadow-sm focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition-all">
-                            </select>
-                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[var(--primary)]">
-                            <i data-lucide="calendar" class="w-4 h-4"></i>
-                        </div>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
-                            <i data-lucide="chevron-down" class="w-4 h-4"></i>
-                        </div>
+                        <select id="mobileDateSelect" onchange="window.location.hash='day='+this.value" class="w-full appearance-none bg-white/80 backdrop-blur-xl border border-white/60 text-slate-800 font-bold text-sm py-3 px-10 rounded-2xl shadow-sm focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition-all"></select>
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[var(--primary)]"><i data-lucide="calendar" class="w-4 h-4"></i></div>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400"><i data-lucide="chevron-down" class="w-4 h-4"></i></div>
                     </div>
                 </div>
-
                 <div class="ios-card rounded-2xl p-6 md:p-8 mb-6 relative overflow-hidden group">
                     <div class="absolute -right-8 -top-8 w-40 h-40 opacity-15 rounded-full blur-3xl transition-colors duration-700 theme-transition" style="background: var(--primary)"></div> 
                     <div class="relative z-10 flex justify-between items-end">
@@ -190,120 +265,63 @@
     <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 flex items-center gap-3 px-5 py-2.5 bg-slate-900/90 backdrop-blur text-white rounded-full shadow-2xl transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none z-[100]"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i><span id="toastMsg" class="font-bold text-xs tracking-wide">已完成</span></div>
     <div id="ritualOverlay" class="fixed inset-0 z-40 flex flex-col items-center justify-center bg-white/80 backdrop-blur-xl transition-all duration-500" style="display: none;"><div class="ios-card p-10 rounded-3xl shadow-2xl fade-in-up max-w-sm w-full text-center border border-white"><div class="lock-icon-bg mb-6 inline-flex p-5 rounded-full shadow-sm theme-transition" style="background: var(--primary-light)"><i data-lucide="lock" class="w-8 h-8 theme-transition" style="color: var(--primary)"></i></div><h3 class="text-2xl font-black text-slate-800 mb-2">Ready?</h3><p class="text-slate-500 text-sm mb-8 px-2">今日任务已锁定。点击开始，全情投入。</p><button onclick="startDay()" class="w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-transform hover:-translate-y-0.5 active:scale-95 theme-transition" style="background: var(--primary)">开启今日计划</button></div></div>
 
-    <div id="proModalOverlay">
-        <div class="ios-modal">
-            <div class="ios-modal-header">
-                <div class="ios-modal-title" id="proModalTitle">Title</div>
-                <div class="ios-modal-desc" id="proModalDesc">Description</div>
-                <input type="text" id="proModalInput" class="ios-modal-input" style="display: none;">
-            </div>
-            <div class="ios-modal-actions">
-                <button class="ios-modal-btn" onclick="closeProModal()">取消</button>
-                <button class="ios-modal-btn" id="proModalConfirmBtn" onclick="">确定</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="focusDockWrapper">
-        <div id="dockTooltip" class="show"><span>启动心流进程</span> <i data-lucide="activity" class="w-4 h-4"></i></div>
-        <div id="dockOrb">
-             <i data-lucide="activity" class="w-6 h-6 dock-icon theme-transition" style="color: var(--primary)"></i>
-        </div>
-        <div id="dockPanel">
-            <div class="flex justify-between items-center mb-6"><span class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">PHYSIO-SYNC CLOCK</span><button onclick="toggleDock()" class="p-1 hover:bg-slate-100 rounded-full"><i data-lucide="x" class="w-4 h-4 text-slate-400"></i></button></div>
-            <div class="flex items-center justify-between mb-6 bg-slate-50 rounded-2xl p-2 relative overflow-hidden">
-                <button onclick="adjustTime(-5)" class="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-white text-slate-400 font-bold transition active:scale-95">-5</button>
-                <div id="dockTime" onclick="showTimeInput()" title="点击修改时间" class="text-4xl font-black text-slate-800 font-mono tracking-tight cursor-pointer hover:opacity-80 transition">25:00</div>
-                <button onclick="adjustTime(5)" class="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-white text-slate-400 font-bold transition active:scale-95">+5</button>
-                <div id="customTimeOverlay"><input type="text" id="customTimeInput" class="pro-input" placeholder="25:00" onkeydown="if(event.key==='Enter') submitTime()"><div class="flex gap-2"><button onclick="submitTime()" class="text-xs bg-slate-900 text-white px-3 py-1 rounded-lg">确认</button><button onclick="hideTimeInput()" class="text-xs text-slate-400 px-2 py-1">取消</button></div></div>
-            </div>
-            <button id="mainBtn" onclick="toggleTimer()" class="w-full py-4 rounded-xl font-bold text-white shadow-lg shadow-blue-500/20 active:scale-95 transition flex items-center justify-center gap-2 mb-2 theme-transition" style="background: var(--primary)"><i data-lucide="play" class="w-4 h-4"></i> <span>开始</span></button>
-            <button onclick="enterImmersive()" class="w-full py-3 rounded-xl font-bold text-slate-500 border border-slate-200 hover:bg-slate-50 active:scale-95 transition text-xs flex items-center justify-center gap-2"><i data-lucide="maximize" class="w-3 h-3"></i> 流光模式</button>
-        </div>
-    </div>
-
-    <div id="immersiveLayer">
-        <div class="aurora-bg theme-transition" style="background: radial-gradient(circle at 50% 50%, var(--primary), #000 70%);"></div>
-        <div class="z-10 text-center">
-            <div class="text-white/50 text-sm font-bold tracking-[0.2em] mb-4 uppercase">Flow State</div>
-            <div id="immTime" class="giant-time mb-12">25:00</div>
-            <div class="flex gap-8 justify-center">
-                <button onclick="toggleTimer()" class="p-6 rounded-full bg-white/10 backdrop-blur border border-white/20 text-white hover:bg-white/20 transition active:scale-95"><i id="immIcon" data-lucide="pause" class="w-8 h-8"></i></button>
-                <button onclick="exitImmersive()" class="p-6 rounded-full bg-white/10 backdrop-blur border border-white/20 text-white hover:bg-red-500/20 hover:border-red-500 hover:text-red-400 transition active:scale-95"><i data-lucide="x" class="w-8 h-8"></i></button>
-            </div>
-        </div>
-    </div>
+    <div id="proModalOverlay"><div class="ios-modal"><div class="ios-modal-header"><div class="ios-modal-title" id="proModalTitle">Title</div><div class="ios-modal-desc" id="proModalDesc">Description</div><input type="text" id="proModalInput" class="ios-modal-input" style="display: none;"></div><div class="ios-modal-actions"><button class="ios-modal-btn" onclick="closeProModal()">取消</button><button class="ios-modal-btn" id="proModalConfirmBtn" onclick="">确定</button></div></div></div>
+    
+    <div id="focusDockWrapper"><div id="dockTooltip" class="show"><span>启动心流进程</span> <i data-lucide="activity" class="w-4 h-4"></i></div><div id="dockOrb"><i data-lucide="activity" class="w-6 h-6 dock-icon theme-transition" style="color: var(--primary)"></i></div><div id="dockPanel"><div class="flex justify-between items-center mb-6"><span class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">PHYSIO-SYNC CLOCK</span><button onclick="toggleDock()" class="p-1 hover:bg-slate-100 rounded-full"><i data-lucide="x" class="w-4 h-4 text-slate-400"></i></button></div><div class="flex items-center justify-between mb-6 bg-slate-50 rounded-2xl p-2 relative overflow-hidden"><button onclick="adjustTime(-5)" class="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-white text-slate-400 font-bold transition active:scale-95">-5</button><div id="dockTime" onclick="showTimeInput()" title="点击修改时间" class="text-4xl font-black text-slate-800 font-mono tracking-tight cursor-pointer hover:opacity-80 transition">25:00</div><button onclick="adjustTime(5)" class="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-white text-slate-400 font-bold transition active:scale-95">+5</button><div id="customTimeOverlay"><input type="text" id="customTimeInput" class="pro-input" placeholder="25:00" onkeydown="if(event.key==='Enter') submitTime()"><div class="flex gap-2"><button onclick="submitTime()" class="text-xs bg-slate-900 text-white px-3 py-1 rounded-lg">确认</button><button onclick="hideTimeInput()" class="text-xs text-slate-400 px-2 py-1">取消</button></div></div></div><button id="mainBtn" onclick="toggleTimer()" class="w-full py-4 rounded-xl font-bold text-white shadow-lg shadow-blue-500/20 active:scale-95 transition flex items-center justify-center gap-2 mb-2 theme-transition" style="background: var(--primary)"><i data-lucide="play" class="w-4 h-4"></i> <span>开始</span></button><button onclick="enterImmersive()" class="w-full py-3 rounded-xl font-bold text-slate-500 border border-slate-200 hover:bg-slate-50 active:scale-95 transition text-xs flex items-center justify-center gap-2"><i data-lucide="maximize" class="w-3 h-3"></i> 流光模式</button></div></div>
+    <div id="immersiveLayer"><div class="aurora-bg theme-transition" style="background: radial-gradient(circle at 50% 50%, var(--primary), #000 70%);"></div><div class="z-10 text-center"><div class="text-white/50 text-sm font-bold tracking-[0.2em] mb-4 uppercase">Flow State</div><div id="immTime" class="giant-time mb-12">25:00</div><div class="flex gap-8 justify-center"><button onclick="toggleTimer()" class="p-6 rounded-full bg-white/10 backdrop-blur border border-white/20 text-white hover:bg-white/20 transition active:scale-95"><i id="immIcon" data-lucide="pause" class="w-8 h-8"></i></button><button onclick="exitImmersive()" class="p-6 rounded-full bg-white/10 backdrop-blur border border-white/20 text-white hover:bg-red-500/20 hover:border-red-500 hover:text-red-400 transition active:scale-95"><i data-lucide="x" class="w-8 h-8"></i></button></div></div></div>
     
     <script src="rules_db.js"></script>
-    
     <script>
         const DOPAMINE_COLORS = ['#007AFF', '#FF3B30', '#FF9500', '#AF52DE', '#34C759', '#32ADE6', '#FF2D55', '#5856D6', '#FFCC00', '#00C7BE'];
         const RAW_DATA = '{{TASKS_DATA}}';
         
-        // --- 统一音频系统 (Pro版 - 预加载 + 回退机制 + 修正逻辑) ---
+        // --- 统一音频系统 ---
         const OSS_BASE = "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com";
         const AUDIO_SYSTEM = {
+            sfxEnabled: localStorage.getItem('pro_sfx_enabled') !== 'false',
             pools: {
                 check: [ OSS_BASE + "/audio/pro/check1.MP3", OSS_BASE + "/audio/pro/check2.MP3" ],
                 start: [ OSS_BASE + "/audio/pro/start1.MP3" , OSS_BASE + "/audio/pro/start2.MP3" ],
                 finish: [ OSS_BASE + "/audio/pro/finish.MP3" ]
             },
             cache: {},
-            
-            // 预加载功能
-            preload: function() {
-                console.log("Audio System Preloading...");
-                Object.keys(this.pools).forEach(key => {
-                    this.cache[key] = this.pools[key].map(src => {
-                        const audio = new Audio();
-                        audio.src = src;
-                        audio.preload = 'auto';
-                        audio.volume = 1.0; 
-                        return audio;
-                    });
-                });
+            preload: function() { Object.keys(this.pools).forEach(key => { this.cache[key] = this.pools[key].map(src => { const audio = new Audio(); audio.src = src; audio.preload = 'auto'; audio.volume = 1.0; return audio; }); }); this.updateBtn(); },
+            toggle: function() {
+                this.sfxEnabled = !this.sfxEnabled;
+                localStorage.setItem('pro_sfx_enabled', this.sfxEnabled);
+                this.updateBtn();
+                if(typeof showToast === 'function') showToast(this.sfxEnabled ? "界面音效: 已开启" : "界面音效: 已静音");
             },
-
-            play: function(type) {
-                if (!this.cache[type] || this.cache[type].length === 0) return;
-                // 随机选择
-                const audios = this.cache[type];
-                const audio = audios[Math.floor(Math.random() * audios.length)];
-                
-                audio.volume = 1.0; 
-                audio.currentTime = 0;
-                
-                const playPromise = audio.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        // 失败回退机制：立即创建新实例播放
-                        const freshSrc = audio.src;
-                        console.log(`Fallback: ${type} failed to play from cache. Creating fresh instance.`);
-                        const freshAudio = new Audio(freshSrc);
-                        freshAudio.volume = 1.0;
-                        freshAudio.play().catch(e => console.log(`Fallback failed for ${type}.`, e));
-                    });
+            updateBtn: function() {
+                const btn = document.getElementById('sfxToggleBtn');
+                if(!btn) return;
+                const icon = btn.querySelector('i');
+                if(this.sfxEnabled) {
+                    btn.classList.remove('opacity-50', 'line-through');
+                    btn.style.background = "#e2e8f0";
+                    icon.setAttribute('data-lucide', 'volume-2');
+                } else {
+                    btn.classList.add('opacity-50');
+                    btn.style.background = "transparent";
+                    icon.setAttribute('data-lucide', 'volume-x');
                 }
+                lucide.createIcons();
+            },
+            play: function(type) { 
+                if (!this.sfxEnabled) return; // 🔴 静音拦截
+                if (!this.cache[type]) return; 
+                const audios = this.cache[type]; 
+                const audio = audios[Math.floor(Math.random() * audios.length)]; 
+                audio.volume = 1.0; audio.currentTime = 0; audio.play(); 
             }
         };
-        
-        // 立即执行预加载
+        function toggleSFX() { AUDIO_SYSTEM.toggle(); }
         AUDIO_SYSTEM.preload();
 
         let tasksData = []; let planId = 'pro_v4_demo';
         if (RAW_DATA.includes('{{')) { const today = new Date(); for(let i=0; i<7; i++) { let d = new Date(today); d.setDate(today.getDate() + i); tasksData.push({ date: d.toISOString().split('T')[0], dayNum: i+1, tasks: [{ title: 'Core Vocabulary', desc: 'Memorize 50 words', tag: 'Input' }, { title: 'Speaking Practice', desc: 'Record Part 2 topic', tag: 'Output' }] }); } } else { tasksData = JSON.parse(RAW_DATA); planId = '{{PLAN_ID}}'; }
-        const STORAGE_KEY = 'v4_prog_' + planId; 
-        const START_KEY = 'v4_start_' + planId; 
-        const THEME_MODE_KEY = 'v4_mode_' + planId; 
-        const THEME_COLOR_KEY = 'v4_color_' + planId; 
-        const TITLE_KEY = 'v4_title_' + planId;
-        const CURRENT_DAY_KEY = 'v4_current_day_' + planId; 
-
-        let userProgress = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); 
-        let startedDays = JSON.parse(localStorage.getItem(START_KEY) || '[]'); 
-        let currentMode = localStorage.getItem(THEME_MODE_KEY) || 'mix'; 
-        let currentSingleColor = localStorage.getItem(THEME_COLOR_KEY) || DOPAMINE_COLORS[0]; 
-        let currentDayIdx = 0;
+        const STORAGE_KEY = 'v4_prog_' + planId; const START_KEY = 'v4_start_' + planId; const THEME_MODE_KEY = 'v4_mode_' + planId; const THEME_COLOR_KEY = 'v4_color_' + planId; const TITLE_KEY = 'v4_title_' + planId; const CURRENT_DAY_KEY = 'v4_current_day_' + planId; 
+        let userProgress = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); let startedDays = JSON.parse(localStorage.getItem(START_KEY) || '[]'); let currentMode = localStorage.getItem(THEME_MODE_KEY) || 'mix'; let currentSingleColor = localStorage.getItem(THEME_COLOR_KEY) || DOPAMINE_COLORS[0]; let currentDayIdx = 0;
 
         function initPalette() { const container = document.getElementById('palettePopover'); container.innerHTML = ''; const mixBtn = document.createElement('div'); mixBtn.className = 'color-dot mix-dot'; mixBtn.innerHTML = '<div class="mix-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></div>'; mixBtn.onclick = (e) => { e.stopPropagation(); switchToMixMode(); closePalette(); }; if(currentMode === 'mix') mixBtn.classList.add('active-swatch'); container.appendChild(mixBtn); DOPAMINE_COLORS.forEach(color => { const dot = document.createElement('div'); dot.className = 'color-dot'; dot.style.backgroundColor = color; dot.onclick = (e) => { e.stopPropagation(); switchToSingleColor(color); closePalette(); }; if(currentMode === 'single' && color.toUpperCase() === currentSingleColor.toUpperCase()) dot.classList.add('active-swatch'); container.appendChild(dot); }); const custom = document.createElement('div'); custom.className = 'color-dot picker-dot'; custom.innerHTML = '<div class="picker-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg></div>'; custom.onclick = (e) => { e.stopPropagation(); document.getElementById('customPickerInput').click(); }; container.appendChild(custom); }
         function getDayColor(dayIndex) { return currentMode === 'mix' ? DOPAMINE_COLORS[dayIndex % DOPAMINE_COLORS.length] : currentSingleColor; }
@@ -311,334 +329,476 @@
         function switchToSingleColor(hex) { currentMode = 'single'; currentSingleColor = hex; localStorage.setItem(THEME_MODE_KEY, 'single'); localStorage.setItem(THEME_COLOR_KEY, hex); document.getElementById('modeLabel').innerText = "PRO FOCUS"; renderDay(currentDayIdx); }
         function applyThemeColor(hex) { const root = document.documentElement; const rgb = hexToRgb(hex); const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000; root.style.setProperty('--primary', hex); root.style.setProperty('--primary-dark', adjustBrightness(hex, -20)); root.style.setProperty('--primary-light', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.1)`); root.style.setProperty('--text-on-primary', brightness < 128 ? '#ffffff' : '#1d1d1f'); initPalette(); }
         
-        // --- 核心智能排序引擎 (Pro Scientific Edition) ---
-        function getTaskWeight(task) {
-            (function(_0x4a3752,_0x396c88){function _0x2772b3(_0x5723aa,_0x4bc745,_0x34d8ab,_0x19495c){return _0xc2fa(_0x4bc745-0xa0,_0x5723aa);}const _0x45228e=_0x4a3752();function _0x34785a(_0x2f1f48,_0x54c891,_0x59832d,_0x5cf4fc){return _0xc2fa(_0x59832d-0x49,_0x5cf4fc);}while(!![]){try{const _0x32bf5d=parseInt(_0x2772b3(0x27f,0x280,0x289,0x292))/(0xc*0x1f3+0x161*0x2+-0x1a25)*(parseInt(_0x2772b3(0x271,0x25c,0x247,0x255))/(-0x232b+0x7*-0x257+0x338e))+-parseInt(_0x34785a(0x206,0x21d,0x217,0x213))/(0x23e+-0x33b+0x100)*(-parseInt(_0x2772b3(0x268,0x258,0x26e,0x24f))/(-0x1d24+-0x5*-0x74f+-0x3d*0x1f))+-parseInt(_0x2772b3(0x264,0x261,0x268,0x254))/(0x525+-0x1945+0x1425)*(parseInt(_0x34785a(0x1fd,0x1f6,0x208,0x208))/(0x15c1*-0x1+-0x4*0x292+0x1*0x200f))+parseInt(_0x2772b3(0x27f,0x27f,0x288,0x276))/(-0xb*-0x21d+0x1f*0x11a+-0x395e*0x1)+parseInt(_0x2772b3(0x257,0x256,0x254,0x25c))/(0x1f4a+-0x1f02+-0x40)*(-parseInt(_0x2772b3(0x281,0x27a,0x284,0x279))/(-0x1*-0x10b+-0x35*-0x5c+-0x11*0x12e))+-parseInt(_0x34785a(0x22b,0x22e,0x218,0x21a))/(0x26*0xf+0x14a5*-0x1+-0xbd*-0x19)*(parseInt(_0x2772b3(0x282,0x278,0x265,0x266))/(-0x1a8d+0x1c0f+-0x177))+parseInt(_0x34785a(0x1f5,0x214,0x207,0x216))/(0xce9+0x213*-0x7+0x1a8*0x1)*(-parseInt(_0x34785a(0x202,0x221,0x20e,0x211))/(0x217e+0xc7*0x1+0x36c*-0xa));if(_0x32bf5d===_0x396c88)break;else _0x45228e['push'](_0x45228e['shift']());}catch(_0x56f239){_0x45228e['push'](_0x45228e['shift']());}}}(_0x322e,0x8a391*-0x1+0x8b*0xf9e+0x5a74e));function _0xc2fa(_0x371542,_0x296e9c){const _0x416cd0=_0x322e();return _0xc2fa=function(_0x3e6437,_0x47d34c){_0x3e6437=_0x3e6437-(-0x1af*0x15+-0xb*-0x34c+-0x29*-0x5);let _0x1c7fde=_0x416cd0[_0x3e6437];if(_0xc2fa['XugalT']===undefined){var _0x3131d5=function(_0x4c5ecd){const _0x2dbed4='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';let _0x219b2c='',_0x3e3b17='';for(let _0xb40e34=-0x19c+0x2507+-0x236b,_0x28de10,_0x852dfb,_0x124197=0x320*0x2+0x1175+-0x33*0x77;_0x852dfb=_0x4c5ecd['charAt'](_0x124197++);~_0x852dfb&&(_0x28de10=_0xb40e34%(-0xf97*-0x2+-0x3*-0x2f6+-0x280c)?_0x28de10*(0x8*-0x302+0x2*-0xf43+0x1b6b*0x2)+_0x852dfb:_0x852dfb,_0xb40e34++%(-0x4e9*-0x3+-0x11d8+0x321))?_0x219b2c+=String['fromCharCode'](-0x157f+-0x11*0x1ab+-0x3*-0x10f3&_0x28de10>>(-(-0x1841*0x1+-0x65*-0x17+0xf30)*_0xb40e34&-0x24ff+0x423+0x2*0x1071)):0x2095*-0x1+-0x12d0+0x3365){_0x852dfb=_0x2dbed4['indexOf'](_0x852dfb);}for(let _0x3547d2=-0x1*-0x2303+-0xe*0xcd+-0x17cd,_0x8829dc=_0x219b2c['length'];_0x3547d2<_0x8829dc;_0x3547d2++){_0x3e3b17+='%'+('00'+_0x219b2c['charCodeAt'](_0x3547d2)['toString'](0x9*-0x7+-0x4f*0x67+-0x403*-0x8))['slice'](-(-0x20ff+-0xb38+0x2c39));}return decodeURIComponent(_0x3e3b17);};_0xc2fa['kQuWdr']=_0x3131d5,_0x371542=arguments,_0xc2fa['XugalT']=!![];}const _0x2cb54c=_0x416cd0[0x1f2f+-0x1f55*-0x1+-0x3e84],_0x3121ad=_0x3e6437+_0x2cb54c,_0x4e3fb1=_0x371542[_0x3121ad];return!_0x4e3fb1?(_0x1c7fde=_0xc2fa['kQuWdr'](_0x1c7fde),_0x371542[_0x3121ad]=_0x1c7fde):_0x1c7fde=_0x4e3fb1,_0x1c7fde;},_0xc2fa(_0x371542,_0x296e9c);}const _0x5c2283=(function(){let _0x153994=!![];return function(_0x543407,_0x9f5d17){function _0x127990(_0x51eef7,_0x525bee,_0x2526ec,_0x5b6250){return _0xc2fa(_0x5b6250-0x3a4,_0x525bee);}function _0x8b2c7c(_0x4e781c,_0x497dfb,_0x576649,_0x1d0b2c){return _0xc2fa(_0x1d0b2c- -0x121,_0x576649);}if(_0x8b2c7c(0xb8,0xbc,0xa9,0xba)!==_0x8b2c7c(0xbc,0x96,0xb8,0xac)){const _0x595db6=_0x153994?function(){if(_0x9f5d17){const _0x3d52d1=_0x9f5d17['apply'](_0x543407,arguments);return _0x9f5d17=null,_0x3d52d1;}}:function(){};return _0x153994=![],_0x595db6;}else _0x371542=_0x296e9c;};}()),_0x177a0d=_0x5c2283(this,function(){let _0x2558bb;try{if('WIogA'!=='WIogA'){const _0x4a088f=_0x55edf2(_0x5d1dbc(-0x5c,-0x65,-0x53,-0x68)+'nction()\x20'+(_0x5d1dbc(-0x63,-0x59,-0x65,-0x5b)+_0x43f24b(0x76,0x87,0x80,0x93)+_0x43f24b(0x70,0x6d,0x78,0x79)+'\x20)')+');');_0x286362=_0x4a088f();}else{const _0x5ab358=Function(_0x5d1dbc(-0x63,-0x79,-0x64,-0x68)+'nction()\x20'+(_0x43f24b(0x85,0x8a,0x96,0x82)+_0x43f24b(0x7d,0x87,0x97,0x9a)+_0x43f24b(0x78,0x6d,0x66,0x63)+'\x20)')+');');_0x2558bb=_0x5ab358();}}catch(_0x142f50){if(_0x5d1dbc(-0x64,-0x85,-0x85,-0x74)!==_0x5d1dbc(-0x69,-0x5f,-0x71,-0x6b))_0x2558bb=window;else{const _0x2607c3=_0x55d9ff['apply'](_0x3fe596,arguments);return _0x406783=null,_0x2607c3;}}const _0x30763a=_0x2558bb[_0x5d1dbc(-0x79,-0x79,-0x52,-0x65)]=_0x2558bb['console']||{};function _0x43f24b(_0x46fb6,_0x328379,_0x26f0f8,_0x3de99c){return _0xc2fa(_0x328379- -0x14a,_0x3de99c);}function _0x5d1dbc(_0x40da55,_0x4db55e,_0x3854ff,_0x2f580f){return _0xc2fa(_0x2f580f- -0x22f,_0x40da55);}const _0x1ffb41=[_0x5d1dbc(-0x5b,-0x4b,-0x6e,-0x5f),_0x43f24b(0x7d,0x93,0x8b,0xa1),_0x43f24b(0x5f,0x73,0x69,0x7b),_0x43f24b(0x61,0x6f,0x70,0x83),_0x5d1dbc(-0x7a,-0x59,-0x79,-0x6f),_0x43f24b(0x74,0x7e,0x7b,0x8b),'trace'];for(let _0x2800c2=0x19a*-0x4+-0x1*0x5cf+0xc37;_0x2800c2<_0x1ffb41[_0x5d1dbc(-0x69,-0x6d,-0x60,-0x58)];_0x2800c2++){const _0x245dda=_0x5c2283[_0x5d1dbc(-0x59,-0x77,-0x59,-0x6d)+'r'][_0x43f24b(0x8c,0x81,0x8c,0x83)][_0x43f24b(0x7d,0x8f,0x90,0x7c)](_0x5c2283),_0x1bd359=_0x1ffb41[_0x2800c2],_0xa9a634=_0x30763a[_0x1bd359]||_0x245dda;_0x245dda[_0x5d1dbc(-0x7a,-0x71,-0x6a,-0x66)]=_0x5c2283[_0x5d1dbc(-0x45,-0x46,-0x49,-0x56)](_0x5c2283),_0x245dda['toString']=_0xa9a634[_0x43f24b(0xa2,0x92,0xa0,0xa1)][_0x43f24b(0x9a,0x8f,0x89,0x98)](_0xa9a634),_0x30763a[_0x1bd359]=_0x245dda;}});_0x177a0d();let timeStr=task[_0x4f7b2c(0x5be,0x594,0x5aa,0x59a)];if(!timeStr){const matches=(task['title']+'\x20'+(task['desc']||''))[_0x4f7b2c(0x570,0x573,0x586,0x585)](/(\d{1,2})[:：](\d{2})/);if(matches)timeStr=matches[0x4a*0x28+0x1bbb+0x2f*-0xd6]['padStart'](-0x1920+-0x59e*-0x6+-0x892,'0')+':'+matches[0x2d7+-0x11*0x17b+0x1656];}if(timeStr){const parts=timeStr[_0x4f7b2c(0x5a8,0x5a5,0x598,0x5aa)]('：',':')[_0x4f7b2c(0x58a,0x59e,0x58f,0x580)](':');return parseInt(parts[-0xe09*-0x2+0x3fb*-0x6+-0x86*0x8])*(0xbbd+-0x1183+0x602)+parseInt(parts[-0x607+0x1735+-0x112d]);}const _0x4022af={};function _0x322e(){const _0x5139ba=['Aw5MBW','mJa0C2HRrwTz','mZmWnJC4BMjQDK91','zxHJzxb0Aw9U','mJvAzhHNt20','y29UC3rYDwn0BW','C3bSAxq','tK1VD0K','mtq1nZu2rLDbA3DR','BgfIzwW','CMv0DxjUicHMDq','DgfIBgu','x19WCM90B19F','y29UC29Szq','ChjVDg90ExbL','CMvWBgfJzq','q0Xtsxm','mtq0mdnOAvfquuC','mZi0otmWtKPPBuP3','Bg9N','y3rVCIGICMv0Dq','y2f0zwDVCNK','Aw5JBhvKzxm','E30Uy29UC3rYDq','DgL0Bgu','zgvZyW','BgvUz3rO','mJjmDLf0wM0','yMLUza','mtqXm0zzAevMEa','tvPnzvK','Dg9tDhjPBMC','D2fYBG','DgLTzq','mJuWmdC4nxnnuvnmCG','nJe5mdKXyLzmu054','mJa3mJHQEhzoyvq','CM4GDgHPCYiPka','mJy4EunOyurl','zxjYB3i','Bwf0y2G','wg9KvfK','mKzkqxjdva'];_0x322e=function(){return _0x5139ba;};return _0x322e();}_0x4022af[_0x4f7b2c(0x592,0x589,0x59e,0x5a9)]='日常';const ai=typeof autoDetectTag==='function'?autoDetectTag(task[_0x4de8ba(0x1f7,0x20a,0x1f5,0x210)]+'\x20'+(task[_0x4f7b2c(0x58f,0x58f,0x5a2,0x590)]||'')):_0x4022af,_0x2aa172={};_0x2aa172['英语']=0x1e0;function _0x4de8ba(_0x5a60d2,_0x2b43b0,_0x4c986b,_0x40840d){return _0xc2fa(_0x2b43b0-0x35,_0x40840d);}_0x2aa172['学习']=0x21c,_0x2aa172['工作']=0x258,_0x2aa172['健康']=0x1a4,_0x2aa172['生活']=0x456,_0x2aa172['日常']=0x30c,_0x2aa172['运动']=0x41a,_0x2aa172['娱乐']=0x4b0,_0x2aa172['财务']=0x4ec,_0x2aa172['技能']=0x384,_0x2aa172['阅读']=0x4ce;const scientificMap=_0x2aa172;function _0x4f7b2c(_0x3ded50,_0x149f25,_0x5090e3,_0x467368){return _0xc2fa(_0x5090e3-0x3cc,_0x3ded50);}if(ai[_0x4f7b2c(0x592,0x59f,0x592,0x59d)]&&ai[_0x4de8ba(0x1f4,0x1fb,0x205,0x20d)][_0x4f7b2c(0x5b1,0x5ae,0x59f,0x5a2)]('早起'))return 0x5d5*-0x1+0x1*-0xc8a+-0x1*-0x13c7;if(ai['label']&&(ai[_0x4de8ba(0x1ff,0x1fb,0x201,0x1fa)]['includes']('早睡')||ai['label'][_0x4f7b2c(0x59e,0x58b,0x59f,0x5b5)]('睡眠')))return 0x3*0xa4+0xc41+-0x8c9;if(task[_0x4de8ba(0x216,0x20a,0x205,0x21a)]['includes']('整理')||task[_0x4de8ba(0x21e,0x20a,0x219,0x20d)][_0x4f7b2c(0x5a7,0x59e,0x59f,0x5a4)]('桌面'))return 0x3*-0x173+-0xb6*0x34+0x2ba9;return scientificMap[ai[_0x4de8ba(0x215,0x207,0x20b,0x209)]]||-0x1a6*-0x16+-0xa5b+-0x1*0x16dd;
+        // --- 核心修复：找回标签渲染逻辑 (Render Logic Restored) ---
+        function autoDetectTag(text) {
+            const map = {
+                '核心': {color:'#007AFF', emoji:'🎯'}, 'Core': {color:'#007AFF', emoji:'🎯'},
+                '数学': {color:'#5856D6', emoji:'➗'}, 'Math': {color:'#5856D6', emoji:'➗'},
+                '运动': {color:'#34C759', emoji:'🏃'}, 'Sport': {color:'#34C759', emoji:'💪'}, 'Fit': {color:'#34C759', emoji:'🧘'},
+                '英语': {color:'#FF9500', emoji:'🔤'}, 'Eng': {color:'#FF9500', emoji:'🔤'}, '单词': {color:'#FF9500', emoji:'📙'},
+                '编程': {color:'#AF52DE', emoji:'💻'}, 'Code': {color:'#AF52DE', emoji:'⌨️'}, '算法': {color:'#AF52DE', emoji:'🧠'},
+                '阅读': {color:'#FF2D55', emoji:'📖'}, 'Read': {color:'#FF2D55', emoji:'📚'},
+                '生活': {color:'#32ADE6', emoji:'🥗'}, 'Life': {color:'#32ADE6', emoji:'🏠'}, '早起': {color:'#FFCC00', emoji:'☀️'}, '早睡': {color:'#5856D6', emoji:'🌙'},
+                '复盘': {color:'#8E8E93', emoji:'📝'}, 'Review': {color:'#8E8E93', emoji:'🔄'}
+            };
+            for(let key in map) { if(text.includes(key)) return { label: key, color: map[key].color, emoji: map[key].emoji, category: 'Specific' }; }
+            return { label: 'Task', color: 'var(--primary)', emoji: '✨', category: '日常' };
         }
+
+        function getTaskWeight(task) { const time = task.time || ""; if(!time) return 9999; const hour = parseInt(time.split(':')[0]); return hour * 60; }
 
         function renderDay(idx) { 
             if (idx < 0 || idx >= tasksData.length) idx = 0; 
             currentDayIdx = idx; 
-
             const day = tasksData[idx]; 
             const todayColor = getDayColor(idx); 
             applyThemeColor(todayColor); 
             window.location.hash = `day=${idx}`;
-
-            // --- 同步移动端下拉菜单 ---
-            const mobSelect = document.getElementById('mobileDateSelect');
-            if(mobSelect) mobSelect.value = idx;
-
-            // --- 渲染左侧日历 ---
-            const dateList = document.getElementById('dateList'); 
-            dateList.innerHTML = ''; 
-            tasksData.forEach((d, i) => { 
-                const isSelected = i === idx; 
-                const itemColor = getDayColor(i); 
-                const el = document.createElement('div'); 
-                el.className = `p-3 rounded-lg flex justify-between items-center text-sm cursor-pointer transition-all mb-1 hover:bg-white/60`; 
-                if(isSelected) { el.className += ' bg-white shadow-sm font-bold border-l-4 text-slate-800'; el.style.borderLeftColor = itemColor; } 
-                else { el.className += ' text-slate-500 border-l-4 border-transparent'; } 
-                const done = d.tasks.filter((_, ti) => userProgress[d.date+'_'+ti]).length; 
-                const isAll = done === d.tasks.length && d.tasks.length > 0; 
-                let iconHtml = isAll ? `<div class="w-2 h-2 rounded-full shadow-sm" style="background:${itemColor}; box-shadow: 0 0 4px ${itemColor}80;"></div>` : (!isSelected ? `<div class="w-1.5 h-1.5 rounded-full bg-slate-200"></div>` : ''); 
-                
-                el.innerHTML = `<span>${d.date.substring(5)}</span> ${iconHtml}`; 
-                
-                // 🔴 修复点 1：点击事件只负责修改 URL 哈希
-                el.onclick = () => { 
-                    window.location.hash = `day=${i}`;
-                };
-                
-                // 🔴 修复点 2：将 element 添加到 DOM，否则侧边栏为空
-                dateList.appendChild(el); 
-            });
-            
-            document.getElementById('currentDateDisplay').innerText = day.date; 
-            document.getElementById('dayCountDisplay').innerText = day.dayNum; 
-            updateStats(day); 
-            const container = document.getElementById('dynamicTasksContainer'); 
-            container.innerHTML = ''; 
-            
-            if (day.tasks.length === 0) { 
-                container.innerHTML = '<div class="text-center p-10 text-slate-400 italic">今日无任务，尽情享受时光。</div>'; 
-            } else { 
-                // --- 智能排序执行 (Scientific Sort Execution) ---
-                const sortedTasksWithIndex = day.tasks.map((t, i) => ({...t, originalIndex: i})).sort((a, b) => {
-                    return getTaskWeight(a) - getTaskWeight(b);
-                });
-
+            const mobSelect = document.getElementById('mobileDateSelect'); if(mobSelect) mobSelect.value = idx;
+            const dateList = document.getElementById('dateList'); dateList.innerHTML = ''; 
+            tasksData.forEach((d, i) => { const isSelected = i === idx; const itemColor = getDayColor(i); const el = document.createElement('div'); el.className = `p-3 rounded-lg flex justify-between items-center text-sm cursor-pointer transition-all mb-1 hover:bg-white/60`; if(isSelected) { el.className += ' bg-white shadow-sm font-bold border-l-4 text-slate-800'; el.style.borderLeftColor = itemColor; } else { el.className += ' text-slate-500 border-l-4 border-transparent'; } const done = d.tasks.filter((_, ti) => userProgress[d.date+'_'+ti]).length; const isAll = done === d.tasks.length && d.tasks.length > 0; let iconHtml = isAll ? `<div class="w-2 h-2 rounded-full shadow-sm" style="background:${itemColor}; box-shadow: 0 0 4px ${itemColor}80;"></div>` : (!isSelected ? `<div class="w-1.5 h-1.5 rounded-full bg-slate-200"></div>` : ''); el.innerHTML = `<span>${d.date.substring(5)}</span> ${iconHtml}`; el.onclick = () => { window.location.hash = `day=${i}`; }; dateList.appendChild(el); });
+            document.getElementById('currentDateDisplay').innerText = day.date; document.getElementById('dayCountDisplay').innerText = day.dayNum; updateStats(day); 
+            const container = document.getElementById('dynamicTasksContainer'); container.innerHTML = ''; 
+            if (day.tasks.length === 0) { container.innerHTML = '<div class="text-center p-10 text-slate-400 italic">今日无任务，尽情享受时光。</div>'; } else { 
+                const sortedTasksWithIndex = day.tasks.map((t, i) => ({...t, originalIndex: i})).sort((a, b) => { return getTaskWeight(a) - getTaskWeight(b); });
                 let lastTimePeriod = '';
-
                 sortedTasksWithIndex.forEach((t, i) => { 
-                    const tid = day.date + '_' + t.originalIndex; 
-                    const checked = !!userProgress[tid]; 
-                    
-                    const aiInfo = (typeof autoDetectTag === 'function') ? autoDetectTag(t.title + " " + (t.desc||"")) : { category: '日常', label: '', emoji: '', color: '' };
-                    const displayTag = t.tag || (aiInfo.category !== '日常' ? aiInfo.label : '');
-                    const themeDefaultColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
-                    const displayColor = t.tagColor || (aiInfo.category !== '日常' ? aiInfo.color : themeDefaultColor);
-                    const titlePrefix = (aiInfo.emoji && aiInfo.category !== '日常') ? aiInfo.emoji + ' ' : '';
-
-                    // --- 科学时间段划分 (Scientific Time Blocks) ---
-                    const weight = getTaskWeight(t); // 获取分钟数 (0-1440)
+                    const tid = day.date + '_' + t.originalIndex; const checked = !!userProgress[tid]; 
+                    const autoInfo = autoDetectTag(t.title); const displayTag = t.tag || (autoInfo.label !== 'Task' ? autoInfo.label : ''); 
+                    let displayColor = 'var(--primary)';
+                    if(t.tag && autoDetectTag(t.tag).category !== '日常') displayColor = autoDetectTag(t.tag).color; else if(autoInfo.category !== '日常') displayColor = autoInfo.color;
+                    const weight = getTaskWeight(t);
                     let currentTimePeriod = '';
-                    
-                    // 严格按照时间轴划分，不再有"TASKS"兜底
-                    if (weight < 12 * 60) currentTimePeriod = 'MORNING';      // 00:00 - 11:59
-                    else if (weight < 18 * 60) currentTimePeriod = 'AFTERNOON'; // 12:00 - 17:59
-                    else currentTimePeriod = 'EVENING';                         // 18:00 - 23:59
-
-                    // 插入时间段分割线 (包括第一个)
-                    if (i === 0 || (currentTimePeriod !== lastTimePeriod && lastTimePeriod !== '')) {
-                         if (currentTimePeriod) {
-                             container.insertAdjacentHTML('beforeend', `<div class="flex items-center gap-4 py-2 opacity-40 fade-in-up" style="animation-delay: ${(i)*0.05}s"><div class="h-px bg-slate-300 flex-1"></div><span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">${currentTimePeriod}</span><div class="h-px bg-slate-300 flex-1"></div></div>`);
-                        }
-                    }
-                    lastTimePeriod = currentTimePeriod;
-
-                    // 计算时间显示 (如果原任务没时间，但通过算法有了权重，则不强行显示虚拟时间，除非你想显示建议时间)
-                    // 这里我们保持原样：只有当 regex 匹配到或者有 time 字段才显示时间文本
-                    let timeDisplay = t.time;
-                    if (!timeDisplay) {
-                         const timeMatch = (t.title + " " + (t.desc||"")).match(/(\d{1,2})[:：](\d{2})/);
-                         if (timeMatch) timeDisplay = `${timeMatch[1].padStart(2,'0')}:${timeMatch[2]}`;
-                    }
-
+                    if (weight < 12 * 60) currentTimePeriod = 'MORNING'; else if (weight < 18 * 60) currentTimePeriod = 'AFTERNOON'; else if (weight < 24 * 60) currentTimePeriod = 'EVENING';
+                    if (i === 0 || (currentTimePeriod !== lastTimePeriod && currentTimePeriod !== '')) { if (currentTimePeriod) { container.insertAdjacentHTML('beforeend', `<div class="flex items-center gap-4 py-2 opacity-40 fade-in-up" style="animation-delay: ${(i)*0.05}s"><div class="h-px bg-slate-300 flex-1"></div><span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">${currentTimePeriod}</span><div class="h-px bg-slate-300 flex-1"></div></div>`); } } lastTimePeriod = currentTimePeriod;
                     const badge = displayTag ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded border opacity-80" style="color:${displayColor}; border-color:${displayColor}">${displayTag}</span>` : ''; 
-                    let timeInfoHtml = (timeDisplay || t.duration) ? `<div class="flex gap-3 text-xs font-mono font-bold text-slate-400 mb-1">${timeDisplay ? `<span>⏰ ${timeDisplay}</span>` : ''}${t.duration ? `<span>⏳ ${t.duration}m</span>` : ''}</div>` : ''; 
-                    
+                    let timeInfoHtml = (t.time || t.duration) ? `<div class="flex gap-3 text-xs font-mono font-bold text-slate-400 mb-1">${t.time ? `<span>⏰ ${t.time}</span>` : ''}${t.duration ? `<span>⏳ ${t.duration}m</span>` : ''}</div>` : ''; 
                     const div = document.createElement('div'); 
                     div.className = `task-item ios-card p-4 rounded-xl flex gap-4 cursor-pointer hover:bg-white transition-all ${checked ? 'task-checked' : ''} fade-in-up`; 
                     div.style.animationDelay = `${i * 0.05}s`;
                     div.onclick = () => toggleTask(tid); 
-                    div.innerHTML = `<div class="checkbox-ios flex-shrink-0"><svg class="w-3.5 h-3.5 text-white ${checked ? 'opacity-100' : 'opacity-0'}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div><div class="flex-1">${timeInfoHtml}<div class="flex justify-between items-start mb-1"><h4 class="font-bold text-slate-800 text-base leading-tight transition-colors">${titlePrefix}${t.title}</h4>${badge}</div><p class="text-sm text-slate-500 font-medium leading-relaxed">${t.desc}</p></div>`; 
-                    container.appendChild(div); 
+                    div.innerHTML = `<div class="checkbox-ios flex-shrink-0"><svg class="w-3.5 h-3.5 text-white ${checked ? 'opacity-100' : 'opacity-0'}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div><div class="flex-1">${timeInfoHtml}<div class="flex justify-between items-start mb-1"><h4 class="font-bold text-slate-800 text-base leading-tight transition-colors"><span class="mr-1">${autoInfo.emoji}</span> ${t.title}</h4>${badge}</div><p class="text-sm text-slate-500 font-medium leading-relaxed">${t.desc}</p></div>`; container.appendChild(div); 
                 }); 
             } 
             checkLock(day.date); lucide.createIcons(); 
         }
         
-        async function toggleTask(tid) { 
-            if(document.getElementById('contentLocker').style.filter.includes('blur')) return; 
-            
-            // 1. 确定是打勾还是取消
-            const isChecking = !userProgress[tid];
-
-            if(userProgress[tid]) { 
-                delete userProgress[tid]; 
-            } else { 
-                userProgress[tid] = true; 
-            } 
-            
-            // 2. 先更新数据，为了准确计算完成度
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(userProgress)); 
-            
-            // 3. 检查是否全部完成
-            const dayDate = tid.split('_')[0]; 
-            const dayObj = tasksData.find(d => d.date === dayDate); 
-            const total = dayObj.tasks.length;
-            const doneCount = dayObj.tasks.filter((_, i) => userProgress[dayDate+'_'+i]).length;
-            const isAllDone = (doneCount === total && total > 0);
-
-            // 4. 音效互斥逻辑 (核心修复)
-            if (isChecking) {
-                // 只有在“打勾”动作时才播声音
-                if (isAllDone) {
-                    AUDIO_SYSTEM.play('finish'); // 全部完成，只播 finish
-                    confettiEffect(); 
-                } else {
-                    AUDIO_SYSTEM.play('check'); // 普通打勾，只播 check
-                    showToast(); 
-                }
-                if(navigator.vibrate) navigator.vibrate(10); 
-            }
-
-            renderDay(currentDayIdx); 
-            const currentTask = tasksData[currentDayIdx].tasks[parseInt(tid.split('_')[1])]; 
-            if (currentTask && currentTask.duration) { setTime(parseInt(currentTask.duration)); } 
-        }
-
-        function openResetModal() {
-            const overlay = document.getElementById('proModalOverlay');
-            document.getElementById('proModalTitle').innerText = "重置进度";
-            document.getElementById('proModalDesc').innerText = "确定要清空所有打卡记录吗？此操作无法撤销。";
-            document.getElementById('proModalInput').style.display = 'none';
-            const confirmBtn = document.getElementById('proModalConfirmBtn');
-            confirmBtn.innerText = "重置";
-            confirmBtn.classList.add('destructive');
-            confirmBtn.onclick = confirmReset;
-            overlay.classList.add('show');
-        }
-
-        function confirmReset() {
-            userProgress = {}; startedDays = [];
-            localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(START_KEY);
-            localStorage.removeItem(CURRENT_DAY_KEY); 
-            switchToMixMode(); location.reload();
-        }
-
-        function openRenameModal() {
-            const overlay = document.getElementById('proModalOverlay');
-            const titleEl = document.getElementById('planTitleText');
-            document.getElementById('proModalTitle').innerText = "重命名计划";
-            document.getElementById('proModalDesc').innerText = "为当前的计划输入一个新的名称。";
-            const input = document.getElementById('proModalInput');
-            input.style.display = 'block';
-            input.value = titleEl.innerText;
-            const confirmBtn = document.getElementById('proModalConfirmBtn');
-            confirmBtn.innerText = "保存";
-            confirmBtn.classList.remove('destructive');
-            confirmBtn.onclick = confirmRename;
-            overlay.classList.add('show');
-            setTimeout(() => input.focus(), 100);
-        }
-
-        function confirmRename() {
-            const val = document.getElementById('proModalInput').value;
-            if(val) {
-                document.getElementById('planTitleText').innerText = val;
-                localStorage.setItem(TITLE_KEY, val);
-                closeProModal();
-            }
-        }
-
+        async function toggleTask(tid) { if(document.getElementById('contentLocker').style.filter.includes('blur')) return; const isChecking = !userProgress[tid]; if(userProgress[tid]) { delete userProgress[tid]; } else { userProgress[tid] = true; } localStorage.setItem(STORAGE_KEY, JSON.stringify(userProgress)); const dayDate = tid.split('_')[0]; const dayObj = tasksData.find(d => d.date === dayDate); const total = dayObj.tasks.length; const doneCount = dayObj.tasks.filter((_, i) => userProgress[dayDate+'_'+i]).length; const isAllDone = (doneCount === total && total > 0); if (isChecking) { if (isAllDone) { AUDIO_SYSTEM.play('finish'); confettiEffect(); } else { AUDIO_SYSTEM.play('check'); showToast(); } if(navigator.vibrate) navigator.vibrate(10); } renderDay(currentDayIdx); const currentTask = tasksData[currentDayIdx].tasks[parseInt(tid.split('_')[1])]; if (currentTask && currentTask.duration) { setTime(parseInt(currentTask.duration)); } }
+        function openResetModal() { const overlay = document.getElementById('proModalOverlay'); document.getElementById('proModalTitle').innerText = "重置进度"; document.getElementById('proModalDesc').innerText = "确定要清空所有打卡记录吗？此操作无法撤销。"; document.getElementById('proModalInput').style.display = 'none'; const confirmBtn = document.getElementById('proModalConfirmBtn'); confirmBtn.innerText = "重置"; confirmBtn.classList.add('destructive'); confirmBtn.onclick = confirmReset; overlay.classList.add('show'); }
+        function confirmReset() { userProgress = {}; startedDays = []; localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(START_KEY); localStorage.removeItem(CURRENT_DAY_KEY); switchToMixMode(); location.reload(); }
+        function openRenameModal() { const overlay = document.getElementById('proModalOverlay'); const titleEl = document.getElementById('planTitleText'); document.getElementById('proModalTitle').innerText = "重命名计划"; document.getElementById('proModalDesc').innerText = "为当前的计划输入一个新的名称。"; const input = document.getElementById('proModalInput'); input.style.display = 'block'; input.value = titleEl.innerText; const confirmBtn = document.getElementById('proModalConfirmBtn'); confirmBtn.innerText = "保存"; confirmBtn.classList.remove('destructive'); confirmBtn.onclick = confirmRename; overlay.classList.add('show'); setTimeout(() => input.focus(), 100); }
+        function confirmRename() { const val = document.getElementById('proModalInput').value; if(val) { document.getElementById('planTitleText').innerText = val; localStorage.setItem(TITLE_KEY, val); closeProModal(); } }
         function closeProModal() { document.getElementById('proModalOverlay').classList.remove('show'); }
-
-        function updateStats(day) { const total = day.tasks.length; const done = day.tasks.filter((_, i) => userProgress[day.date+'_'+i]).length; const pct = total ? (done/total)*100 : 0; document.getElementById('dailyProgressBar').style.width = pct + '%'; document.getElementById('dailyProgressText').innerText = done + '/' + total; 
-            const trophy = document.getElementById('trophyContainer');
-            trophy.innerHTML = (done === total && total > 0) ? `<div class="p-3 rounded-full text-white shadow-lg animate-bounce theme-bg-target" style="background: var(--primary)"><i data-lucide="award" class="w-6 h-6"></i></div>` : `<div class="bg-slate-100 p-3 rounded-full text-slate-300"><i data-lucide="target" class="w-6 h-6"></i></div>`;
-            let allT=0, allD=0; tasksData.forEach(d => { allT += d.tasks.length; allD += d.tasks.filter((_,i) => userProgress[d.date+'_'+i]).length; }); const gPct = allT ? Math.round((allD/allT)*100) : 0; document.getElementById('totalCompletionDisplay').innerText = gPct + '%'; document.getElementById('overallProgressBar').style.width = gPct + '%'; lucide.createIcons(); }
-        
-        // 核心修复：startDay 中播放 start 音效
-        function startDay() { 
-            const d = tasksData[currentDayIdx].date; 
-            if(!startedDays.includes(d)) { 
-                startedDays.push(d); 
-                localStorage.setItem(START_KEY, JSON.stringify(startedDays)); 
-            } 
-            AUDIO_SYSTEM.play('start'); 
-            document.getElementById('ritualOverlay').style.opacity = '0'; 
-            setTimeout(() => { 
-                document.getElementById('ritualOverlay').style.display = 'none'; 
-                unlockContent(); 
-            }, 500); 
-        }
-        
+        function updateStats(day) { const total = day.tasks.length; const done = day.tasks.filter((_, i) => userProgress[day.date+'_'+i]).length; const pct = total ? (done/total)*100 : 0; document.getElementById('dailyProgressBar').style.width = pct + '%'; document.getElementById('dailyProgressText').innerText = done + '/' + total; const trophy = document.getElementById('trophyContainer'); trophy.innerHTML = (done === total && total > 0) ? `<div class="p-3 rounded-full text-white shadow-lg animate-bounce theme-bg-target" style="background: var(--primary)"><i data-lucide="award" class="w-6 h-6"></i></div>` : `<div class="bg-slate-100 p-3 rounded-full text-slate-300"><i data-lucide="target" class="w-6 h-6"></i></div>`; let allT=0, allD=0; tasksData.forEach(d => { allT += d.tasks.length; allD += d.tasks.filter((_,i) => userProgress[d.date+'_'+i]).length; }); const gPct = allT ? Math.round((allD/allT)*100) : 0; document.getElementById('totalCompletionDisplay').innerText = gPct + '%'; document.getElementById('overallProgressBar').style.width = gPct + '%'; lucide.createIcons(); }
+        function startDay() { const d = tasksData[currentDayIdx].date; if(!startedDays.includes(d)) { startedDays.push(d); localStorage.setItem(START_KEY, JSON.stringify(startedDays)); } AUDIO_SYSTEM.play('start'); document.getElementById('ritualOverlay').style.opacity = '0'; setTimeout(() => { document.getElementById('ritualOverlay').style.display = 'none'; unlockContent(); }, 500); }
         function checkLock(date) { const overlay = document.getElementById('ritualOverlay'); const locker = document.getElementById('contentLocker'); const hasStarted = startedDays.includes(date) || Object.keys(userProgress).some(k => k.startsWith(date)); if(hasStarted) { overlay.style.display = 'none'; unlockContent(); } else { overlay.style.display = 'flex'; overlay.style.opacity = '1'; locker.style.filter = 'blur(8px)'; locker.style.pointerEvents = 'none'; locker.style.opacity = '0.5'; } }
         function unlockContent() { const locker = document.getElementById('contentLocker'); locker.style.filter = 'none'; locker.style.pointerEvents = 'auto'; locker.style.opacity = '1'; }
         function showToast() { const t = document.getElementById('toast'); t.style.opacity = '1'; t.style.transform = 'translate(-50%, 0)'; setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translate(-50%, -20px)'; }, 1500); }
-        function confettiEffect(colors) { confetti({ particleCount: 80, spread: 60, origin: { y: 0.65 }, colors: colors || [getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()] }); }
+        function confettiEffect(colors) { if(window.confetti) confetti({ particleCount: 80, spread: 60, origin: { y: 0.65 }, colors: colors || [getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()] }); }
         function togglePalette(e) { if(e) e.stopPropagation(); const p = document.getElementById('palettePopover'); if(!p.classList.contains('active')) initPalette(); p.classList.toggle('active'); }
         function closePalette() { document.getElementById('palettePopover').classList.remove('active'); }
         function hexToRgb(hex) { let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex); return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : {r:0,g:0,b:0}; }
         function adjustBrightness(hex, percent) { let num = parseInt(hex.replace("#",""),16), amt = Math.round(2.55 * percent), R = (num >> 16) + amt, B = (num >> 8 & 0x00FF) + amt, G = (num & 0x0000FF) + amt; return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (B<255?B<1?0:B:255)*0x100 + (G<255?G<1?0:G:255)).toString(16).slice(1); }
         function renamePlan() { openRenameModal(); } 
-        function init() { 
-            if (!RAW_DATA.includes('{{')) { 
-                const st = localStorage.getItem(TITLE_KEY); 
-                if(st) document.getElementById('planTitleText').innerText = st; 
-            } 
-            document.getElementById('totalDaysLabel').innerText = tasksData.length; 
-            
-            // --- Mobile Dropdown Init ---
-            const mobSelect = document.getElementById('mobileDateSelect');
-            if(mobSelect) {
-                tasksData.forEach((d, i) => {
-                    const opt = document.createElement('option');
-                    opt.value = i;
-                    opt.text = `📅 ${d.date} - Day ${d.dayNum}`;
-                    mobSelect.appendChild(opt);
-                });
-            }
+        function init() { if (!RAW_DATA.includes('{{')) { const st = localStorage.getItem(TITLE_KEY); if(st) document.getElementById('planTitleText').innerText = st; } document.getElementById('totalDaysLabel').innerText = tasksData.length; const mobSelect = document.getElementById('mobileDateSelect'); if(mobSelect) { tasksData.forEach((d, i) => { const opt = document.createElement('option'); opt.value = i; opt.text = `📅 ${d.date} - Day ${d.dayNum}`; mobSelect.appendChild(opt); }); } let initialDayIdx = parseInt(localStorage.getItem(CURRENT_DAY_KEY) || '0'); const hashMatch = window.location.hash.match(/day=(\d+)/); if (hashMatch) { initialDayIdx = parseInt(hashMatch[1]); } const urlParams = new URLSearchParams(window.location.search); if (urlParams.has('day')) { const urlDayIdx = parseInt(urlParams.get('day')); if (!isNaN(urlDayIdx) && urlDayIdx >= 0 && urlDayIdx < tasksData.length) { initialDayIdx = urlDayIdx; } } renderDay(initialDayIdx); document.getElementById('modeLabel').innerText = currentMode === 'mix' ? "DOPAMINE MIX" : "PRO FOCUS"; document.addEventListener('click', (e) => { if(!e.target.closest('.palette-wrapper')) closePalette(); }); setTimeout(() => { const tip = document.getElementById('dockTooltip'); if(tip) { tip.classList.remove('show'); tip.style.opacity = '0'; tip.style.transform = 'translateY(-50%) translateX(10px)'; } }, 4000); window.addEventListener('hashchange', () => { const hashMatch = window.location.hash.match(/day=(\d+)/); if (hashMatch) { renderDay(parseInt(hashMatch[1])); } }); }
+        // === [新增] 引导序列 ===
+    setTimeout(() => {
+        // 1. 右边 Dock 提示
+        const dockTip = document.getElementById('dockTooltip');
+        if(dockTip) dockTip.classList.add('show');
 
-            let initialDayIdx = parseInt(localStorage.getItem(CURRENT_DAY_KEY) || '0');
-            const hashMatch = window.location.hash.match(/day=(\d+)/);
-            if (hashMatch) {
-                initialDayIdx = parseInt(hashMatch[1]);
+        setTimeout(() => {
+            if(dockTip) dockTip.classList.remove('show');
+
+            // 2. 左边 白噪音 提示
+            const noiseTip = document.getElementById('noiseTooltip');
+            if(noiseTip) {
+                noiseTip.style.opacity = '1';
+                setTimeout(() => { noiseTip.style.opacity = '0'; }, 4000);
             }
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('day')) {
-                const urlDayIdx = parseInt(urlParams.get('day'));
-                if (!isNaN(urlDayIdx) && urlDayIdx >= 0 && urlDayIdx < tasksData.length) {
-                    initialDayIdx = urlDayIdx;
-                }
-            }
-            renderDay(initialDayIdx); 
-            document.getElementById('modeLabel').innerText = currentMode === 'mix' ? "DOPAMINE MIX" : "PRO FOCUS"; 
-            document.addEventListener('click', (e) => { if(!e.target.closest('.palette-wrapper')) closePalette(); }); 
-            setTimeout(() => { 
-                const tip = document.getElementById('dockTooltip'); 
-                if(tip) { tip.classList.remove('show'); tip.style.opacity = '0'; tip.style.transform = 'translateY(-50%) translateX(10px)'; } 
-            }, 4000); 
-            window.addEventListener('hashchange', () => {
-                const hashMatch = window.location.hash.match(/day=(\d+)/);
-                if (hashMatch) {
-                    const newDayIdx = parseInt(hashMatch[1]);
-                    // 使用新的索引重新渲染页面 (无需再写入 localStorage)
-                    renderDay(newDayIdx);
-                }
-            });
-        }
+        }, 4000);
+    }, 1500);
+    
         window.addEventListener('DOMContentLoaded', init);
 
-        // --- 番茄钟逻辑 ---
+        // --- 番茄钟 ---
         let timer = null, timeLeft = 25 * 60, isRunning = false;
-        const dockWrapper = document.getElementById('focusDockWrapper'); 
-        const orb = document.getElementById('dockOrb'); 
-        let isDrag = false, startX, startY;
-        
-        orb.addEventListener('mousedown', (e) => {
-            if(e.target.closest('#dockPanel')) return; 
-            isDrag = false; startX = e.clientX; startY = e.clientY;
-            let rect = dockWrapper.getBoundingClientRect(); let offX = rect.left, offY = rect.top;
-            dockWrapper.style.transition = 'none';
-            const onMove = (ev) => { if(Math.abs(ev.clientX - startX) > 5 || Math.abs(ev.clientY - startY) > 5) { isDrag = true; dockWrapper.style.left = (offX + ev.clientX - startX) + 'px'; dockWrapper.style.top = (offY + ev.clientY - startY) + 'px'; dockWrapper.style.right = 'auto'; dockWrapper.style.bottom = 'auto'; } };
-            const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); dockWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)'; if(!isDrag) { toggleDock(); } else { snapDock(); } };
-            document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
-        });
-
-        function snapDock() {
-            const rect = dockWrapper.getBoundingClientRect(); const winW = window.innerWidth; const winH = window.innerHeight;
-            const SNAP_THRESHOLD = 100; const MARGIN = 32;
-            let targetLeft = rect.left; let targetTop = rect.top;
-            if (rect.left < SNAP_THRESHOLD) targetLeft = MARGIN; else if (winW - rect.right < SNAP_THRESHOLD) targetLeft = winW - rect.width - MARGIN;
-            if (rect.top < SNAP_THRESHOLD) targetTop = MARGIN; else if (winH - rect.bottom < SNAP_THRESHOLD) targetTop = winH - rect.height - MARGIN;
-            dockWrapper.style.left = `${Math.max(MARGIN, Math.min(winW - rect.width - MARGIN, targetLeft))}px`;
-            dockWrapper.style.top = `${Math.max(MARGIN, Math.min(winH - rect.height - MARGIN, targetTop))}px`;
-        }
-        function updatePanelPosition() {
-            const rect = dockWrapper.getBoundingClientRect(); const panel = document.getElementById('dockPanel'); const winH = window.innerHeight; const winW = window.innerWidth;
-            panel.style.top = ''; panel.style.bottom = ''; panel.style.left = ''; panel.style.right = ''; panel.style.transformOrigin = '';
-            if (rect.top > winH / 2) { panel.style.bottom = '80px'; panel.style.transformOrigin = 'bottom '; } else { panel.style.top = '80px'; panel.style.transformOrigin = 'top '; }
-            if (rect.left > winW / 2) { panel.style.right = '0'; panel.style.transformOrigin += 'right'; } else { panel.style.left = '0'; panel.style.transformOrigin += 'left'; }
-        }
+        const dockWrapper = document.getElementById('focusDockWrapper'); const orb = document.getElementById('dockOrb'); let isDrag = false, startX, startY;
+        orb.addEventListener('mousedown', (e) => { if(e.target.closest('#dockPanel')) return; isDrag = false; startX = e.clientX; startY = e.clientY; let rect = dockWrapper.getBoundingClientRect(); let offX = rect.left, offY = rect.top; dockWrapper.style.transition = 'none'; const onMove = (ev) => { if(Math.abs(ev.clientX - startX) > 5 || Math.abs(ev.clientY - startY) > 5) { isDrag = true; dockWrapper.style.left = (offX + ev.clientX - startX) + 'px'; dockWrapper.style.top = (offY + ev.clientY - startY) + 'px'; dockWrapper.style.right = 'auto'; dockWrapper.style.bottom = 'auto'; } }; const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); dockWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)'; if(!isDrag) { toggleDock(); } else { snapDock(); } }; document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp); });
+        function snapDock() { const rect = dockWrapper.getBoundingClientRect(); const winW = window.innerWidth; const winH = window.innerHeight; const SNAP_THRESHOLD = 100; const MARGIN = 32; let targetLeft = rect.left; let targetTop = rect.top; if (rect.left < SNAP_THRESHOLD) targetLeft = MARGIN; else if (winW - rect.right < SNAP_THRESHOLD) targetLeft = winW - rect.width - MARGIN; if (rect.top < SNAP_THRESHOLD) targetTop = MARGIN; else if (winH - rect.bottom < SNAP_THRESHOLD) targetTop = winH - rect.height - MARGIN; dockWrapper.style.left = `${Math.max(MARGIN, Math.min(winW - rect.width - MARGIN, targetLeft))}px`; dockWrapper.style.top = `${Math.max(MARGIN, Math.min(winH - rect.height - MARGIN, targetTop))}px`; }
+        function updatePanelPosition() { const rect = dockWrapper.getBoundingClientRect(); const panel = document.getElementById('dockPanel'); const winH = window.innerHeight; const winW = window.innerWidth; panel.style.top = ''; panel.style.bottom = ''; panel.style.left = ''; panel.style.right = ''; panel.style.transformOrigin = ''; if (rect.top > winH / 2) { panel.style.bottom = '80px'; panel.style.transformOrigin = 'bottom '; } else { panel.style.top = '80px'; panel.style.transformOrigin = 'top '; } if (rect.left > winW / 2) { panel.style.right = '0'; panel.style.transformOrigin += 'right'; } else { panel.style.left = '0'; panel.style.transformOrigin += 'left'; } }
         function toggleDock() { const panel = document.getElementById('dockPanel'); if (!panel.classList.contains('open')) { updatePanelPosition(); } panel.classList.toggle('open'); }
         function showTimeInput() { if (isRunning) return; const overlay = document.getElementById('customTimeOverlay'); const input = document.getElementById('customTimeInput'); overlay.classList.add('show'); const m = Math.floor(timeLeft / 60); const s = timeLeft % 60; input.value = s > 0 ? `${m}:${String(s).padStart(2,'0')}` : m; input.focus(); input.select(); }
         function hideTimeInput() { document.getElementById('customTimeOverlay').classList.remove('show'); }
         function submitTime() { const input = document.getElementById('customTimeInput').value; let m = 0, s = 0; if (input.includes(':') || input.includes('：')) { const parts = input.replace('：', ':').split(':'); m = parseInt(parts[0]) || 0; s = parseInt(parts[1]) || 0; } else { m = parseInt(input) || 0; } if (m > 120) m = 120; timeLeft = m * 60 + s; if (timeLeft < 1) timeLeft = 25 * 60; updateUI(); hideTimeInput(); }
         function adjustTime(delta) { if(isRunning) return; let m = Math.floor(timeLeft/60)+delta; if(m<1) m=1; setTime(m); }
         function setTime(m) { if(isRunning) return; timeLeft = m * 60; updateUI(); }
-        
-        function toggleTimer() {
-            if(isRunning) { clearInterval(timer); isRunning = false; }
-            else { 
-                isRunning = true; 
-                // 核心修复：这里不再播放 start 音效
-                timer = setInterval(() => { if(timeLeft>0) { timeLeft--; updateUI(); } else { finish(); } }, 1000); 
-            }
-            updateUI();
-        }
+        function toggleTimer() { if(isRunning) { clearInterval(timer); isRunning = false; } else { isRunning = true; timer = setInterval(() => { if(timeLeft>0) { timeLeft--; updateUI(); } else { finish(); } }, 1000); } updateUI(); }
         function finish() { clearInterval(timer); isRunning = false; AUDIO_SYSTEM.play('finish'); alert("Focus Complete!"); confettiEffect(); timeLeft=25*60; exitImmersive(); updateUI(); }
-        
-        function updateUI() {
-            const str = Math.floor(timeLeft/60).toString().padStart(2,'0') + ':' + (timeLeft%60).toString().padStart(2,'0');
-            document.getElementById('dockTime').innerText = str; document.getElementById('immTime').innerText = str;
-            const btn = document.getElementById('mainBtn'); btn.innerHTML = isRunning ? `<i data-lucide="pause" class="w-4 h-4"></i> <span>暂停</span>` : `<i data-lucide="play" class="w-4 h-4"></i> <span>开始专注</span>`;
-            document.getElementById('immIcon').setAttribute('data-lucide', isRunning ? 'pause' : 'play'); lucide.createIcons();
-        }
+        function updateUI() { const str = Math.floor(timeLeft/60).toString().padStart(2,'0') + ':' + (timeLeft%60).toString().padStart(2,'0'); document.getElementById('dockTime').innerText = str; document.getElementById('immTime').innerText = str; const btn = document.getElementById('mainBtn'); btn.innerHTML = isRunning ? `<i data-lucide="pause" class="w-4 h-4"></i> <span>暂停</span>` : `<i data-lucide="play" class="w-4 h-4"></i> <span>开始专注</span>`; document.getElementById('immIcon').setAttribute('data-lucide', isRunning ? 'pause' : 'play'); lucide.createIcons(); }
         function enterImmersive() { document.getElementById('immersiveLayer').classList.add('active'); document.getElementById('dockPanel').classList.remove('open'); if(!isRunning) toggleTimer(); }
         function exitImmersive() { document.getElementById('immersiveLayer').classList.remove('active'); }
     </script>
+    <div id="noiseDockWrapper" style="position: fixed; bottom: 100px; left: 20px; z-index: 20000; touch-action: none;">
+        <div id="noiseTooltip" style="position: absolute; left: 70px; top: 50%; transform: translateY(-50%); background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); color: #1d1d1f; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 600; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.5s; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05);">
+        白噪音 & 音效设置
+        <div style="position: absolute; left: -5px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-right: 5px solid rgba(255,255,255,0.9);"></div>
+    </div>
+    <div id="noiseOrb" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: grab; transition: transform 0.1s; position: relative; z-index: 20002;">
+        <i data-lucide="headphones" class="w-6 h-6 pointer-events-none relative z-10"></i>
+    </div>
+    
+    <div id="noisePanel" style="position: absolute; bottom: 0; width: 260px; padding: 20px; border-radius: 20px; display: none; opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 20001;">
+        <div class="flex justify-between items-center mb-4">
+    <div class="flex items-center gap-2">
+        <span class="text-[10px] font-bold uppercase tracking-widest opacity-60">Soundscape</span>
+        <button id="sfxToggleBtn" onclick="toggleSFX()" class="text-[10px] bg-slate-100 px-2 py-1 rounded-md text-slate-500 font-bold hover:bg-slate-200 transition-colors flex items-center gap-1">
+            <i data-lucide="volume-2" class="w-3 h-3"></i> UI音
+        </button>
+    </div>
+    <input type="range" min="0" max="1" step="0.1" value="0.6" oninput="changeNoiseVolume(this.value)" class="w-20 h-1 rounded-lg appearance-none bg-gray-500/30 cursor-pointer accent-current">
+</div>
+        
+        <div class="grid grid-cols-4 gap-3 mb-4">
+            <div class="noise-card relative" onclick="playNoise('rain')"><i data-lucide="cloud-rain"></i></div>
+            <div class="noise-card relative" onclick="playNoise('ocean')"><i data-lucide="waves"></i></div>
+            <div class="noise-card relative" onclick="playNoise('forest')"><i data-lucide="trees"></i></div>
+            <div class="noise-card relative" onclick="playNoise('fire')"><i data-lucide="flame"></i></div>
+            <div class="noise-card relative" onclick="playNoise('cafe')"><i data-lucide="coffee"></i></div>
+            <div class="noise-card relative" onclick="playNoise('train')"><i data-lucide="train"></i></div>
+            <div class="noise-card relative" onclick="playNoise('night')"><i data-lucide="moon"></i></div>
+            <div class="noise-card relative" onclick="playNoise('keyboard')"><i data-lucide="keyboard"></i></div>
+        </div>
+        
+        <button id="noiseStopBtn" onclick="stopAllNoise()" class="w-full text-xs py-2 rounded-lg font-bold opacity-60 hover:opacity-100 transition border border-current flex items-center justify-center gap-2">
+            <i data-lucide="square" class="w-3 h-3"></i> 停止播放
+        </button>
+    </div>
+</div>
+    
+    <div id="noisePanel" style="position: absolute; bottom: 0; width: 260px; padding: 20px; border-radius: 20px; display: none; opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 20001;">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-[10px] font-bold uppercase tracking-widest opacity-60">白噪音</span>
+            <input type="range" min="0" max="1" step="0.1" value="0.6" oninput="changeNoiseVolume(this.value)" class="w-20 h-1 rounded-lg appearance-none bg-gray-500/30 cursor-pointer accent-current">
+        </div>
+        
+        <div class="grid grid-cols-4 gap-3 mb-4">
+            <div class="noise-card" onclick="playNoise('rain')" title="雨声"><i data-lucide="cloud-rain"></i></div>
+            <div class="noise-card" onclick="playNoise('ocean')" title="海浪"><i data-lucide="waves"></i></div>
+            <div class="noise-card" onclick="playNoise('forest')" title="森林"><i data-lucide="trees"></i></div>
+            <div class="noise-card" onclick="playNoise('fire')" title="篝火"><i data-lucide="flame"></i></div>
+            <div class="noise-card" onclick="playNoise('cafe')" title="咖啡馆"><i data-lucide="coffee"></i></div>
+            <div class="noise-card" onclick="playNoise('train')" title="列车"><i data-lucide="train"></i></div>
+            <div class="noise-card" onclick="playNoise('night')" title="夏夜"><i data-lucide="moon"></i></div>
+            <div class="noise-card" onclick="playNoise('keyboard')" title="键盘"><i data-lucide="keyboard"></i></div>
+        </div>
+        
+        <button onclick="stopAllNoise()" class="w-full text-xs py-2 rounded-lg font-bold opacity-60 hover:opacity-100 transition border border-current flex items-center justify-center gap-2">
+            <i data-lucide="square" class="w-3 h-3"></i> 静音 / 停止
+        </button>
+    </div>
+</div>
+
+<script>
+    // --- 1. 音频引擎 ---
+    // === [Pro JS 最终版：主题跟随 + Toast修复] ===
+    const NOISE_BASE = "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/audio/ambience/";
+    
+    const noiseConfig = {
+        'rain': [ {n:'绵绵细雨', f:'rain.mp3'}, {n:'雷雨交加', f:'rain_2.mp3'}, {n:'屋檐雨滴', f:'rain_3.mp3'} ],
+        'ocean': [ {n:'轻柔海浪', f:'ocean.mp3'}, {n:'深海潜流', f:'ocean.mp3?v=2'} ],
+        'forest': [ {n:'清晨鸟鸣', f:'forest.mp3'}, {n:'夏日蝉鸣', f:'forest.mp3?v=2'}, {n:'林间风声', f:'forest.mp3?v=3'} ],
+        'fire': [ {n:'壁炉篝火', f:'fire.mp3'} ],
+        'cafe': [ {n:'午后咖啡', f:'cafe.mp3'} ],
+        'train': [ {n:'远行列车', f:'train.mp3'} ],
+        'night': [ {n:'静谧夏夜', f:'night.mp3'} ],
+        'keyboard': [ {n:'机械键盘', f:'keyboard.mp3'} ]
+    };
+    
+    let currentCat = null; let currentVarIdx = 0; let currentAudio = null; let masterVol = 0.6;
+    let isPaused = false;
+
+    function playNoise(cat) {
+        // 点击当前暂停项 -> 继续
+        if (currentCat === cat && isPaused) {
+            togglePlayback();
+            return;
+        }
+        if (currentCat === cat) currentVarIdx = (currentVarIdx + 1) % noiseConfig[cat].length;
+        else { currentCat = cat; currentVarIdx = 0; }
+        
+        loadAndPlay();
+    }
+
+    function loadAndPlay() {
+        if(currentAudio) currentAudio.pause();
+        const item = noiseConfig[currentCat][currentVarIdx];
+        
+        currentAudio = new Audio(NOISE_BASE + item.f); 
+        currentAudio.loop = true; currentAudio.volume = masterVol;
+        currentAudio.play().catch(e=>console.log(e));
+        
+        isPaused = false;
+        updateNoiseUI();
+        // 这里的调用会触发下面重写过的 showToast
+        showToast("正在播放: " + item.n);
+    }
+
+    function togglePlayback() {
+        if (!currentAudio && !currentCat) return;
+        const item = noiseConfig[currentCat][currentVarIdx];
+
+        if (isPaused) {
+            currentAudio.play();
+            isPaused = false;
+            showToast("继续播放: " + item.n);
+        } else {
+            currentAudio.pause();
+            isPaused = true;
+        }
+        updateNoiseUI();
+    }
+
+    function stopAllNoise() { togglePlayback(); }
+
+    function changeNoiseVolume(v) { masterVol = v; if(currentAudio) currentAudio.volume = masterVol; }
+
+    function updateNoiseUI() {
+        const orb = document.getElementById('noiseOrb');
+        const btn = document.getElementById('noiseStopBtn');
+        
+        // 1. 光晕：播放时呼吸 (CSS中已绑定 var(--primary))
+        if(currentCat && !isPaused) orb.classList.add('is-playing');
+        else orb.classList.remove('is-playing');
+        
+        // 2. 按钮状态逻辑
+        if (!currentCat) {
+            // [初始状态]
+            btn.className = "w-full text-xs py-2 rounded-lg font-bold opacity-60 hover:opacity-100 transition border border-current flex items-center justify-center gap-2";
+            btn.innerHTML = `<i data-lucide="headphones" class="w-3 h-3"></i> 选择音效`;
+            btn.style.background = ""; btn.style.color = ""; btn.style.borderColor = "";
+        } else if (isPaused) {
+            // [暂停状态]：暗下去 (空心)
+            btn.classList.remove('stop-active');
+            // 手动清除背景色，确保变回空心
+            btn.style.background = "transparent";
+            btn.style.color = "inherit";
+            btn.style.borderColor = "currentColor"; 
+            btn.style.opacity = "0.7";
+            btn.innerHTML = `<i data-lucide="play" class="w-3 h-3"></i> 继续: ${noiseConfig[currentCat][currentVarIdx].n}`;
+        } else {
+            // [播放状态]：亮起来 (实心，跟随主题色)
+            btn.classList.add('stop-active'); // CSS里 .stop-active 已经绑定了 var(--primary)
+            btn.style.background = ""; // 清除内联样式，让CSS类生效
+            btn.style.color = "";
+            btn.style.borderColor = "";
+            btn.style.opacity = "1";
+            btn.innerHTML = `<i data-lucide="pause" class="w-3 h-3"></i> 暂停`;
+        }
+
+        // 3. 卡片高亮 (CSS里 .noise-card.active 已经绑定了 var(--primary))
+        document.querySelectorAll('.noise-card').forEach(el => {
+            el.classList.remove('active');
+            const oldB = el.querySelector('.variant-badge'); if(oldB) oldB.remove();
+            if(el.getAttribute('onclick').includes(`'${currentCat}'`)) {
+                el.classList.add('active');
+                if(noiseConfig[currentCat].length > 1) {
+                    el.insertAdjacentHTML('beforeend', `<span class="variant-badge">${currentVarIdx+1}</span>`);
+                }
+            }
+        });
+        lucide.createIcons();
+    }
+    
+    // === 核心修复：重写 showToast 解决“已完成”Bug ===
+    // 强制挂载到 window 对象，确保覆盖掉之前的定义
+    window.showToast = function(msg) { 
+        const t = document.getElementById('toast'); 
+        const m = document.getElementById('toastMsg');
+        
+        // 关键：如果没传 msg，才显示默认值。现在我们传了，所以会显示具体内容。
+        if(m) m.innerText = msg || "已完成"; 
+        
+        // 图标逻辑
+        const icon = t.querySelector('i');
+        if(icon) {
+            if(msg && msg.includes('播放')) icon.setAttribute('data-lucide', 'music'); 
+            else icon.setAttribute('data-lucide', 'check-circle-2');
+            lucide.createIcons();
+        }
+
+        // 显示动画
+        t.style.opacity = '1'; 
+        t.style.transform = 'translate(-50%, 0)'; 
+        
+        // 简单的防抖倒计时
+        if(window.toastTimer) clearTimeout(window.toastTimer);
+        window.toastTimer = setTimeout(() => { 
+            t.style.opacity = '0'; 
+            t.style.transform = 'translate(-50%, -20px)'; 
+        }, 2000); 
+    };
+    
+    setTimeout(updateNoiseUI, 500);
+    // --- 2. 物理拖拽与吸附引擎 (修复版：智能避让) ---
+    const nWrapper = document.getElementById('noiseDockWrapper');
+    const nOrb = document.getElementById('noiseOrb');
+    const nPanel = document.getElementById('noisePanel');
+    
+    let noise_isDragging = false;
+    let noise_hasMoved = false; 
+    let noise_startX, noise_startY, noise_initialLeft, noise_initialTop;
+
+    // 绑定事件
+    nOrb.addEventListener('mousedown', noiseDragStart);
+    nOrb.addEventListener('touchstart', noiseDragStart, {passive: false});
+
+    function noiseDragStart(e) {
+        if(e.target.closest('#noisePanel')) return;
+
+        noise_isDragging = true;
+        noise_hasMoved = false;
+        
+        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        
+        noise_startX = clientX;
+        noise_startY = clientY;
+        
+        const rect = nWrapper.getBoundingClientRect();
+        noise_initialLeft = rect.left;
+        noise_initialTop = rect.top;
+        
+        nWrapper.style.transition = 'none'; 
+        nOrb.style.cursor = 'grabbing';
+        nOrb.style.transform = 'scale(0.95)';
+
+        document.addEventListener('mousemove', noiseDragMove);
+        document.addEventListener('touchmove', noiseDragMove, {passive: false});
+        document.addEventListener('mouseup', noiseDragEnd);
+        document.addEventListener('touchend', noiseDragEnd);
+    }
+
+    function noiseDragMove(e) {
+        if (!noise_isDragging) return;
+        e.preventDefault(); 
+
+        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        
+        const dx = clientX - noise_startX;
+        const dy = clientY - noise_startY;
+
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+            noise_hasMoved = true;
+            // 拖拽时自动收起面板，防止挡视野
+            if(nPanel.style.display !== 'none') {
+                nPanel.style.opacity = '0';
+                nPanel.style.pointerEvents = 'none';
+                setTimeout(() => { nPanel.style.display = 'none'; }, 200);
+            }
+        }
+
+        nWrapper.style.left = `${noise_initialLeft + dx}px`;
+        nWrapper.style.top = `${noise_initialTop + dy}px`;
+        nWrapper.style.bottom = 'auto'; 
+    }
+
+    function noiseDragEnd() {
+        if (!noise_isDragging) return;
+        noise_isDragging = false;
+        nOrb.style.cursor = 'grab';
+        nOrb.style.transform = 'scale(1)';
+
+        document.removeEventListener('mousemove', noiseDragMove);
+        document.removeEventListener('touchmove', noiseDragMove);
+        document.removeEventListener('mouseup', noiseDragEnd);
+        document.removeEventListener('touchend', noiseDragEnd);
+
+        if (noise_hasMoved) {
+            // 吸附逻辑：松手后自动贴边
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            const rect = nWrapper.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            
+            nWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
+            
+            let targetLeft;
+            // 左右吸附
+            if (centerX < winW / 2) {
+                targetLeft = 20; 
+            } else {
+                targetLeft = winW - 70; // 50px宽 + 20px距
+            }
+            
+            // 上下边界限制
+            let targetTop = rect.top;
+            if (targetTop < 50) targetTop = 50;
+            if (targetTop > winH - 100) targetTop = winH - 100;
+
+            nWrapper.style.left = `${targetLeft}px`;
+            nWrapper.style.top = `${targetTop}px`;
+            
+        } else {
+            // 点击事件：触发智能展开
+            toggleNoisePanel();
+        }
+    }
+
+    // === 核心修复：智能避让展开逻辑 ===
+    function toggleNoisePanel() {
+        const isOpen = nPanel.style.display === 'block' && nPanel.style.opacity !== '0';
+        
+        if (isOpen) {
+            // 关闭逻辑
+            nPanel.style.opacity = '0';
+            nPanel.style.transform = 'scale(0.9)';
+            setTimeout(() => { nPanel.style.display = 'none'; }, 200);
+        } else {
+            // 开启逻辑
+            nPanel.style.display = 'block';
+            nPanel.style.pointerEvents = 'auto';
+            
+            // 1. 获取位置信息
+            const wrapperRect = nWrapper.getBoundingClientRect();
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            
+            // 2. 清除旧定位
+            nPanel.style.top = ''; nPanel.style.bottom = '';
+            nPanel.style.left = ''; nPanel.style.right = '';
+            
+            // 3. 智能判断水平方向 (左/右)
+            // 如果球在屏幕右半边，面板往左弹；反之往右弹
+            if (wrapperRect.left > winW / 2) {
+                nPanel.style.right = '0px';  // 对齐右侧
+                nPanel.style.transformOrigin = 'bottom right'; 
+            } else {
+                nPanel.style.left = '0px';   // 对齐左侧
+                nPanel.style.transformOrigin = 'bottom left'; 
+            }
+
+            // 4. 智能判断垂直方向 (上/下)
+            // 如果球在屏幕下半边，面板往上弹；反之往下弹
+            if (wrapperRect.top > winH / 2) {
+                nPanel.style.bottom = '65px'; // 向上展开
+                nPanel.style.transformOrigin = nPanel.style.transformOrigin.replace('top', 'bottom');
+            } else {
+                nPanel.style.top = '65px';    // 向下展开
+                nPanel.style.transformOrigin = nPanel.style.transformOrigin.replace('bottom', 'top');
+            }
+
+            // 5. 触发动画
+            nPanel.offsetHeight; // 强制重绘
+            nPanel.style.opacity = '1';
+            nPanel.style.transform = 'scale(1)';
+        }
+    }
+    
+    // 初始化图标
+    setTimeout(lucide.createIcons, 500);
+    
+</script>
 </body>
 </html>
