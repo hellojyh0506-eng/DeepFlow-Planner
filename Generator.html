@@ -183,7 +183,7 @@
         .glass-panel:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
 
         /* ==========================================================================
-           【核心移植】来自 Index.html 的顶级特效卡片样式 (完全保留)
+           【核心移植】来自 Index.html 的顶级特效卡片样式
            ========================================================================== */
         
         /* 基础选择卡片容器 */
@@ -745,8 +745,18 @@
         }
 
         // ============================================
-        // 核心工具函数 (原版保留)
+        // 核心工具函数
         // ============================================
+
+        // 新增：Base64 编码函数，用于将生成的 HTML 转换为 Data URI
+        function base64Encode(str) {
+            try {
+                return btoa(unescape(encodeURIComponent(str)));
+            } catch (e) {
+                console.error("Base64 Encoding Failed:", e);
+                return "";
+            }
+        }
 
         function formatExcelTime(val) {
             if (val === undefined || val === null || val === '') return '';
@@ -880,20 +890,24 @@
             });
         }
 
+        // --- 核心修复：强制刷新缓存 (添加 ?t=时间戳) ---
         async function getTemplateContent(theme) {
-            const templatePath = 'templates/template_' + theme + '.html';
+            const timestamp = new Date().getTime(); // 获取当前时间戳
+            // 在请求 URL 后添加 ?t=timestamp，强制浏览器请求服务器上的最新文件，而不是缓存
+            const templatePath = 'templates/template_' + theme + '.html?t=' + timestamp;
+            
             try {
                 const response = await fetch(templatePath);
                 if (!response.ok) {
-                    // Fallback for root directory testing
-                    const rootResponse = await fetch('template_' + theme + '.html');
+                    // 备用路径也要加时间戳
+                    const rootResponse = await fetch('template_' + theme + '.html?t=' + timestamp);
                     if(rootResponse.ok) return await rootResponse.text();
                     throw new Error('HTTP错误: ' + response.status);
                 }
                 return await response.text();
             } catch (error) {
                 console.error('模板加载错误:', error);
-                throw new Error('无法加载模板文件');
+                throw new Error('无法加载模板文件，请确保模板文件与生成器在同一目录下');
             }
         }
 
@@ -1048,13 +1062,18 @@
                     finalHtml = finalHtml.replace('<script src="rules_db.js"><\/script>', '<script>' + rulesDbContent + '<\/script>');
                     }
                 const safeFileName = safeTitle.replace(/[<>:"/\\|?*]/g, '_') + '_' + selectedTheme + '.html';
-                const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-8' });
-                const blobUrl = URL.createObjectURL(blob);
                 
-                // --- 修复处：传递 blobUrl 并移除立即销毁的代码 ---
-                displayResultOptions(blobUrl, safeFileName);
-                // URL.revokeObjectURL(url); // 已删除这行错误代码
+                // --- 1. 生成 Base64 URI 供预览 (这是 Android 的 Plan B) ---
+                const base64Content = base64Encode(finalHtml);
+                const previewDataUri = 'data:text/html;base64,' + base64Content;
 
+                // --- 2. 重新生成 Blob URL 仅供下载 (Blob URL 在下载文件时更稳定) ---
+                const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-8' });
+                const downloadBlobUrl = URL.createObjectURL(blob);
+                
+                // --- 3. 唤起结果弹窗 (传递两个不同的 URL) ---
+                displayResultOptions(previewDataUri, downloadBlobUrl, safeFileName);
+                
                 customAlert(
                     '✅ 生成成功！\n\n包含 ' + structuredData.length + ' 天计划。',
                     '成功',
@@ -1164,18 +1183,25 @@
             }
         });
         
-        let currentBlobUrl = null; // 用于存储当前的 Blob URL
-
-        function displayResultOptions(blobUrl, fileName) {
+        // 修改后的 displayResultOptions 函数
+        // previewUrl: 用于预览的 Base64 链接
+        // downloadUrl: 用于下载的 Blob 链接
+        function displayResultOptions(previewUrl, downloadUrl, fileName) {
             const previewButton = document.getElementById('previewButton');
             const downloadButton = document.getElementById('downloadButton');
             const modal = document.getElementById('resultModalOverlay');
             
-            previewButton.href = blobUrl;
+            // 1. 配置预览按钮 (使用 Base64 Data URI)
+            previewButton.href = previewUrl;
+            previewButton.onclick = (e) => {
+                e.preventDefault();
+                // 直接打开 Base64 链接，不使用 Blob，避免 Android 拦截
+                window.open(previewUrl, '_blank');
+            };
             
-            // --- 修复处：增加文件名，确保下载时文件名正确 ---
-            downloadButton.href = blobUrl;
-            downloadButton.download = fileName; // 关键修复：设置下载文件名
+            // 2. 配置下载按钮 (使用 Blob URL)
+            downloadButton.href = downloadUrl;
+            downloadButton.download = fileName; 
             
             downloadButton.onclick = () => {
                 setTimeout(closeResultModal, 50); 
