@@ -157,6 +157,20 @@
         </aside>
         <main class="flex-1 overflow-y-auto relative no-scrollbar rounded-2xl" id="mainScroll">
             <div class="max-w-3xl mx-auto py-2 md:py-4 min-h-[80vh]">
+                
+                <div class="md:hidden mb-4 px-1">
+                    <div class="relative">
+                        <select id="mobileDateSelect" onchange="window.location.hash='day='+this.value" class="w-full appearance-none bg-white/80 backdrop-blur-xl border border-white/60 text-slate-800 font-bold text-sm py-3 px-10 rounded-2xl shadow-sm focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition-all">
+                            </select>
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[var(--primary)]">
+                            <i data-lucide="calendar" class="w-4 h-4"></i>
+                        </div>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
+                            <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="ios-card rounded-2xl p-6 md:p-8 mb-6 relative overflow-hidden group">
                     <div class="absolute -right-8 -top-8 w-40 h-40 opacity-15 rounded-full blur-3xl transition-colors duration-700 theme-transition" style="background: var(--primary)"></div> 
                     <div class="relative z-10 flex justify-between items-end">
@@ -310,30 +324,35 @@
             const todayColor = getDayColor(idx); 
             applyThemeColor(todayColor); 
             window.location.hash = `day=${idx}`;
+
+            // --- 同步移动端下拉菜单 ---
+            const mobSelect = document.getElementById('mobileDateSelect');
+            if(mobSelect) mobSelect.value = idx;
+
             // --- 渲染左侧日历 ---
             const dateList = document.getElementById('dateList'); 
             dateList.innerHTML = ''; 
             tasksData.forEach((d, i) => { 
-    const isSelected = i === idx; 
-    const itemColor = getDayColor(i); 
-    const el = document.createElement('div'); 
-    el.className = `p-3 rounded-lg flex justify-between items-center text-sm cursor-pointer transition-all mb-1 hover:bg-white/60`; 
-    if(isSelected) { el.className += ' bg-white shadow-sm font-bold border-l-4 text-slate-800'; el.style.borderLeftColor = itemColor; } 
-    else { el.className += ' text-slate-500 border-l-4 border-transparent'; } 
-    const done = d.tasks.filter((_, ti) => userProgress[d.date+'_'+ti]).length; 
-    const isAll = done === d.tasks.length && d.tasks.length > 0; 
-    let iconHtml = isAll ? `<div class="w-2 h-2 rounded-full shadow-sm" style="background:${itemColor}; box-shadow: 0 0 4px ${itemColor}80;"></div>` : (!isSelected ? `<div class="w-1.5 h-1.5 rounded-full bg-slate-200"></div>` : ''); 
-    
-    el.innerHTML = `<span>${d.date.substring(5)}</span> ${iconHtml}`; 
-    
-    // 🔴 修复点 1：点击事件只负责修改 URL 哈希
-    el.onclick = () => { 
-        window.location.hash = `day=${i}`;
-    };
-    
-    // 🔴 修复点 2：将 element 添加到 DOM，否则侧边栏为空
-    dateList.appendChild(el); 
-});
+                const isSelected = i === idx; 
+                const itemColor = getDayColor(i); 
+                const el = document.createElement('div'); 
+                el.className = `p-3 rounded-lg flex justify-between items-center text-sm cursor-pointer transition-all mb-1 hover:bg-white/60`; 
+                if(isSelected) { el.className += ' bg-white shadow-sm font-bold border-l-4 text-slate-800'; el.style.borderLeftColor = itemColor; } 
+                else { el.className += ' text-slate-500 border-l-4 border-transparent'; } 
+                const done = d.tasks.filter((_, ti) => userProgress[d.date+'_'+ti]).length; 
+                const isAll = done === d.tasks.length && d.tasks.length > 0; 
+                let iconHtml = isAll ? `<div class="w-2 h-2 rounded-full shadow-sm" style="background:${itemColor}; box-shadow: 0 0 4px ${itemColor}80;"></div>` : (!isSelected ? `<div class="w-1.5 h-1.5 rounded-full bg-slate-200"></div>` : ''); 
+                
+                el.innerHTML = `<span>${d.date.substring(5)}</span> ${iconHtml}`; 
+                
+                // 🔴 修复点 1：点击事件只负责修改 URL 哈希
+                el.onclick = () => { 
+                    window.location.hash = `day=${i}`;
+                };
+                
+                // 🔴 修复点 2：将 element 添加到 DOM，否则侧边栏为空
+                dateList.appendChild(el); 
+            });
             
             document.getElementById('currentDateDisplay').innerText = day.date; 
             document.getElementById('dayCountDisplay').innerText = day.dayNum; 
@@ -521,11 +540,23 @@
                 if(st) document.getElementById('planTitleText').innerText = st; 
             } 
             document.getElementById('totalDaysLabel').innerText = tasksData.length; 
+            
+            // --- Mobile Dropdown Init ---
+            const mobSelect = document.getElementById('mobileDateSelect');
+            if(mobSelect) {
+                tasksData.forEach((d, i) => {
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.text = `📅 ${d.date} - Day ${d.dayNum}`;
+                    mobSelect.appendChild(opt);
+                });
+            }
+
             let initialDayIdx = parseInt(localStorage.getItem(CURRENT_DAY_KEY) || '0');
-    const hashMatch = window.location.hash.match(/day=(\d+)/);
-    if (hashMatch) {
-        initialDayIdx = parseInt(hashMatch[1]);
-    }
+            const hashMatch = window.location.hash.match(/day=(\d+)/);
+            if (hashMatch) {
+                initialDayIdx = parseInt(hashMatch[1]);
+            }
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('day')) {
                 const urlDayIdx = parseInt(urlParams.get('day'));
@@ -541,13 +572,13 @@
                 if(tip) { tip.classList.remove('show'); tip.style.opacity = '0'; tip.style.transform = 'translateY(-50%) translateX(10px)'; } 
             }, 4000); 
             window.addEventListener('hashchange', () => {
-    const hashMatch = window.location.hash.match(/day=(\d+)/);
-    if (hashMatch) {
-        const newDayIdx = parseInt(hashMatch[1]);
-        // 使用新的索引重新渲染页面 (无需再写入 localStorage)
-        renderDay(newDayIdx);
-    }
-});
+                const hashMatch = window.location.hash.match(/day=(\d+)/);
+                if (hashMatch) {
+                    const newDayIdx = parseInt(hashMatch[1]);
+                    // 使用新的索引重新渲染页面 (无需再写入 localStorage)
+                    renderDay(newDayIdx);
+                }
+            });
         }
         window.addEventListener('DOMContentLoaded', init);
 
