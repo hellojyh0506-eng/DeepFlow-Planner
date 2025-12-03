@@ -1,19 +1,21 @@
 <!DOCTYPE html>
 <html lang="zh-CN" class="scroll-smooth">
 <head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#020617">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DeepFlow | 将计划转化为心流</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
     
-    <script>
+    <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/tailwind.js"></script>
+    <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/lucide.min.js"></script>
+    <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/xlsx.full.min.js"></script> <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: { 
+                        // 3. 字体名称恢复：依赖您在上方粘贴的字体链接
                         sans: ['"Plus Jakarta Sans"', '"Noto Sans SC"', 'sans-serif'],
                         mono: ['"JetBrains Mono"', 'monospace']
                     },
@@ -33,139 +35,149 @@
             }
         }
     </script>
-    <style>
-        body { 
-            background-color: #020617; 
-            color: white; 
-            overflow-x: hidden; 
-        }
-        .glass-nav { background: rgba(2, 6, 23, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .hero-gradient { background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #020617 60%); }
-        .feature-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s; }
-        .feature-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.05); border-color: rgba(59,130,246,0.3); }
-        .text-gradient { background: linear-gradient(to right, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        /* 手机壳样式 */
-        .mockup-phone {
-            border: 12px solid #333; border-radius: 40px; overflow: hidden; position: relative;
-            background: #fff; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-        .mockup-notch {
-            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-            width: 120px; height: 25px; background: #333;
-            border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; z-index: 20;
-        }
+<style>
+    body { 
+        background-color: #020617; 
+        color: white; 
+        overflow-x: hidden; 
+        /* 确保字体平滑 */
+        -webkit-font-smoothing: antialiased;
+    }
+    .glass-nav { background: rgba(2, 6, 23, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .hero-gradient { background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #020617 60%); }
+    .feature-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s; }
+    .feature-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.05); border-color: rgba(59,130,246,0.3); }
+    
+    /* 核心修复区域：移除非标准的 text-fill-color */
+    .text-gradient { 
+        background: linear-gradient(to right, #60a5fa, #a78bfa); 
+        -webkit-background-clip: text; 
+        background-clip: text; 
+        -webkit-text-fill-color: transparent; 
+        /* ⚠️ 移除：text-fill-color: transparent; 解决未知属性报错 */
+    }
+    
+    /* 手机壳样式 */
+    .mockup-phone {
+        border: 12px solid #333; border-radius: 40px; overflow: hidden; position: relative;
+        background: #fff; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    .mockup-notch {
+        position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+        width: 120px; height: 25px; background: #333;
+        border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; z-index: 20;
+    }
 
-        /* ==========================================================================
-           以下为 1:1 移植自 Landing.html 的核心卡片特效 CSS
-           ========================================================================== */
-        
-        /* 1. 卡片基础构造 */
-        .template-card {
-            position: relative;
-            height: 420px;
-            border-radius: 24px;
-            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            cursor: pointer;
-        }
-        .template-card:hover { transform: translateY(-10px) scale(1.02); }
-        .feature-tag { font-size: 10px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; padding: 4px 8px; border-radius: 6px; }
+    /* ==========================================================================
+       以下为 1:1 移植自 Landing.html 的核心卡片特效 CSS
+       ========================================================================== */
+    
+    /* 1. 卡片基础构造 */
+    .template-card {
+        position: relative;
+        height: 420px;
+        border-radius: 24px;
+        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        cursor: pointer;
+    }
+    .template-card:hover { transform: translateY(-10px) scale(1.02); }
+    .feature-tag { font-size: 10px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; padding: 4px 8px; border-radius: 6px; }
 
-        /* --- PRO 卡片：纯 CSS 绘制多巴胺光斑 --- */
-        .card-pro-premium {
-            background: rgba(255, 255, 255, 0.05); 
-            color: white; 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
-            backdrop-filter: blur(20px); 
-        }
-        .card-pro-premium::before {
-            content: ''; position: absolute; inset: -50%; 
-            background: 
-                radial-gradient(circle at 80% 20%, rgba(255, 100, 150, 0.8) 0%, transparent 20%), 
-                radial-gradient(circle at 20% 80%, rgba(255, 255, 100, 0.7) 0%, transparent 25%), 
-                radial-gradient(circle at 50% 100%, rgba(59, 130, 246, 0.7) 0%, transparent 30%); 
-            background-size: 300% 300%;
-            background-position: center;
-            filter: blur(100px) saturate(3.5) contrast(1.5); 
-            opacity: 0.5;
-            z-index: 0;
-            pointer-events: none;
-            mix-blend-mode: screen; 
-            transition: transform 0.8s ease, opacity 0.5s; 
-            transform: scale(1);
-        }
-        .card-pro-premium:hover::before { 
-            transform: scale(1.1) rotate(5deg); 
-            opacity: 0.9; 
-        }
-        .card-pro-premium:hover { 
-            box-shadow: 0 20px 50px -12px rgba(236, 72, 153, 0.5); 
-            border-color: rgba(236, 72, 153, 0.5); 
-        }
-        .btn-pro-gem { 
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            border: 1px solid rgba(255,255,255,0.2); box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 4px 20px rgba(37, 99, 235, 0.5);
-            position: relative; overflow: hidden; z-index: 10; transition: all 0.3s;
-        }
-        .btn-pro-gem:hover { 
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 6px 25px rgba(37, 99, 235, 0.7); 
-            transform: translateY(-1px); 
-        }
-        .btn-pro-gem::before { 
-            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: translateX(0%);
-        }
-        .card-pro-premium:hover .btn-pro-gem::before { transform: translateX(200%); transition-delay: 0.05s; }
-        
-        /* --- ZEN 卡片：纯净白色留白 --- */
-        .card-zen-matte {
-            background: #ffffff; 
-            color: #18181b; 
-            border: 1px solid #e4e4e7;
-            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.2); 
-            backdrop-filter: none; 
-        }
-        .card-zen-matte:hover { box-shadow: 0 0 40px rgba(255, 255, 255, 0.4); border-color: #d4d4d4; }
-        .btn-zen-minimal {
-            background: #18181b; color: white; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        }
-        .btn-zen-minimal:hover { background: #27272a; transform: translateY(-1px); }
+    /* --- PRO 卡片：纯 CSS 绘制多巴胺光斑 --- */
+    .card-pro-premium {
+        background: rgba(255, 255, 255, 0.05); 
+        color: white; 
+        border: 1px solid rgba(255, 255, 255, 0.1); 
+        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+        backdrop-filter: blur(20px); 
+    }
+    .card-pro-premium::before {
+        content: ''; position: absolute; inset: -50%; 
+        background: 
+            radial-gradient(circle at 80% 20%, rgba(255, 100, 150, 0.8) 0%, transparent 20%), 
+            radial-gradient(circle at 20% 80%, rgba(255, 255, 100, 0.7) 0%, transparent 25%), 
+            radial-gradient(circle at 50% 100%, rgba(59, 130, 246, 0.7) 0%, transparent 30%); 
+        background-size: 300% 300%;
+        background-position: center;
+        filter: blur(100px) saturate(3.5) contrast(1.5); 
+        opacity: 0.5;
+        z-index: 0;
+        pointer-events: none;
+        mix-blend-mode: screen; 
+        transition: transform 0.8s ease, opacity 0.5s; 
+        transform: scale(1);
+    }
+    .card-pro-premium:hover::before { 
+        transform: scale(1.1) rotate(5deg); 
+        opacity: 0.9; 
+    }
+    .card-pro-premium:hover { 
+        box-shadow: 0 20px 50px -12px rgba(236, 72, 153, 0.5); 
+        border-color: rgba(236, 72, 153, 0.5); 
+    }
+    .btn-pro-gem { 
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        border: 1px solid rgba(255,255,255,0.2); box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 4px 20px rgba(37, 99, 235, 0.5);
+        position: relative; overflow: hidden; z-index: 10; transition: all 0.3s;
+    }
+    .btn-pro-gem:hover { 
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 6px 25px rgba(37, 99, 235, 0.7); 
+        transform: translateY(-1px); 
+    }
+    .btn-pro-gem::before { 
+        content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateX(0%);
+    }
+    .card-pro-premium:hover .btn-pro-gem::before { transform: translateX(200%); transition-delay: 0.05s; }
+    
+    /* --- ZEN 卡片：纯净白色留白 --- */
+    .card-zen-matte {
+        background: #ffffff; 
+        color: #18181b; 
+        border: 1px solid #e4e4e7;
+        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.2); 
+        backdrop-filter: none; 
+    }
+    .card-zen-matte:hover { box-shadow: 0 0 40px rgba(255, 255, 255, 0.4); border-color: #d4d4d4; }
+    .btn-zen-minimal {
+        background: #18181b; color: white; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    .btn-zen-minimal:hover { background: #27272a; transform: translateY(-1px); }
 
-        /* --- CYBER 卡片：霓虹黑客 --- */
-        .card-cyber-neon {
-            background: #09090b; border: 1px solid rgba(217, 70, 239, 0.3);
-            background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(217, 70, 239, 0.05) 3px);
-        }
-        .card-cyber-neon:hover {
-            box-shadow: 0 0 40px rgba(217, 70, 239, 0.5), inset 0 0 20px rgba(217, 70, 239, 0.1);
-            border-color: #d946ef;
-        }
-        .btn-cyber-neon {
-            background: transparent; border: 1px solid #d946ef; color: #d946ef;
-            text-shadow: 0 0 5px #d946ef; box-shadow: 0 0 10px rgba(217, 70, 239, 0.2);
-        }
-        .btn-cyber-neon:hover { background: #d946ef; color: black; box-shadow: 0 0 20px #d946ef; }
+    /* --- CYBER 卡片：霓虹黑客 --- */
+    .card-cyber-neon {
+        background: #09090b; border: 1px solid rgba(217, 70, 239, 0.3);
+        background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(217, 70, 239, 0.05) 3px);
+    }
+    .card-cyber-neon:hover {
+        box-shadow: 0 0 40px rgba(217, 70, 239, 0.5), inset 0 0 20px rgba(217, 70, 239, 0.1);
+        border-color: #d946ef;
+    }
+    .btn-cyber-neon {
+        background: transparent; border: 1px solid #d946ef; color: #d946ef;
+        text-shadow: 0 0 5px #d946ef; box-shadow: 0 0 10px rgba(217, 70, 239, 0.2);
+    }
+    .btn-cyber-neon:hover { background: #d946ef; color: black; box-shadow: 0 0 20px #d946ef; }
 
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
 
-        /* --- 评论区 Logo 容器样式 (已移除 Logo) --- */
-        .logo-container {
-            /* 修正：移除 Logo 后的底部空间，由 Footer 承担 */
-            display: none;
-        }
-        
-        /* 修正：评论区与 FAQ 之间的间距（将 py-24 调整为 py-16 以增强紧凑感） */
-        .compact-section {
-            padding-top: 4rem; /* py-16 */
-            padding-bottom: 4rem; /* py-16 */
-        }
-    </style>
+    /* --- 评论区 Logo 容器样式 (已移除 Logo) --- */
+    .logo-container {
+        /* 修正：移除 Logo 后的底部空间，由 Footer 承担 */
+        display: none;
+    }
+    
+    /* 修正：评论区与 FAQ 之间的间距（将 py-24 调整为 py-16 以增强紧凑感） */
+    .compact-section {
+        padding-top: 4rem; /* py-16 */
+        padding-bottom: 4rem; /* py-16 */
+    }
+</style>
 </head>
 <body class="antialiased selection:bg-blue-500/30">
 
@@ -501,5 +513,15 @@
             link.click();
         }
     </script>
+<script>
+    // 注册 PWA Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then((reg) => console.log('DeepFlow PWA 注册成功:', reg.scope))
+                .catch((err) => console.log('DeepFlow PWA 注册失败:', err));
+        });
+    }
+</script>
 </body>
 </html>

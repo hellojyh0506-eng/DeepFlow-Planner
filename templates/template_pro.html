@@ -517,7 +517,7 @@ orb.addEventListener('touchstart', handleDragStart, {passive: false});
         function enterImmersive() { document.getElementById('immersiveLayer').classList.add('active'); document.getElementById('dockPanel').classList.remove('open'); if(!isRunning) toggleTimer(); }
         function exitImmersive() { document.getElementById('immersiveLayer').classList.remove('active'); }
     </script>
-    <div id="noiseDockWrapper" style="position: fixed; bottom: 120px; right: 32px; left: auto; z-index: 20000; touch-action: none;">
+    <div id="noiseDockWrapper" style="position: fixed; bottom: 100px; left: 20px; z-index: 20000; touch-action: none;">
         <div id="noiseTooltip" style="position: absolute; left: 70px; top: 50%; transform: translateY(-50%); background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); color: #1d1d1f; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 600; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.5s; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05);">
         白噪音 & 音效设置
         <div style="position: absolute; left: -5px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-right: 5px solid rgba(255,255,255,0.9);"></div>
@@ -782,106 +782,47 @@ orb.addEventListener('touchstart', handleDragStart, {passive: false});
         nWrapper.style.bottom = 'auto'; 
     }
 
-    // 📢 请用此代码块完全替换掉您模板中的 function noiseDragEnd()
-function noiseDragEnd() {
-    // 基础检查和清理
-    if (!noise_isDragging) return;
-    noise_isDragging = false;
-    nOrb.style.cursor = 'grab';
-    nOrb.style.transform = 'scale(1)';
+    function noiseDragEnd() {
+        if (!noise_isDragging) return;
+        noise_isDragging = false;
+        nOrb.style.cursor = 'grab';
+        nOrb.style.transform = 'scale(1)';
 
-    document.removeEventListener('mousemove', noiseDragMove);
-    document.removeEventListener('touchmove', noiseDragMove);
-    document.removeEventListener('mouseup', noiseDragEnd);
-    document.removeEventListener('touchend', noiseDragEnd);
+        document.removeEventListener('mousemove', noiseDragMove);
+        document.removeEventListener('touchmove', noiseDragMove);
+        document.removeEventListener('mouseup', noiseDragEnd);
+        document.removeEventListener('touchend', noiseDragEnd);
 
-    if (noise_hasMoved) {
-        const winW = window.innerWidth;
-        const winH = window.innerHeight;
-        const rect = nWrapper.getBoundingClientRect();
-
-        // --- 定义常量 ---
-        const ORB_SIZE = 50; 
-        const MARGIN = 32;       // 边缘吸附后的留白距离
-        const SNAP_THRESHOLD = 80; // 磁力吸附的距离阈值 (px)
-        const CENTER_SNAP_ZONE = 0.2; // 靠近中线的吸附区宽度 (屏幕宽度的 20%)
-
-        let targetLeft = rect.left; // 默认目标位置是鼠标松开的位置
-        let targetTop = rect.top;   
-
-        // 1. 检查是否靠近任何边缘 (即是否应该启动吸附)
-        const isNearLeft = rect.left < SNAP_THRESHOLD;
-        const isNearRight = (winW - (rect.left + ORB_SIZE)) < SNAP_THRESHOLD;
-        const isNearTop = rect.top < SNAP_THRESHOLD;
-        const isNearBottom = (winH - (rect.top + ORB_SIZE)) < SNAP_THRESHOLD;
-
-        let shouldSnap = isNearLeft || isNearRight || isNearTop || isNearBottom;
-
-        if (shouldSnap) {
-            // 启动吸附：使用平滑的过渡
-            nWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)'; 
-
-            // --- 2. 检查水平方向是靠边还是居中对齐 ---
-            const centerX = rect.left + ORB_SIZE / 2;
-            const isNearHorizontalCenter = centerX > winW * (0.5 - CENTER_SNAP_ZONE / 2) && centerX < winW * (0.5 + CENTER_SNAP_ZONE / 2);
+        if (noise_hasMoved) {
+            // 吸附逻辑：松手后自动贴边
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            const rect = nWrapper.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
             
-            if (isNearLeft || isNearRight) {
-                // 如果靠近左侧或右侧边缘
-                if (isNearHorizontalCenter) {
-                    targetLeft = (winW / 2) - (ORB_SIZE / 2); // 居中吸附 (中点)
-                } else if (isNearLeft) {
-                    targetLeft = MARGIN; // 吸附到左边缘 (角点)
-                } else if (isNearRight) {
-                    targetLeft = winW - ORB_SIZE - MARGIN; // 吸附到右边缘 (角点)
-                }
-            } 
-            // 如果仅靠近垂直边缘，但同时又在水平中线附近，也吸附到水平中线
-            else if (isNearHorizontalCenter) {
-                targetLeft = (winW / 2) - (ORB_SIZE / 2);
+            nWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
+            
+            let targetLeft;
+            // 左右吸附
+            if (centerX < winW / 2) {
+                targetLeft = 20; 
+            } else {
+                targetLeft = winW - 70; // 50px宽 + 20px距
             }
             
-            // --- 3. 检查垂直方向是靠边还是居中对齐 ---
-            const centerY = rect.top + ORB_SIZE / 2;
-            const isNearVerticalCenter = centerY > winH * (0.5 - CENTER_SNAP_ZONE / 2) && centerY < winH * (0.5 + CENTER_SNAP_ZONE / 2);
+            // 上下边界限制
+            let targetTop = rect.top;
+            if (targetTop < 50) targetTop = 50;
+            if (targetTop > winH - 100) targetTop = winH - 100;
 
-            if (isNearTop || isNearBottom) {
-                // 如果靠近顶部或底部边缘
-                if (isNearVerticalCenter) {
-                    targetTop = (winH / 2) - (ORB_SIZE / 2); // 居中吸附 (中点)
-                } else if (isNearTop) {
-                    targetTop = MARGIN; // 吸附到上边缘 (角点)
-                } else if (isNearBottom) {
-                    targetTop = winH - ORB_SIZE - MARGIN; // 吸附到下边缘 (角点)
-                }
-            } 
-            // 如果仅靠近水平边缘，但同时又在垂直中线附近，也吸附到垂直中线
-            else if (isNearVerticalCenter) {
-                 targetTop = (winH / 2) - (ORB_SIZE / 2);
-            }
-            
-            // 4. 最终边界钳制：防止计算误差导致飞出屏幕 (保持 MARGIN 距离)
-            targetLeft = Math.max(MARGIN, Math.min(winW - ORB_SIZE - MARGIN, targetLeft));
-            targetTop = Math.max(MARGIN, Math.min(winH - ORB_SIZE - MARGIN, targetTop));
-
-            // 应用计算后的吸附位置
             nWrapper.style.left = `${targetLeft}px`;
             nWrapper.style.top = `${targetTop}px`;
-            nWrapper.style.bottom = 'auto'; 
-
+            
         } else {
-            // 自由悬停区 (No Snap Zone): 留在原地
-            // 使用快速过渡，让它立即停止在松手的位置
-            nWrapper.style.transition = 'all 0.1s linear'; 
-            nWrapper.style.left = `${targetLeft}px`;
-            nWrapper.style.top = `${targetTop}px`;
-            nWrapper.style.bottom = 'auto'; 
+            // 点击事件：触发智能展开
+            toggleNoisePanel();
         }
-
-    } else {
-        // 点击事件：触发面板
-        toggleNoisePanel();
     }
-}
 
     // === 核心修复：智能避让展开逻辑 ===
     function toggleNoisePanel() {
