@@ -677,17 +677,67 @@
 
         // --- 番茄钟逻辑 ---
         let timer = null, timeLeft = 25 * 60, isRunning = false;
-        const dockWrapper = document.getElementById('zenDockWrapper'); const orb = document.getElementById('zenOrb'); let isDrag = false, startX, startY;
-        
-        orb.addEventListener('mousedown', (e) => {
-            if(e.target.closest('#zenPanel')) return; 
-            isDrag = false; startX = e.clientX; startY = e.clientY;
-            let rect = dockWrapper.getBoundingClientRect(); let offX = rect.left, offY = rect.top;
-            dockWrapper.style.transition = 'none';
-            const onMove = (ev) => { if(Math.abs(ev.clientX - startX) > 5 || Math.abs(ev.clientY - startY) > 5) { isDrag = true; dockWrapper.style.left = (offX + ev.clientX - startX) + 'px'; dockWrapper.style.top = (offY + ev.clientY - startY) + 'px'; dockWrapper.style.right = 'auto'; dockWrapper.style.bottom = 'auto'; } };
-            const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); dockWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)'; if(!isDrag) { toggleDock(); } else { snapDock(); } };
-            document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
-        });
+        const dockWrapper = document.getElementById('zenDockWrapper'); const orb = document.getElementById('zenOrb'); 
+let isDrag = false, startX, startY, initialLeft, initialTop;
+
+// 统一处理开始拖拽 (支持鼠标和触摸)
+function handleDragStart(e) {
+    if(e.target.closest('#zenPanel')) return; // 防止误触面板
+    
+    isDrag = false;
+    // 兼容获取坐标
+    const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+    const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+    
+    startX = clientX; 
+    startY = clientY;
+    
+    let rect = dockWrapper.getBoundingClientRect();
+    initialLeft = rect.left;
+    initialTop = rect.top;
+    
+    dockWrapper.style.transition = 'none'; // 拖动时移除过渡效果
+    
+    // 绑定移动和结束事件
+    document.addEventListener('mousemove', handleDragMove);
+    document.addEventListener('touchmove', handleDragMove, {passive: false});
+    document.addEventListener('mouseup', handleDragEnd);
+    document.addEventListener('touchend', handleDragEnd);
+}
+
+function handleDragMove(e) {
+    const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+    const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+    
+    // 只有移动超过一定距离才算拖拽，避免点击被误判
+    if(Math.abs(clientX - startX) > 5 || Math.abs(clientY - startY) > 5) {
+        isDrag = true;
+        e.preventDefault(); // 防止手机端滚动页面
+        dockWrapper.style.left = (initialLeft + clientX - startX) + 'px';
+        dockWrapper.style.top = (initialTop + clientY - startY) + 'px';
+        dockWrapper.style.right = 'auto'; 
+        dockWrapper.style.bottom = 'auto';
+    }
+}
+
+function handleDragEnd() {
+    document.removeEventListener('mousemove', handleDragMove);
+    document.removeEventListener('touchmove', handleDragMove);
+    document.removeEventListener('mouseup', handleDragEnd);
+    document.removeEventListener('touchend', handleDragEnd);
+    
+    dockWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)'; // 恢复弹性动画
+    
+    if(!isDrag) {
+        toggleDock(); // 如果没拖动，就是点击
+    } else {
+        snapDock(); // 如果拖动了，执行吸附
+    }
+}
+
+// 绑定监听
+orb.addEventListener('mousedown', handleDragStart);
+orb.addEventListener('touchstart', handleDragStart, {passive: false});
 
         function snapDock() {
             const rect = dockWrapper.getBoundingClientRect(); const winW = window.innerWidth; const winH = window.innerHeight;
@@ -734,7 +784,7 @@ s = Math.max(0, Math.min(59, parseInt(parts[1]) || 0)); } else { m = parseInt(in
         function enterImmersive() { document.getElementById('zenImmersive').classList.add('active'); document.getElementById('zenPanel').classList.remove('open'); if(!isRunning) toggleTimer(); }
         function exitImmersive() { document.getElementById('zenImmersive').classList.remove('active'); }
     </script>
-    <div id="noiseDockWrapper" style="position: fixed; bottom: 100px; left: 20px; z-index: 20000; touch-action: none;">
+    <div id="noiseDockWrapper" style="position: fixed; bottom: 120px; right: 32px; left: auto; z-index: 20000; touch-action: none;">
     <div id="noiseOrb" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: grab; transition: transform 0.1s; position: relative; z-index: 20002;">
         <div id="noiseTooltip" style="position: absolute; left: 70px; top: 50%; transform: translateY(-50%); background: #1c1917; color: #f7f7f5; padding: 6px 12px; border-radius: 2px; font-size: 12px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.5s ease; box-shadow: 2px 2px 10px rgba(0,0,0,0.1);">
         白噪音 | 音效设置
@@ -809,7 +859,7 @@ s = Math.max(0, Math.min(59, parseInt(parts[1]) || 0)); } else { m = parseInt(in
         'cafe': [ {n:'午后茶馆', f:'cafe.mp3'} ],
         'train': [ {n:'归乡列车', f:'train.mp3'} ],
         'night': [ {n:'静谧夏夜', f:'night.mp3'} ],
-        'keyboard': [ {n:'书写声', f:'keyboard.mp3'} ]
+        'keyboard': [ {n:'打字声', f:'keyboard.mp3'} ]
     };
     
     let currentCat = null; 
@@ -985,47 +1035,106 @@ s = Math.max(0, Math.min(59, parseInt(parts[1]) || 0)); } else { m = parseInt(in
         nWrapper.style.bottom = 'auto'; 
     }
 
-    function noiseDragEnd() {
-        if (!noise_isDragging) return;
-        noise_isDragging = false;
-        nOrb.style.cursor = 'grab';
-        nOrb.style.transform = 'scale(1)';
+    // 📢 请用此代码块完全替换掉您模板中的 function noiseDragEnd()
+function noiseDragEnd() {
+    // 基础检查和清理
+    if (!noise_isDragging) return;
+    noise_isDragging = false;
+    nOrb.style.cursor = 'grab';
+    nOrb.style.transform = 'scale(1)';
 
-        document.removeEventListener('mousemove', noiseDragMove);
-        document.removeEventListener('touchmove', noiseDragMove);
-        document.removeEventListener('mouseup', noiseDragEnd);
-        document.removeEventListener('touchend', noiseDragEnd);
+    document.removeEventListener('mousemove', noiseDragMove);
+    document.removeEventListener('touchmove', noiseDragMove);
+    document.removeEventListener('mouseup', noiseDragEnd);
+    document.removeEventListener('touchend', noiseDragEnd);
 
-        if (noise_hasMoved) {
-            // 吸附逻辑：松手后自动贴边
-            const winW = window.innerWidth;
-            const winH = window.innerHeight;
-            const rect = nWrapper.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
+    if (noise_hasMoved) {
+        const winW = window.innerWidth;
+        const winH = window.innerHeight;
+        const rect = nWrapper.getBoundingClientRect();
+
+        // --- 定义常量 ---
+        const ORB_SIZE = 50; 
+        const MARGIN = 32;       // 边缘吸附后的留白距离
+        const SNAP_THRESHOLD = 80; // 磁力吸附的距离阈值 (px)
+        const CENTER_SNAP_ZONE = 0.2; // 靠近中线的吸附区宽度 (屏幕宽度的 20%)
+
+        let targetLeft = rect.left; // 默认目标位置是鼠标松开的位置
+        let targetTop = rect.top;   
+
+        // 1. 检查是否靠近任何边缘 (即是否应该启动吸附)
+        const isNearLeft = rect.left < SNAP_THRESHOLD;
+        const isNearRight = (winW - (rect.left + ORB_SIZE)) < SNAP_THRESHOLD;
+        const isNearTop = rect.top < SNAP_THRESHOLD;
+        const isNearBottom = (winH - (rect.top + ORB_SIZE)) < SNAP_THRESHOLD;
+
+        let shouldSnap = isNearLeft || isNearRight || isNearTop || isNearBottom;
+
+        if (shouldSnap) {
+            // 启动吸附：使用平滑的过渡
+            nWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)'; 
+
+            // --- 2. 检查水平方向是靠边还是居中对齐 ---
+            const centerX = rect.left + ORB_SIZE / 2;
+            const isNearHorizontalCenter = centerX > winW * (0.5 - CENTER_SNAP_ZONE / 2) && centerX < winW * (0.5 + CENTER_SNAP_ZONE / 2);
             
-            nWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
-            
-            let targetLeft;
-            // 左右吸附
-            if (centerX < winW / 2) {
-                targetLeft = 20; 
-            } else {
-                targetLeft = winW - 70; // 50px宽 + 20px距
+            if (isNearLeft || isNearRight) {
+                // 如果靠近左侧或右侧边缘
+                if (isNearHorizontalCenter) {
+                    targetLeft = (winW / 2) - (ORB_SIZE / 2); // 居中吸附 (中点)
+                } else if (isNearLeft) {
+                    targetLeft = MARGIN; // 吸附到左边缘 (角点)
+                } else if (isNearRight) {
+                    targetLeft = winW - ORB_SIZE - MARGIN; // 吸附到右边缘 (角点)
+                }
+            } 
+            // 如果仅靠近垂直边缘，但同时又在水平中线附近，也吸附到水平中线
+            else if (isNearHorizontalCenter) {
+                targetLeft = (winW / 2) - (ORB_SIZE / 2);
             }
             
-            // 上下边界限制
-            let targetTop = rect.top;
-            if (targetTop < 50) targetTop = 50;
-            if (targetTop > winH - 100) targetTop = winH - 100;
+            // --- 3. 检查垂直方向是靠边还是居中对齐 ---
+            const centerY = rect.top + ORB_SIZE / 2;
+            const isNearVerticalCenter = centerY > winH * (0.5 - CENTER_SNAP_ZONE / 2) && centerY < winH * (0.5 + CENTER_SNAP_ZONE / 2);
 
+            if (isNearTop || isNearBottom) {
+                // 如果靠近顶部或底部边缘
+                if (isNearVerticalCenter) {
+                    targetTop = (winH / 2) - (ORB_SIZE / 2); // 居中吸附 (中点)
+                } else if (isNearTop) {
+                    targetTop = MARGIN; // 吸附到上边缘 (角点)
+                } else if (isNearBottom) {
+                    targetTop = winH - ORB_SIZE - MARGIN; // 吸附到下边缘 (角点)
+                }
+            } 
+            // 如果仅靠近水平边缘，但同时又在垂直中线附近，也吸附到垂直中线
+            else if (isNearVerticalCenter) {
+                 targetTop = (winH / 2) - (ORB_SIZE / 2);
+            }
+            
+            // 4. 最终边界钳制：防止计算误差导致飞出屏幕 (保持 MARGIN 距离)
+            targetLeft = Math.max(MARGIN, Math.min(winW - ORB_SIZE - MARGIN, targetLeft));
+            targetTop = Math.max(MARGIN, Math.min(winH - ORB_SIZE - MARGIN, targetTop));
+
+            // 应用计算后的吸附位置
             nWrapper.style.left = `${targetLeft}px`;
             nWrapper.style.top = `${targetTop}px`;
-            
+            nWrapper.style.bottom = 'auto'; 
+
         } else {
-            // 点击事件：触发智能展开
-            toggleNoisePanel();
+            // 自由悬停区 (No Snap Zone): 留在原地
+            // 使用快速过渡，让它立即停止在松手的位置
+            nWrapper.style.transition = 'all 0.1s linear'; 
+            nWrapper.style.left = `${targetLeft}px`;
+            nWrapper.style.top = `${targetTop}px`;
+            nWrapper.style.bottom = 'auto'; 
         }
+
+    } else {
+        // 点击事件：触发面板
+        toggleNoisePanel();
     }
+}
 
     // === 核心修复：智能避让展开逻辑 ===
     function toggleNoisePanel() {

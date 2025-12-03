@@ -381,7 +381,7 @@ transform: translateX(4px) scale(1.005); box-shadow: 0 0 25px rgba(0, 255, 249, 
 </button>
 </div>
 <div id="globalDockWrapper">
-<div id="dockTooltip" class="show"><span>拟态矩阵接入 //</span><i data-lucide="crosshair" class="w-4 h-4 text-white"></i></div>
+<div id="dockTooltip" class="show"><span>番茄钟   </span><i data-lucide="crosshair" class="w-4 h-4 text-white"></i></div>
 <div id="dockOrb">
 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="reactor-spin">
 <circle cx="12" cy="12" r="10"></circle>
@@ -958,28 +958,57 @@ function closeModal() { document.getElementById('modalOverlay').classList.remove
 let timer=null, timeLeft=1500, isRun=false;
 const dockWrapper = document.getElementById('globalDockWrapper');
 const orb = document.getElementById('dockOrb');
-let isDrag = false, startX, startY;
-orb.addEventListener('mousedown', (e) => {
-if(e.target.closest('#dockPanel')) return;
-isDrag = false; startX = e.clientX; startY = e.clientY;
-let rect = dockWrapper.getBoundingClientRect();
-let offX = rect.left, offY = rect.top;
-dockWrapper.style.transition = 'none';
-const onMove = (ev) => {
-if(Math.abs(ev.clientX - startX) > 5 || Math.abs(ev.clientY - startY) > 5) {
-isDrag = true;
-dockWrapper.style.left = (offX + ev.clientX - startX) + 'px';
-dockWrapper.style.top = (offY + ev.clientY - startY) + 'px';
-dockWrapper.style.right = 'auto'; dockWrapper.style.bottom = 'auto';
+let isDrag = false, startX, startY, initialLeft, initialTop;
+
+function handleDragStart(e) {
+    if(e.target.closest('#dockPanel')) return;
+    
+    isDrag = false;
+    const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+    const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+    
+    startX = clientX; 
+    startY = clientY;
+    
+    let rect = dockWrapper.getBoundingClientRect();
+    initialLeft = rect.left;
+    initialTop = rect.top;
+    
+    dockWrapper.style.transition = 'none';
+    
+    document.addEventListener('mousemove', handleDragMove);
+    document.addEventListener('touchmove', handleDragMove, {passive: false});
+    document.addEventListener('mouseup', handleDragEnd);
+    document.addEventListener('touchend', handleDragEnd);
 }
-};
-const onUp = () => {
-document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp);
-dockWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
-if(!isDrag) { toggleDock(); } else { snapDock(); }
-};
-document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
-});
+
+function handleDragMove(e) {
+    const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+    const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+    
+    if(Math.abs(clientX - startX) > 5 || Math.abs(clientY - startY) > 5) {
+        isDrag = true;
+        e.preventDefault();
+        dockWrapper.style.left = (initialLeft + clientX - startX) + 'px';
+        dockWrapper.style.top = (initialTop + clientY - startY) + 'px';
+        dockWrapper.style.right = 'auto'; 
+        dockWrapper.style.bottom = 'auto';
+    }
+}
+
+function handleDragEnd() {
+    document.removeEventListener('mousemove', handleDragMove);
+    document.removeEventListener('touchmove', handleDragMove);
+    document.removeEventListener('mouseup', handleDragEnd);
+    document.removeEventListener('touchend', handleDragEnd);
+    
+    dockWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
+    
+    if(!isDrag) { toggleDock(); } else { snapDock(); }
+}
+
+orb.addEventListener('mousedown', handleDragStart);
+orb.addEventListener('touchstart', handleDragStart, {passive: false});
 function snapDock() {
 const rect = dockWrapper.getBoundingClientRect();
 const winW = window.innerWidth; const winH = window.innerHeight;
@@ -1041,7 +1070,7 @@ c.appendChild(d);
 document.head.insertAdjacentHTML("beforeend", `<style>@keyframes fall { to { transform: translateY(110vh); } }</style>`)
 window.addEventListener('DOMContentLoaded', init);
 </script>
-<div id="noiseDockWrapper" style="position: fixed; bottom: 100px; left: 20px; z-index: 100000; touch-action: none;">
+<div id="noiseDockWrapper" style="position: fixed; bottom: 200px; right: 32px; left: auto; z-index: 20000; touch-action: none;">
     <div id="noiseOrb" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: grab; transition: transform 0.1s; position: relative; z-index: 20002;">
         <i data-lucide="headphones" class="w-6 h-6 pointer-events-none relative z-10"></i>
         <div class="cyber-ring cyber-ring-1"></div>
@@ -1243,47 +1272,106 @@ window.addEventListener('DOMContentLoaded', init);
         nWrapper.style.bottom = 'auto'; 
     }
 
-    function noiseDragEnd() {
-        if (!noise_isDragging) return;
-        noise_isDragging = false;
-        nOrb.style.cursor = 'grab';
-        nOrb.style.transform = 'scale(1)';
+    // 📢 请用此代码块完全替换掉您模板中的 function noiseDragEnd()
+function noiseDragEnd() {
+    // 基础检查和清理
+    if (!noise_isDragging) return;
+    noise_isDragging = false;
+    nOrb.style.cursor = 'grab';
+    nOrb.style.transform = 'scale(1)';
 
-        document.removeEventListener('mousemove', noiseDragMove);
-        document.removeEventListener('touchmove', noiseDragMove);
-        document.removeEventListener('mouseup', noiseDragEnd);
-        document.removeEventListener('touchend', noiseDragEnd);
+    document.removeEventListener('mousemove', noiseDragMove);
+    document.removeEventListener('touchmove', noiseDragMove);
+    document.removeEventListener('mouseup', noiseDragEnd);
+    document.removeEventListener('touchend', noiseDragEnd);
 
-        if (noise_hasMoved) {
-            // 吸附逻辑：松手后自动贴边
-            const winW = window.innerWidth;
-            const winH = window.innerHeight;
-            const rect = nWrapper.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
+    if (noise_hasMoved) {
+        const winW = window.innerWidth;
+        const winH = window.innerHeight;
+        const rect = nWrapper.getBoundingClientRect();
+
+        // --- 定义常量 ---
+        const ORB_SIZE = 50; 
+        const MARGIN = 32;       // 边缘吸附后的留白距离
+        const SNAP_THRESHOLD = 80; // 磁力吸附的距离阈值 (px)
+        const CENTER_SNAP_ZONE = 0.2; // 靠近中线的吸附区宽度 (屏幕宽度的 20%)
+
+        let targetLeft = rect.left; // 默认目标位置是鼠标松开的位置
+        let targetTop = rect.top;   
+
+        // 1. 检查是否靠近任何边缘 (即是否应该启动吸附)
+        const isNearLeft = rect.left < SNAP_THRESHOLD;
+        const isNearRight = (winW - (rect.left + ORB_SIZE)) < SNAP_THRESHOLD;
+        const isNearTop = rect.top < SNAP_THRESHOLD;
+        const isNearBottom = (winH - (rect.top + ORB_SIZE)) < SNAP_THRESHOLD;
+
+        let shouldSnap = isNearLeft || isNearRight || isNearTop || isNearBottom;
+
+        if (shouldSnap) {
+            // 启动吸附：使用平滑的过渡
+            nWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)'; 
+
+            // --- 2. 检查水平方向是靠边还是居中对齐 ---
+            const centerX = rect.left + ORB_SIZE / 2;
+            const isNearHorizontalCenter = centerX > winW * (0.5 - CENTER_SNAP_ZONE / 2) && centerX < winW * (0.5 + CENTER_SNAP_ZONE / 2);
             
-            nWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
-            
-            let targetLeft;
-            // 左右吸附
-            if (centerX < winW / 2) {
-                targetLeft = 20; 
-            } else {
-                targetLeft = winW - 70; // 50px宽 + 20px距
+            if (isNearLeft || isNearRight) {
+                // 如果靠近左侧或右侧边缘
+                if (isNearHorizontalCenter) {
+                    targetLeft = (winW / 2) - (ORB_SIZE / 2); // 居中吸附 (中点)
+                } else if (isNearLeft) {
+                    targetLeft = MARGIN; // 吸附到左边缘 (角点)
+                } else if (isNearRight) {
+                    targetLeft = winW - ORB_SIZE - MARGIN; // 吸附到右边缘 (角点)
+                }
+            } 
+            // 如果仅靠近垂直边缘，但同时又在水平中线附近，也吸附到水平中线
+            else if (isNearHorizontalCenter) {
+                targetLeft = (winW / 2) - (ORB_SIZE / 2);
             }
             
-            // 上下边界限制
-            let targetTop = rect.top;
-            if (targetTop < 50) targetTop = 50;
-            if (targetTop > winH - 100) targetTop = winH - 100;
+            // --- 3. 检查垂直方向是靠边还是居中对齐 ---
+            const centerY = rect.top + ORB_SIZE / 2;
+            const isNearVerticalCenter = centerY > winH * (0.5 - CENTER_SNAP_ZONE / 2) && centerY < winH * (0.5 + CENTER_SNAP_ZONE / 2);
 
+            if (isNearTop || isNearBottom) {
+                // 如果靠近顶部或底部边缘
+                if (isNearVerticalCenter) {
+                    targetTop = (winH / 2) - (ORB_SIZE / 2); // 居中吸附 (中点)
+                } else if (isNearTop) {
+                    targetTop = MARGIN; // 吸附到上边缘 (角点)
+                } else if (isNearBottom) {
+                    targetTop = winH - ORB_SIZE - MARGIN; // 吸附到下边缘 (角点)
+                }
+            } 
+            // 如果仅靠近水平边缘，但同时又在垂直中线附近，也吸附到垂直中线
+            else if (isNearVerticalCenter) {
+                 targetTop = (winH / 2) - (ORB_SIZE / 2);
+            }
+            
+            // 4. 最终边界钳制：防止计算误差导致飞出屏幕 (保持 MARGIN 距离)
+            targetLeft = Math.max(MARGIN, Math.min(winW - ORB_SIZE - MARGIN, targetLeft));
+            targetTop = Math.max(MARGIN, Math.min(winH - ORB_SIZE - MARGIN, targetTop));
+
+            // 应用计算后的吸附位置
             nWrapper.style.left = `${targetLeft}px`;
             nWrapper.style.top = `${targetTop}px`;
-            
+            nWrapper.style.bottom = 'auto'; 
+
         } else {
-            // 点击事件：触发智能展开
-            toggleNoisePanel();
+            // 自由悬停区 (No Snap Zone): 留在原地
+            // 使用快速过渡，让它立即停止在松手的位置
+            nWrapper.style.transition = 'all 0.1s linear'; 
+            nWrapper.style.left = `${targetLeft}px`;
+            nWrapper.style.top = `${targetTop}px`;
+            nWrapper.style.bottom = 'auto'; 
         }
+
+    } else {
+        // 点击事件：触发面板
+        toggleNoisePanel();
     }
+}
 
     // === 核心修复：智能避让展开逻辑 ===
     function toggleNoisePanel() {
