@@ -1,24 +1,22 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-        
     <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/tailwind.js"></script>
     <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/lucide.min.js"></script>
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="manifest" href="manifest.json"> 
-<meta name="theme-color" content="#020617"> 
+    <meta name="theme-color" content="#020617"> 
 
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="DeepFlow">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DeepFlow">
 
-<link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <title>DeepFlow Zen - {{PLAN_TITLE}}</title>
 
     <style>
-        /* 2. [修正] 字体栈：移除 Google Fonts，全平台兼容宋体 */
         :root { 
             --paper-bg: #f7f7f5; 
             --ink-black: #1c1917; 
@@ -29,61 +27,50 @@
         }
         
         body { 
-            /* 优先调用 iOS/Mac 宋体 -> 安卓/Win 宋体 -> 通用衬线 */
             font-family: "Songti SC", "Noto Serif SC", "STSong", "SimSun", "Times New Roman", serif;
             background-color: var(--paper-bg); 
             color: var(--ink-black); 
-            /* 纸张噪点纹理 */
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E"); 
             -webkit-font-smoothing: antialiased;
         }
         
         .sans-font { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
         
-        /* Zen 卡片样式 */
         .zen-card { background: white; border: 1px solid var(--line-color); border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); border-left: 4px solid var(--line-color); transition: all 0.3s ease; }
         .zen-card:hover { border-left-color: var(--ink-black); box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
         
-        /* 侧边栏样式 */
         .sidebar-item { border-left: 2px solid transparent; transition: all 0.2s; }
         .sidebar-item.active { border-left-color: var(--ink-black); background: var(--focus-highlight); font-weight: 700; color: var(--ink-black); }
         
-        /* 任务列表 */
         .task-row { border-bottom: 1px solid var(--line-color); transition: background-color 0.2s; position: relative; } 
         .task-row:last-child { border-bottom: none; } 
         .task-row:hover { background-color: var(--focus-highlight); }
         
-        /* 复选框 */
         .zen-checkbox { width: 20px; height: 20px; border: 1.5px solid var(--ink-gray); border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; }
         .task-completed .zen-checkbox { background-color: var(--ink-black); border-color: var(--ink-black); transform: scale(0.9); }
         .task-completed h4 { text-decoration: line-through; color: #a8a29e; transition: color 0.3s; }
         
-        /* 遮罩层 */
         .zen-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(247, 247, 245, 0.9); backdrop-filter: blur(4px); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; transition: opacity 0.6s ease; }
         .zen-btn { background: var(--ink-black); color: white; padding: 12px 36px; border-radius: 2px; letter-spacing: 0.1em; transition: transform 0.2s, box-shadow 0.2s; }
         .zen-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         .zen-btn:active { transform: scale(0.95); }
         
-        /* 笔记区域 */
         .zen-note-area { width: 100%; background: transparent; border: none; background-image: linear-gradient(transparent 95%, var(--line-color) 95%); background-size: 100% 2.4em; line-height: 2.4em; padding: 0; resize: none; color: var(--ink-gray); outline: none; transition: color 0.3s; font-size: 0.95rem; font-family: inherit; }
         .zen-note-area:focus { color: var(--ink-black); }
         .zen-note-area::placeholder { color: #d6d3d1; font-style: italic; }
         
-        /* 印章特效 */
         .stamp-wrapper { position: absolute; bottom: 30px; right: 30px; pointer-events: none; z-index: 10; opacity: 0; transform: scale(1.5) rotate(-10deg); transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); mix-blend-mode: multiply; }
         .stamp-wrapper.show { opacity: 0.9; transform: scale(1) rotate(-5deg); }
         .stamp-inner { width: 90px; height: 90px; border: 4px solid var(--seal-red); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: var(--seal-red); font-weight: 900; font-size: 2rem; box-shadow: inset 0 0 0 2px var(--seal-red), inset 0 0 12px rgba(185, 28, 28, 0.1); letter-spacing: 0.1em; background: rgba(185, 28, 28, 0.02); }
 
         .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* 移动端适配 */
         @media (max-width: 768px) { 
             .mobile-select-wrapper { position: relative; } 
             .mobile-select-wrapper select { appearance: none; padding-right: 30px; font-family: "Songti SC", "Noto Serif SC", serif; } 
             .mobile-select-icon { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; } 
         }
         
-        /* 番茄钟悬浮窗 */
         #zenDockWrapper { position: fixed; bottom: 32px; right: 32px; z-index: 100; transition: none; }
         #zenOrb { width: 56px; height: 56px; border-radius: 50%; background: #1a1a1a; color: #f4f4f0; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.15); cursor: pointer; transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1); }
         #zenOrb:active { transform: scale(0.9); }
@@ -92,12 +79,10 @@
         #zenPanel { position: absolute; width: 280px; background: #fff; border: 2px solid #1a1a1a; padding: 24px; opacity: 0; pointer-events: none; transform: translateY(15px); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         #zenPanel.open { opacity: 1; pointer-events: auto; transform: translateY(0); }
         
-        /* 时间输入框 */
         #zenTimeInputModal { position: absolute; inset: 0; background: rgba(255,255,255,0.98); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 20; }
         #zenTimeInputModal.show { opacity: 1; pointer-events: auto; }
         .zen-input { background: transparent; border: none; border-bottom: 2px solid #1a1a1a; font-family: "Songti SC", "Noto Serif SC", serif; font-size: 2rem; text-align: center; color: #1a1a1a; width: 80%; outline: none; margin-bottom: 1rem; }
         
-        /* 沉浸模式 */
         #zenImmersive { position: fixed; inset: 0; z-index: 999; background: var(--paper-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.8s ease; }
         #zenImmersive.active { opacity: 1; pointer-events: auto; }
         .serif-num { font-family: 'Times New Roman', serif; font-variant-numeric: tabular-nums; }
@@ -105,7 +90,6 @@
         .ink-ripple:nth-child(2) { animation-delay: 2s; width: 450px; height: 450px; opacity: 0.6; }
         @keyframes ink-breathe { 0% { transform: scale(0.8); opacity: 0; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1.3); opacity: 0; } }
         
-        /* 按钮组件 */
         .zen-circle-btn { width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--ink-black); display: flex; align-items: center; justify-content: center; color: var(--ink-black); transition: all 0.3s ease; background: transparent; }
         .zen-circle-btn:hover { background: var(--ink-black); color: var(--paper-bg); transform: scale(1.05); }
         .zen-circle-btn:active { transform: scale(0.95); }
@@ -114,7 +98,6 @@
         #zenTimeDisplay { cursor: pointer; border-bottom: 1px solid transparent; transition: border-color 0.3s; }
         #zenTimeDisplay:hover { border-bottom-color: var(--ink-black); }
 
-        /* 模态框 */
         #zenDialogOverlay { position: fixed; inset: 0; z-index: 9999; background: rgba(250, 250, 249, 0.8); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         #zenDialogOverlay.show { opacity: 1; pointer-events: auto; }
         .zen-dialog { background: #fff; width: 340px; padding: 40px; border: 1px solid var(--ink-black); box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; transform: translateY(10px); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -129,65 +112,55 @@
         .zen-dialog-btn:hover { text-decoration: underline; }
         .zen-dialog-btn.primary { border-color: var(--ink-black); color: var(--ink-black); }
         .zen-dialog-btn.primary:hover { background: var(--ink-black); color: #fff; text-decoration: none; }
-        /* --- Zen Theme Noise UI --- */
-#noiseOrb {
-    background: #fff;
-    border: 2px solid #1c1917;
-    box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
-    color: #1c1917;
-}
-#noiseOrb:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 rgba(0,0,0,0.1); }
-#noisePanel {
-    background: #fff;
-    border: 2px solid #1c1917;
-    box-shadow: 8px 8px 0 rgba(0,0,0,0.05);
-    color: #1c1917;
-    transform: scale(0.9);
-}
-.noise-card {
-    height: 44px;
-    border: 1px solid #e5e5e5;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: all 0.2s;
-    border-radius: 2px;
-}
-.noise-card:hover { border-color: #1c1917; }
-.noise-card.active {
-    background: #1c1917; color: #fff; border-color: #1c1917;
-}
-#noiseRipple { background-color: #d6d3d1; }
-/* === [Zen CSS 新增] === */
-/* Logo 基础样式 */
-#noiseOrb {
-    background: #fff; border: 2px solid #1c1917; color: #1c1917;
-    box-shadow: 4px 4px 0 rgba(0,0,0,0.1); overflow: visible !important;
-}
-/* 播放状态：变为实心黑 */
-#noiseOrb.is-playing {
-    background: #1c1917; color: #fff; box-shadow: none;
-}
-/* 水墨涟漪动画 */
-.zen-ripple {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 100%; height: 100%; border-radius: 50%; border: 1px solid #1c1917;
-    opacity: 0; pointer-events: none; z-index: -1;
-}
-#noiseOrb.is-playing .zen-ripple-1 { animation: zen-ripple 4s ease-out infinite; }
-#noiseOrb.is-playing .zen-ripple-2 { animation: zen-ripple 4s ease-out infinite; animation-delay: 2s; }
-@keyframes zen-ripple {
-    0% { width: 100%; height: 100%; opacity: 0.6; border-width: 2px; }
-    100% { width: 300%; height: 300%; opacity: 0; border-width: 0px; }
-}
-/* 停止按钮激活态 (对勾) */
-.stop-active {
-    background: #1c1917 !important; color: #fff !important; border-color: #1c1917 !important; opacity: 1 !important;
-}
-/* 变体小红点 */
-.variant-badge {
-    position: absolute; top: -5px; right: -5px; width: 14px; height: 14px;
-    background: #b91c1c; color: white; border-radius: 50%; font-size: 9px;
-    display: flex; align-items: center; justify-content: center; border: 1px solid #fff;
-}
+
+        #noiseOrb {
+            background: #fff;
+            border: 2px solid #1c1917;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+            color: #1c1917;
+            overflow: visible !important;
+        }
+        #noiseOrb.is-playing {
+            background: #1c1917; color: #fff; box-shadow: none;
+        }
+        .zen-ripple {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 100%; height: 100%; border-radius: 50%; border: 1px solid #1c1917;
+            opacity: 0; pointer-events: none; z-index: -1;
+        }
+        #noiseOrb.is-playing .zen-ripple-1 { animation: zen-ripple 4s ease-out infinite; }
+        #noiseOrb.is-playing .zen-ripple-2 { animation: zen-ripple 4s ease-out infinite; animation-delay: 2s; }
+        @keyframes zen-ripple {
+            0% { width: 100%; height: 100%; opacity: 0.6; border-width: 2px; }
+            100% { width: 300%; height: 300%; opacity: 0; border-width: 0px; }
+        }
+        
+        #noisePanel {
+            background: #fff;
+            border: 2px solid #1c1917;
+            box-shadow: 8px 8px 0 rgba(0,0,0,0.05);
+            color: #1c1917;
+            transform: scale(0.9);
+        }
+        .noise-card {
+            height: 44px;
+            border: 1px solid #e5e5e5;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s;
+            border-radius: 2px;
+        }
+        .noise-card:hover { border-color: #1c1917; }
+        .noise-card.active {
+            background: #1c1917; color: #fff; border-color: #1c1917;
+        }
+        .stop-active {
+            background: #1c1917 !important; color: #fff !important; border-color: #1c1917 !important; opacity: 1 !important;
+        }
+        .variant-badge {
+            position: absolute; top: -5px; right: -5px; width: 14px; height: 14px;
+            background: #b91c1c; color: white; border-radius: 50%; font-size: 9px;
+            display: flex; align-items: center; justify-content: center; border: 1px solid #fff;
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col {{BODY_CLASS}}">
@@ -297,7 +270,6 @@
         
         const OSS_BASE = "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com";
         const AUDIO_SYSTEM = {
-            // 读取本地存储，记住用户的静音偏好
             sfxEnabled: localStorage.getItem('zen_sfx_enabled') !== 'false', 
             pools: {
                 check: [ OSS_BASE + '/audio/pencil/pencil_1.MP3', OSS_BASE + '/audio/pencil/pencil_2.MP3', OSS_BASE + '/audio/pencil/pencil_3.MP3', OSS_BASE + '/audio/pencil/pencil_4.MP3', OSS_BASE + '/audio/pencil/pencil_5.MP3', OSS_BASE + '/audio/pencil/pencil_6.MP3' ],
@@ -334,7 +306,8 @@
                 lucide.createIcons();
             },
             play: function(type) {
-                if (!this.sfxEnabled) return; // 🔴
+                // 2. [修复] 注释掉阻止播放的错误逻辑，确保音效正常工作
+                // if (!this.sfxEnabled) return; 
                 
                 if (!this.cache[type] || this.cache[type].length === 0) return;
                 const audios = this.cache[type];
@@ -369,7 +342,6 @@
             currentIndex = idx; 
             const task = tasksData[idx]; 
             if(!task) return; 
-            // 确保更新手机下拉菜单的值
             const mobSelect = document.getElementById('mobileDateSelect');
             if(mobSelect) mobSelect.value = idx;
             
@@ -387,8 +359,6 @@
             container.innerHTML = ''; 
             if(day.tasks.length === 0) { container.innerHTML = '<div class="p-12 text-center text-stone-400 italic">今日无事，静享时光。</div>'; return; } 
             
-            // --- Smart Sort ---
-            // 创建带原始索引的副本进行排序，不破坏原始数据顺序，保证点击事件ID正确
             const sortedTasks = day.tasks.map((t, i) => ({...t, originalIndex: i})).sort((a, b) => {
                 return getZenWeight(a) - getZenWeight(b);
             });
@@ -396,14 +366,12 @@
             let lastWeight = -1;
 
             sortedTasks.forEach((task, renderIndex) => { 
-                const taskId = day.date + '-' + task.originalIndex; // 使用原始索引作为ID
+                const taskId = day.date + '-' + task.originalIndex;
                 const checked = !!userProgress[taskId]; 
                 
-                // --- 智能识别 ---
                 const aiInfo = typeof autoDetectTag === 'function' ? autoDetectTag(task.title + " " + (task.desc||"")) : {category:'日常'};
                 const displayTag = task.tag || (aiInfo.category !== '日常' ? aiInfo.label : ''); 
                 
-                // --- Zen 风格特殊处理 ---
                 let indicatorStyle = 'border-left-color: transparent;'; 
                 let tagStyle = 'border: 1px solid #e7e5e4; color: #a8a29e; background: transparent;'; 
                 if (displayTag) { 
@@ -413,10 +381,8 @@
                     } 
                 } 
 
-                // --- 视觉优化：呼吸感留白 ---
                 const currentWeight = getZenWeight(task);
                 let extraClass = '';
-                // 如果时间跨度 > 3小时 (180min)，且不是第一个任务，增加留白
                 if (renderIndex > 0 && (currentWeight - lastWeight) > 180) {
                      extraClass = 'mt-8 border-t border-stone-100 pt-8'; 
                 }
@@ -425,7 +391,6 @@
                 const badgeHTML = displayTag ? `<span class="text-[10px] tracking-wider px-2 py-0.5 rounded font-bold" style="${tagStyle}">${displayTag}</span>` : ''; 
                 const checkSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 text-white"><polyline points="20 6 9 17 4 12"></polyline></svg>`; 
                 
-                // 时间显示优化：如果有显式时间，或从标题提取到了时间，则显示
                 let timeDisplay = task.time;
                 if (!timeDisplay) {
                      const m = (task.title + " " + (task.desc||"")).match(/(\d{1,2})[:：](\d{2})/);
@@ -446,13 +411,13 @@
         async function toggleTask(id) { 
             if(document.getElementById('zenOverlay').style.display !== 'none') return; 
             
-            let playCheckSound = false; // 标记是否需要播放打勾音效
+            let playCheckSound = false; 
 
             if(userProgress[id]) { 
                 delete userProgress[id]; 
             } else { 
                 userProgress[id] = true; 
-                playCheckSound = true; // 暂时标记，还没播放
+                playCheckSound = true; 
                 showToast("已记录"); 
             } 
             
@@ -523,12 +488,11 @@
             const isAllDone = doneCount === day.tasks.length;
 
             if (isAllDone) { 
-                // 只有当章还没盖上的时候，才播放音效（防止刷新页面时自动播放）
                 if (!stamp.classList.contains('show')) {
                     AUDIO_SYSTEM.play('finish'); 
                 }
                 stamp.classList.add('show'); 
-                return true; // 告诉外部：如果是刚点击导致的完成，这里已经处理了音效
+                return true; 
             } else { 
                 stamp.classList.remove('show'); 
                 return false;
@@ -536,7 +500,6 @@
         }
         function saveNote() { const val = document.getElementById('dailyNote').value; const date = tasksData[currentIndex].date; if(val.trim()) dailyNotes[date] = val; else delete dailyNotes[date]; localStorage.setItem(NOTE_KEY, JSON.stringify(dailyNotes)); }
         
-        // --- 核心修改：锁定逻辑 ---
         function checkLock(dateStr) { 
             const overlay = document.getElementById('zenOverlay'); 
             const content = document.getElementById('taskList'); 
@@ -546,7 +509,6 @@
                 overlay.style.display = 'none'; 
                 content.style.filter = 'none'; 
                 content.style.pointerEvents = 'auto'; 
-                // 解锁后移除高度限制
                 content.style.maxHeight = 'none'; 
                 content.style.overflow = 'visible'; 
             } else { 
@@ -555,7 +517,6 @@
                 content.style.filter = 'blur(4px) grayscale(100%)'; 
                 content.style.pointerEvents = 'none'; 
                 stamp.classList.remove('show'); 
-                // 锁定时，强制折叠高度，确保遮罩层只在第一屏
                 content.style.maxHeight = '400px'; 
                 content.style.overflow = 'hidden'; 
             } 
@@ -568,7 +529,6 @@
                 localStorage.setItem(START_KEY, JSON.stringify(startedDays)); 
             } 
             
-            // 🔴 核心修复：将 start 音效移动到“开启今日计划”的函数中
             AUDIO_SYSTEM.play('start'); 
             
             const overlay = document.getElementById('zenOverlay'); 
@@ -578,7 +538,6 @@
                 const content = document.getElementById('taskList'); 
                 content.style.filter = 'none'; 
                 content.style.pointerEvents = 'auto'; 
-                // 动画结束解锁后，展开完整列表
                 content.style.maxHeight = 'none'; 
                 content.style.overflow = 'visible'; 
             }, 500); 
@@ -598,31 +557,25 @@
                 }, 0);
             }
             el.appendChild(div); }); }
-            // === [Zen 修复：防闪烁 + 强制显示] ===
     let zenToastTimer = null;
 
     function showToast(text) { 
         const t = document.getElementById('zenToast');
-        // 如果找不到元素（比如ID变了），尝试找旧ID
         const target = t || document.getElementById('zenToastMsg')?.parentElement;
         if(!target) return;
 
         const msgSpan = target.querySelector('span') || document.getElementById('zenToastMsg');
 
-        // 1. 清除旧定时器
         if (zenToastTimer) clearTimeout(zenToastTimer);
 
-        // 2. 更新内容
         if(msgSpan) msgSpan.innerText = text;
         
-        // 3. 强制重置状态 (修正位置和透明度)
         target.style.opacity = '1'; 
-        target.style.transform = 'translate(-50%, 0)'; // 上浮效果
+        target.style.transform = 'translate(-50%, 0)'; 
         
-        // 4. 重新开始倒计时
         zenToastTimer = setTimeout(() => { 
             target.style.opacity = '0'; 
-            target.style.transform = 'translate(-50%, 20px)'; // 下沉消失
+            target.style.transform = 'translate(-50%, 20px)'; 
             zenToastTimer = null;
         }, 2000); 
     }
@@ -642,18 +595,15 @@
                     initialDayIdx = 0;
                 }
             }
-            // 4. [修正] 初始化手机下拉菜单选项
             const mobileSelect = document.getElementById('mobileDateSelect'); 
             if (mobileSelect) {
                 mobileSelect.innerHTML = '';
                 tasksData.forEach((task, index) => { 
                     const opt = document.createElement('option'); 
                     opt.value = index; 
-                    // Zen 风格文案: Chapter 1 · 12-01
                     opt.text = `Chapter ${task.dayNum} · ${task.date.substring(5)}`; 
                     mobileSelect.appendChild(opt); 
                 }); 
-                // 监听切换
                 mobileSelect.addEventListener('change', (e) => loadDay(parseInt(e.target.value))); 
             }
             
@@ -662,39 +612,32 @@
             lucide.createIcons(); 
             setTimeout(() => { const tip = document.getElementById('zenTooltip'); if(tip) tip.style.opacity = '0'; }, 4000); 
         }
-        // === [新增] 新手引导：交错提示 ===
     setTimeout(() => {
-        // 1. 先显示右下角番茄钟提示
         const zenTip = document.getElementById('zenTooltip');
         if(zenTip) zenTip.classList.add('show');
 
-        // 2. 4秒后，隐藏番茄钟，显示左下角白噪音提示
         setTimeout(() => {
             if(zenTip) zenTip.classList.remove('show');
             
             const noiseTip = document.getElementById('noiseTooltip');
             if(noiseTip) {
                 noiseTip.style.opacity = '1';
-                // 3. 再过4秒，隐藏白噪音提示
                 setTimeout(() => {
                     noiseTip.style.opacity = '0';
                 }, 4000);
             }
         }, 4000);
-    }, 1000); // 进场1秒后开始
+    }, 1000); 
         window.addEventListener('DOMContentLoaded', init);
 
-        // --- 番茄钟逻辑 ---
         let timer = null, timeLeft = 25 * 60, isRunning = false;
         const dockWrapper = document.getElementById('zenDockWrapper'); const orb = document.getElementById('zenOrb'); 
 let isDrag = false, startX, startY, initialLeft, initialTop;
 
-// 统一处理开始拖拽 (支持鼠标和触摸)
 function handleDragStart(e) {
-    if(e.target.closest('#zenPanel')) return; // 防止误触面板
+    if(e.target.closest('#zenPanel')) return; 
     
     isDrag = false;
-    // 兼容获取坐标
     const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
     const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
     
@@ -705,9 +648,8 @@ function handleDragStart(e) {
     initialLeft = rect.left;
     initialTop = rect.top;
     
-    dockWrapper.style.transition = 'none'; // 拖动时移除过渡效果
+    dockWrapper.style.transition = 'none'; 
     
-    // 绑定移动和结束事件
     document.addEventListener('mousemove', handleDragMove);
     document.addEventListener('touchmove', handleDragMove, {passive: false});
     document.addEventListener('mouseup', handleDragEnd);
@@ -718,10 +660,9 @@ function handleDragMove(e) {
     const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
     const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
     
-    // 只有移动超过一定距离才算拖拽，避免点击被误判
     if(Math.abs(clientX - startX) > 5 || Math.abs(clientY - startY) > 5) {
         isDrag = true;
-        e.preventDefault(); // 防止手机端滚动页面
+        e.preventDefault(); 
         dockWrapper.style.left = (initialLeft + clientX - startX) + 'px';
         dockWrapper.style.top = (initialTop + clientY - startY) + 'px';
         dockWrapper.style.right = 'auto'; 
@@ -735,16 +676,15 @@ function handleDragEnd() {
     document.removeEventListener('mouseup', handleDragEnd);
     document.removeEventListener('touchend', handleDragEnd);
     
-    dockWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)'; // 恢复弹性动画
+    dockWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)'; 
     
     if(!isDrag) {
-        toggleDock(); // 如果没拖动，就是点击
+        toggleDock(); 
     } else {
-        snapDock(); // 如果拖动了，执行吸附
+        snapDock(); 
     }
 }
 
-// 绑定监听
 orb.addEventListener('mousedown', handleDragStart);
 orb.addEventListener('touchstart', handleDragStart, {passive: false});
 
@@ -778,7 +718,6 @@ s = Math.max(0, Math.min(59, parseInt(parts[1]) || 0)); } else { m = parseInt(in
             }
             else { 
                 isRunning = true; 
-                // 🔴 修复点：移除了 AUDIO_SYSTEM.play('start')，现在 start 音效由 unlockDay 触发。
                 timer = setInterval(() => { if(timeLeft>0) { timeLeft--; updateUI(); } else { finish(); } }, 1000); 
             }
             updateUI();
@@ -830,34 +769,8 @@ s = Math.max(0, Math.min(59, parseInt(parts[1]) || 0)); } else { m = parseInt(in
         </button>
     </div>
 </div>
-    
-    <div id="noisePanel" style="position: absolute; bottom: 0; width: 260px; padding: 20px; border-radius: 20px; display: none; opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 20001;">
-        <div class="flex justify-between items-center mb-4">
-            <span class="text-[10px] font-bold uppercase tracking-widest opacity-60">音量</span>
-            <input type="range" min="0" max="1" step="0.1" value="0.6" oninput="changeNoiseVolume(this.value)" class="w-20 h-1 rounded-lg appearance-none bg-gray-500/30 cursor-pointer accent-current">
-        </div>
-        
-        <div class="grid grid-cols-4 gap-3 mb-4">
-            <div class="noise-card" onclick="playNoise('rain')" title="雨声"><i data-lucide="cloud-rain"></i></div>
-            <div class="noise-card" onclick="playNoise('ocean')" title="海浪"><i data-lucide="waves"></i></div>
-            <div class="noise-card" onclick="playNoise('forest')" title="森林"><i data-lucide="trees"></i></div>
-            <div class="noise-card" onclick="playNoise('fire')" title="篝火"><i data-lucide="flame"></i></div>
-            <div class="noise-card" onclick="playNoise('cafe')" title="咖啡馆"><i data-lucide="coffee"></i></div>
-            <div class="noise-card" onclick="playNoise('train')" title="列车"><i data-lucide="train"></i></div>
-            <div class="noise-card" onclick="playNoise('night')" title="夏夜"><i data-lucide="moon"></i></div>
-            <div class="noise-card" onclick="playNoise('keyboard')" title="键盘"><i data-lucide="keyboard"></i></div>
-        </div>
-        
-        <button onclick="stopAllNoise()" class="w-full text-xs py-2 rounded-lg font-bold opacity-60 hover:opacity-100 transition border border-current flex items-center justify-center gap-2">
-            <i data-lucide="square" class="w-3 h-3"></i> 静音 / 停止
-        </button>
-    </div>
-</div>
 
 <script>
-    // --- 1. 音频引擎 ---
-    // === [Zen JS 终极修复：完整变体 + 汉化] ===
-    // === [Zen JS 升级：支持暂停/继续] ===
     const NOISE_BASE = "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/audio/ambience/";
     
     const noiseConfig = {
@@ -875,21 +788,17 @@ s = Math.max(0, Math.min(59, parseInt(parts[1]) || 0)); } else { m = parseInt(in
     let currentVarIdx = 0; 
     let currentAudio = null; 
     let masterVol = 0.6;
-    let isPaused = false; // 新增状态标记
+    let isPaused = false; 
 
     function playNoise(cat) {
-        // 智能逻辑：
-        // 1. 如果点击的是当前分类，且处于暂停状态 -> 继续播放
         if (currentCat === cat && isPaused) {
             togglePlayback();
             return;
         }
 
-        // 2. 如果点击的是当前分类，且正在播放 -> 切换变体
         if (currentCat === cat) {
             currentVarIdx = (currentVarIdx + 1) % noiseConfig[cat].length;
         } else {
-            // 3. 如果点击新分类 ->以此为准
             currentCat = cat; 
             currentVarIdx = 0;
         }
@@ -897,7 +806,6 @@ s = Math.max(0, Math.min(59, parseInt(parts[1]) || 0)); } else { m = parseInt(in
         loadAndPlay();
     }
 
-    // 内部函数：加载并播放
     function loadAndPlay() {
         if(currentAudio) currentAudio.pause();
         const item = noiseConfig[currentCat][currentVarIdx];
@@ -912,27 +820,23 @@ s = Math.max(0, Math.min(59, parseInt(parts[1]) || 0)); } else { m = parseInt(in
         showToast("正在聆听: " + item.n);
     }
 
-    // 新增：全局播放/暂停切换
     function togglePlayback() {
-        if (!currentAudio && !currentCat) return; // 还没选过
+        if (!currentAudio && !currentCat) return; 
 
         const btn = document.getElementById('noiseStopBtn');
         const item = noiseConfig[currentCat][currentVarIdx];
 
         if (isPaused) {
-            // 执行：继续播放
             currentAudio.play();
             isPaused = false;
             showToast("继续聆听: " + item.n);
         } else {
-            // 执行：暂停
             currentAudio.pause();
             isPaused = true;
         }
         updateNoiseUI();
     }
 
-    // 替代原来的 stopAllNoise，现在不仅停止，还负责 UI 切换
     function stopAllNoise() {
         togglePlayback();
     }
@@ -943,30 +847,22 @@ s = Math.max(0, Math.min(59, parseInt(parts[1]) || 0)); } else { m = parseInt(in
         const orb = document.getElementById('noiseOrb');
         const btn = document.getElementById('noiseStopBtn');
         
-        // 1. 呼吸灯：只有播放时才动
         if(currentCat && !isPaused) orb.classList.add('is-playing');
         else orb.classList.remove('is-playing');
         
-        // 2. 按钮状态 (修正版)
         if (!currentCat) {
-            // [初始]：暗
             btn.className = "w-full text-xs py-2 rounded-lg font-bold opacity-60 hover:opacity-100 transition border border-current flex items-center justify-center gap-2";
             btn.innerHTML = `<i data-lucide="headphones" class="w-3 h-3"></i> 点击卡片播放`;
         } else if (isPaused) {
-            // [暂停]：暗 (空心，等待唤醒)
-            // 移除 stop-active 类，回归默认空心样式
             btn.classList.remove('stop-active');
-            // 增加 opacity 让它看起来像在休息
             btn.style.opacity = "0.7"; 
             btn.innerHTML = `<i data-lucide="play" class="w-3 h-3"></i> 继续: ${noiseConfig[currentCat][currentVarIdx].n}`;
         } else {
-            // [播放中]：亮 (实心，高亮显示)
             btn.classList.add('stop-active'); 
             btn.style.opacity = "1";
             btn.innerHTML = `<i data-lucide="pause" class="w-3 h-3"></i> 暂停播放`;
         }
 
-        // 3. 卡片激活状态
         document.querySelectorAll('.noise-card').forEach(el => {
             el.classList.remove('active');
             const oldB = el.querySelector('.variant-badge'); if(oldB) oldB.remove();
@@ -980,7 +876,7 @@ s = Math.max(0, Math.min(59, parseInt(parts[1]) || 0)); } else { m = parseInt(in
         lucide.createIcons();
     }
     setTimeout(updateNoiseUI, 500);
-// --- 2. 物理拖拽与吸附引擎 (修复版：智能避让) ---
+
     const nWrapper = document.getElementById('noiseDockWrapper');
     const nOrb = document.getElementById('noiseOrb');
     const nPanel = document.getElementById('noisePanel');
@@ -989,7 +885,6 @@ s = Math.max(0, Math.min(59, parseInt(parts[1]) || 0)); } else { m = parseInt(in
     let noise_hasMoved = false; 
     let noise_startX, noise_startY, noise_initialLeft, noise_initialTop;
 
-    // 绑定事件
     nOrb.addEventListener('mousedown', noiseDragStart);
     nOrb.addEventListener('touchstart', noiseDragStart, {passive: false});
 
@@ -1031,7 +926,6 @@ s = Math.max(0, Math.min(59, parseInt(parts[1]) || 0)); } else { m = parseInt(in
 
         if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
             noise_hasMoved = true;
-            // 拖拽时自动收起面板，防止挡视野
             if(nPanel.style.display !== 'none') {
                 nPanel.style.opacity = '0';
                 nPanel.style.pointerEvents = 'none';
@@ -1044,158 +938,132 @@ s = Math.max(0, Math.min(59, parseInt(parts[1]) || 0)); } else { m = parseInt(in
         nWrapper.style.bottom = 'auto'; 
     }
 
-    // 📢 请用此代码块完全替换掉您模板中的 function noiseDragEnd()
-function noiseDragEnd() {
-    // 基础检查和清理
-    if (!noise_isDragging) return;
-    noise_isDragging = false;
-    nOrb.style.cursor = 'grab';
-    nOrb.style.transform = 'scale(1)';
+    // 4. [修复] 完整的 noiseDragEnd 函数，包含智能吸附和防飞出逻辑
+    function noiseDragEnd() {
+        if (!noise_isDragging) return;
+        noise_isDragging = false;
+        nOrb.style.cursor = 'grab';
+        nOrb.style.transform = 'scale(1)';
 
-    document.removeEventListener('mousemove', noiseDragMove);
-    document.removeEventListener('touchmove', noiseDragMove);
-    document.removeEventListener('mouseup', noiseDragEnd);
-    document.removeEventListener('touchend', noiseDragEnd);
+        document.removeEventListener('mousemove', noiseDragMove);
+        document.removeEventListener('touchmove', noiseDragMove);
+        document.removeEventListener('mouseup', noiseDragEnd);
+        document.removeEventListener('touchend', noiseDragEnd);
 
-    if (noise_hasMoved) {
-        const winW = window.innerWidth;
-        const winH = window.innerHeight;
-        const rect = nWrapper.getBoundingClientRect();
+        if (noise_hasMoved) {
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            const rect = nWrapper.getBoundingClientRect();
 
-        // --- 定义常量 ---
-        const ORB_SIZE = 50; 
-        const MARGIN = 32;       // 边缘吸附后的留白距离
-        const SNAP_THRESHOLD = 80; // 磁力吸附的距离阈值 (px)
-        const CENTER_SNAP_ZONE = 0.2; // 靠近中线的吸附区宽度 (屏幕宽度的 20%)
+            const ORB_SIZE = 50; 
+            const MARGIN = 32;       
+            const SNAP_THRESHOLD = 80; 
+            const CENTER_SNAP_ZONE = 0.2; 
 
-        let targetLeft = rect.left; // 默认目标位置是鼠标松开的位置
-        let targetTop = rect.top;   
+            let targetLeft = rect.left; 
+            let targetTop = rect.top;   
 
-        // 1. 检查是否靠近任何边缘 (即是否应该启动吸附)
-        const isNearLeft = rect.left < SNAP_THRESHOLD;
-        const isNearRight = (winW - (rect.left + ORB_SIZE)) < SNAP_THRESHOLD;
-        const isNearTop = rect.top < SNAP_THRESHOLD;
-        const isNearBottom = (winH - (rect.top + ORB_SIZE)) < SNAP_THRESHOLD;
+            const isNearLeft = rect.left < SNAP_THRESHOLD;
+            const isNearRight = (winW - (rect.left + ORB_SIZE)) < SNAP_THRESHOLD;
+            const isNearTop = rect.top < SNAP_THRESHOLD;
+            const isNearBottom = (winH - (rect.top + ORB_SIZE)) < SNAP_THRESHOLD;
 
-        let shouldSnap = isNearLeft || isNearRight || isNearTop || isNearBottom;
+            let shouldSnap = isNearLeft || isNearRight || isNearTop || isNearBottom;
 
-        if (shouldSnap) {
-            // 启动吸附：使用平滑的过渡
-            nWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)'; 
+            if (shouldSnap) {
+                nWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)'; 
 
-            // --- 2. 检查水平方向是靠边还是居中对齐 ---
-            const centerX = rect.left + ORB_SIZE / 2;
-            const isNearHorizontalCenter = centerX > winW * (0.5 - CENTER_SNAP_ZONE / 2) && centerX < winW * (0.5 + CENTER_SNAP_ZONE / 2);
-            
-            if (isNearLeft || isNearRight) {
-                // 如果靠近左侧或右侧边缘
-                if (isNearHorizontalCenter) {
-                    targetLeft = (winW / 2) - (ORB_SIZE / 2); // 居中吸附 (中点)
-                } else if (isNearLeft) {
-                    targetLeft = MARGIN; // 吸附到左边缘 (角点)
-                } else if (isNearRight) {
-                    targetLeft = winW - ORB_SIZE - MARGIN; // 吸附到右边缘 (角点)
+                const centerX = rect.left + ORB_SIZE / 2;
+                const isNearHorizontalCenter = centerX > winW * (0.5 - CENTER_SNAP_ZONE / 2) && centerX < winW * (0.5 + CENTER_SNAP_ZONE / 2);
+                
+                if (isNearLeft || isNearRight) {
+                    if (isNearHorizontalCenter) {
+                        targetLeft = (winW / 2) - (ORB_SIZE / 2); 
+                    } else if (isNearLeft) {
+                        targetLeft = MARGIN; 
+                    } else if (isNearRight) {
+                        targetLeft = winW - ORB_SIZE - MARGIN; 
+                    }
+                } 
+                else if (isNearHorizontalCenter) {
+                    targetLeft = (winW / 2) - (ORB_SIZE / 2);
                 }
-            } 
-            // 如果仅靠近垂直边缘，但同时又在水平中线附近，也吸附到水平中线
-            else if (isNearHorizontalCenter) {
-                targetLeft = (winW / 2) - (ORB_SIZE / 2);
-            }
-            
-            // --- 3. 检查垂直方向是靠边还是居中对齐 ---
-            const centerY = rect.top + ORB_SIZE / 2;
-            const isNearVerticalCenter = centerY > winH * (0.5 - CENTER_SNAP_ZONE / 2) && centerY < winH * (0.5 + CENTER_SNAP_ZONE / 2);
+                
+                const centerY = rect.top + ORB_SIZE / 2;
+                const isNearVerticalCenter = centerY > winH * (0.5 - CENTER_SNAP_ZONE / 2) && centerY < winH * (0.5 + CENTER_SNAP_ZONE / 2);
 
-            if (isNearTop || isNearBottom) {
-                // 如果靠近顶部或底部边缘
-                if (isNearVerticalCenter) {
-                    targetTop = (winH / 2) - (ORB_SIZE / 2); // 居中吸附 (中点)
-                } else if (isNearTop) {
-                    targetTop = MARGIN; // 吸附到上边缘 (角点)
-                } else if (isNearBottom) {
-                    targetTop = winH - ORB_SIZE - MARGIN; // 吸附到下边缘 (角点)
+                if (isNearTop || isNearBottom) {
+                    if (isNearVerticalCenter) {
+                        targetTop = (winH / 2) - (ORB_SIZE / 2); 
+                    } else if (isNearTop) {
+                        targetTop = MARGIN; 
+                    } else if (isNearBottom) {
+                        targetTop = winH - ORB_SIZE - MARGIN; 
+                    }
+                } 
+                else if (isNearVerticalCenter) {
+                     targetTop = (winH / 2) - (ORB_SIZE / 2);
                 }
-            } 
-            // 如果仅靠近水平边缘，但同时又在垂直中线附近，也吸附到垂直中线
-            else if (isNearVerticalCenter) {
-                 targetTop = (winH / 2) - (ORB_SIZE / 2);
-            }
-            
-            // 4. 最终边界钳制：防止计算误差导致飞出屏幕 (保持 MARGIN 距离)
-            targetLeft = Math.max(MARGIN, Math.min(winW - ORB_SIZE - MARGIN, targetLeft));
-            targetTop = Math.max(MARGIN, Math.min(winH - ORB_SIZE - MARGIN, targetTop));
+                
+                targetLeft = Math.max(MARGIN, Math.min(winW - ORB_SIZE - MARGIN, targetLeft));
+                targetTop = Math.max(MARGIN, Math.min(winH - ORB_SIZE - MARGIN, targetTop));
 
-            // 应用计算后的吸附位置
-            nWrapper.style.left = `${targetLeft}px`;
-            nWrapper.style.top = `${targetTop}px`;
-            nWrapper.style.bottom = 'auto'; 
+                nWrapper.style.left = `${targetLeft}px`;
+                nWrapper.style.top = `${targetTop}px`;
+                nWrapper.style.bottom = 'auto'; 
+
+            } else {
+                nWrapper.style.transition = 'all 0.1s linear'; 
+                nWrapper.style.left = `${targetLeft}px`;
+                nWrapper.style.top = `${targetTop}px`;
+                nWrapper.style.bottom = 'auto'; 
+            }
 
         } else {
-            // 自由悬停区 (No Snap Zone): 留在原地
-            // 使用快速过渡，让它立即停止在松手的位置
-            nWrapper.style.transition = 'all 0.1s linear'; 
-            nWrapper.style.left = `${targetLeft}px`;
-            nWrapper.style.top = `${targetTop}px`;
-            nWrapper.style.bottom = 'auto'; 
+            toggleNoisePanel();
         }
-
-    } else {
-        // 点击事件：触发面板
-        toggleNoisePanel();
     }
-}
 
-    // === 核心修复：智能避让展开逻辑 ===
     function toggleNoisePanel() {
         const isOpen = nPanel.style.display === 'block' && nPanel.style.opacity !== '0';
         
         if (isOpen) {
-            // 关闭逻辑
             nPanel.style.opacity = '0';
             nPanel.style.transform = 'scale(0.9)';
             setTimeout(() => { nPanel.style.display = 'none'; }, 200);
         } else {
-            // 开启逻辑
             nPanel.style.display = 'block';
             nPanel.style.pointerEvents = 'auto';
             
-            // 1. 获取位置信息
             const wrapperRect = nWrapper.getBoundingClientRect();
             const winW = window.innerWidth;
             const winH = window.innerHeight;
             
-            // 2. 清除旧定位
             nPanel.style.top = ''; nPanel.style.bottom = '';
             nPanel.style.left = ''; nPanel.style.right = '';
             
-            // 3. 智能判断水平方向 (左/右)
-            // 如果球在屏幕右半边，面板往左弹；反之往右弹
             if (wrapperRect.left > winW / 2) {
-                nPanel.style.right = '0px';  // 对齐右侧
+                nPanel.style.right = '0px';  
                 nPanel.style.transformOrigin = 'bottom right'; 
             } else {
-                nPanel.style.left = '0px';   // 对齐左侧
+                nPanel.style.left = '0px';   
                 nPanel.style.transformOrigin = 'bottom left'; 
             }
 
-            // 4. 智能判断垂直方向 (上/下)
-            // 如果球在屏幕下半边，面板往上弹；反之往下弹
             if (wrapperRect.top > winH / 2) {
-                nPanel.style.bottom = '65px'; // 向上展开
+                nPanel.style.bottom = '65px'; 
                 nPanel.style.transformOrigin = nPanel.style.transformOrigin.replace('top', 'bottom');
             } else {
-                nPanel.style.top = '65px';    // 向下展开
+                nPanel.style.top = '65px';    
                 nPanel.style.transformOrigin = nPanel.style.transformOrigin.replace('bottom', 'top');
             }
 
-            // 5. 触发动画
-            nPanel.offsetHeight; // 强制重绘
+            nPanel.offsetHeight; 
             nPanel.style.opacity = '1';
             nPanel.style.transform = 'scale(1)';
         }
     }
     
-    // 初始化图标
     setTimeout(lucide.createIcons, 500);
 </script>
 </body>

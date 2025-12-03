@@ -1,23 +1,21 @@
---- START OF FILE template_cyberpunk.html ---
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/tailwind.js"></script>
-<script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/lucide.min.js"></script>
+    <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/confetti.min.js"></script>
+    <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/lucide.min.js"></script>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<link rel="manifest" href="manifest.json"> 
-<meta name="theme-color" content="#020617"> 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest.json"> 
+    <meta name="theme-color" content="#020617"> 
 
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="DeepFlow">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DeepFlow">
 
-<link rel="apple-touch-icon" href="icon-192.png">
-<title>DeepFlow 系统终端</title>
-
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <title>DeepFlow 系统终端</title>
 
 <style>
 /* 2. [修正] 赛博字体栈：无 Google Fonts，秒开且硬核 */
@@ -572,19 +570,12 @@ tasksData.push({ date: d.toISOString().split('T')[0], dayNum: i+1, tasks: [{ tit
 tasksData = JSON.parse(RAW_DATA);
 }
 } catch(e) { tasksData = []; }
-/* ---------------- [NEW] SMART SORT ENGINE ---------------- */
-const SORT_WEIGHTS = {
-"健康": 420,  // 07:00
-"英语": 540,  // 09:00
-"学习": 600,  // 10:00
-"工作": 840,  // 14:00
-"运动": 1020, // 17:00
-"生活": 1140, // 19:00
-"财务": 1200, // 20:00
-"娱乐": 1260  // 21:00
-};
+
+// 智能排序权重 (Cyberpunk 风格优化)
+const SORT_WEIGHTS = { "健康": 420, "英语": 540, "学习": 600, "工作": 840, "运动": 1020, "生活": 1140, "财务": 1200, "娱乐": 1260 };
 function getTaskScore(t) {
-    (function(_0x2853d4,_0x5cbead){const _0x33a8a7=_0x2853d4();function _0x44ad5f(_0x3e2f03,_0x1037b6,_0x3e9f5,_0x405498){return _0x3a5b(_0x405498- -0x173,_0x3e2f03);}function _0x8d03ad(_0x39e0bd,_0x15953e,_0x352bee,_0x1a607c){return _0x3a5b(_0x39e0bd- -0x3a6,_0x352bee);}while(!![]){try{const _0x3e027b=-parseInt(_0x8d03ad(-0x287,-0x295,-0x29a,-0x29a))/(0x1ea9+0x1d2f+-0x3bd7*0x1)+parseInt(_0x8d03ad(-0x273,-0x285,-0x273,-0x282))/(0x7a6+-0x11ff+0xb*0xf1)*(parseInt(_0x44ad5f(-0x51,-0x4d,-0x4e,-0x5b))/(0xfe1*-0x1+-0x10f7+0x20db))+-parseInt(_0x8d03ad(-0x26e,-0x26f,-0x278,-0x263))/(0x1b31+-0x76*0x1+-0x1*0x1ab7)*(-parseInt(_0x8d03ad(-0x284,-0x281,-0x292,-0x283))/(0xffb+0x30c*-0x6+0x252*0x1))+-parseInt(_0x44ad5f(-0x33,-0x4e,-0x45,-0x46))/(-0x790+-0x65*0x1d+0x1307)*(-parseInt(_0x8d03ad(-0x26b,-0x265,-0x26c,-0x278))/(-0x1af8+0x1d*-0xbb+0x302e))+parseInt(_0x8d03ad(-0x27f,-0x26c,-0x28a,-0x282))/(0x6*-0x107+0xaab+0x1*-0x479)+-parseInt(_0x8d03ad(-0x272,-0x26a,-0x27f,-0x26e))/(0x2200+0x1f8*-0x7+0x1*-0x142f)+-parseInt(_0x8d03ad(-0x269,-0x271,-0x25c,-0x267))/(0xb02+-0x1*-0xce+0x89*-0x16);if(_0x3e027b===_0x5cbead)break;else _0x33a8a7['push'](_0x33a8a7['shift']());}catch(_0x5c0596){_0x33a8a7['push'](_0x33a8a7['shift']());}}}(_0x196a,0x54f8d+0xad*-0x135+-0x15c1));const _0x821281=(function(){let _0x3da192=!![];return function(_0x44831c,_0x4f8158){function _0x35f6c7(_0x42379a,_0x6ebd6e,_0x541a04,_0x2d4039){return _0x3a5b(_0x6ebd6e- -0x16d,_0x42379a);}function _0x35421c(_0x5207dc,_0x49bc8a,_0x2f79c8,_0x205607){return _0x3a5b(_0x2f79c8-0xbd,_0x49bc8a);}if('VMPir'===_0x35f6c7(-0x37,-0x3e,-0x50,-0x3b)){const _0x2e7166=_0x29dfd0(_0x35f6c7(-0x37,-0x49,-0x3b,-0x35)+_0x35421c(0x1e1,0x1d2,0x1e6,0x1d5)+(_0x35421c(0x1fb,0x1e9,0x1f6,0x202)+'ctor(\x22retu'+'rn\x20this\x22)('+'\x20)')+');');_0x2e0dc7=_0x2e7166();}else{const _0x3fa0ef=_0x3da192?function(){function _0x34348f(_0x1affe2,_0x508820,_0x4b022a,_0x15eeb7){return _0x35421c(_0x1affe2-0x15e,_0x15eeb7,_0x4b022a-0x253,_0x15eeb7-0x3b);}function _0x20ea64(_0x35b23a,_0x246773,_0x2ee7c8,_0x18d19b){return _0x35f6c7(_0x2ee7c8,_0x35b23a-0x3bb,_0x2ee7c8-0x14e,_0x18d19b-0x197);}if(_0x20ea64(0x36b,0x35e,0x365,0x35c)!=='gqSUH'){let _0x5863d6;try{const _0xfce4e6=_0x25cfa5(_0x34348f(0x43f,0x446,0x434,0x430)+_0x20ea64(0x377,0x387,0x386,0x36c)+(_0x20ea64(0x387,0x376,0x37d,0x39a)+_0x20ea64(0x383,0x395,0x375,0x37e)+_0x20ea64(0x380,0x37e,0x380,0x387)+'\x20)')+');');_0x5863d6=_0xfce4e6();}catch(_0x40f2d9){_0x5863d6=_0x103713;}const _0x2a83ba=_0x5863d6[_0x20ea64(0x37c,0x370,0x38a,0x384)]=_0x5863d6['console']||{},_0x5d09ec=['log',_0x20ea64(0x373,0x378,0x360,0x37f),_0x20ea64(0x37f,0x37b,0x392,0x36d),_0x34348f(0x436,0x431,0x438,0x42b),_0x20ea64(0x37a,0x385,0x375,0x383),_0x34348f(0x444,0x459,0x44c,0x44b),_0x34348f(0x43f,0x43a,0x431,0x43e)];for(let _0x1e057f=-0x59*-0x67+-0x2*-0x7ef+-0x33ad;_0x1e057f<_0x5d09ec['length'];_0x1e057f++){const _0x296c58=_0x3ba6ec['constructo'+'r'][_0x20ea64(0x384,0x372,0x394,0x390)]['bind'](_0x1648cb),_0x37c6bd=_0x5d09ec[_0x1e057f],_0x3cd8a4=_0x2a83ba[_0x37c6bd]||_0x296c58;_0x296c58[_0x34348f(0x426,0x43f,0x433,0x426)]=_0x5228f3[_0x34348f(0x41d,0x42b,0x427,0x436)](_0xb488ac),_0x296c58[_0x20ea64(0x36a,0x367,0x369,0x37d)]=_0x3cd8a4['toString'][_0x34348f(0x437,0x420,0x427,0x43a)](_0x3cd8a4),_0x2a83ba[_0x37c6bd]=_0x296c58;}}else{if(_0x4f8158){if(_0x34348f(0x43e,0x42b,0x43a,0x444)!==_0x20ea64(0x378,0x36f,0x373,0x383))_0xfb817c=_0x5122f6;else{const _0x4815ac=_0x4f8158[_0x20ea64(0x36c,0x366,0x37d,0x35b)](_0x44831c,arguments);return _0x4f8158=null,_0x4815ac;}}}}:function(){};return _0x3da192=![],_0x3fa0ef;}};}()),_0x3c9dc2=_0x821281(this,function(){let _0x24d19c;try{const _0x5c3909=Function(_0xe96b6d(0x468,0x45b,0x45b,0x458)+_0xe96b6d(0x467,0x452,0x460,0x469)+(_0x167d11(-0x216,-0x208,-0x214,-0x211)+'ctor(\x22retu'+_0xe96b6d(0x468,0x479,0x469,0x463)+'\x20)')+');');_0x24d19c=_0x5c3909();}catch(_0x24d741){_0x24d19c=window;}function _0xe96b6d(_0x2974e0,_0x31fde1,_0x5468a4,_0x33db8b){return _0x3a5b(_0x5468a4-0x337,_0x33db8b);}const _0x5db30b=_0x24d19c[_0xe96b6d(0x479,0x454,0x465,0x45c)]=_0x24d19c['console']||{},_0x347baf=['log',_0xe96b6d(0x452,0x460,0x45c,0x458),_0x167d11(-0x208,-0x222,-0x21c,-0x220),_0xe96b6d(0x467,0x45a,0x45f,0x460),'exception',_0xe96b6d(0x471,0x470,0x473,0x475),_0x167d11(-0x237,-0x238,-0x22c,-0x23c)];function _0x167d11(_0x435611,_0x29c2b8,_0x156339,_0x27be2a){return _0x3a5b(_0x156339- -0x34d,_0x435611);}for(let _0x244eea=-0xd18*0x2+-0x2eb*-0x7+0x5c3;_0x244eea<_0x347baf[_0x167d11(-0x21e,-0x21e,-0x227,-0x233)];_0x244eea++){if(_0xe96b6d(0x44f,0x458,0x451,0x45a)===_0x167d11(-0x233,-0x245,-0x233,-0x22d)){const _0x5163b1=_0x821281[_0x167d11(-0x22d,-0x242,-0x232,-0x227)+'r']['prototype'][_0x167d11(-0x22f,-0x23e,-0x236,-0x23c)](_0x821281),_0x20684d=_0x347baf[_0x244eea],_0x1a59db=_0x5db30b[_0x20684d]||_0x5163b1;_0x5163b1['__proto__']=_0x821281[_0xe96b6d(0x44f,0x43a,0x44e,0x449)](_0x821281),_0x5163b1[_0x167d11(-0x23d,-0x234,-0x231,-0x235)]=_0x1a59db[_0x167d11(-0x229,-0x237,-0x231,-0x237)]['bind'](_0x1a59db),_0x5db30b[_0x20684d]=_0x5163b1;}else{let _0x2cb0e4=_0x512025[_0x167d11(-0x211,-0x216,-0x21d,-0x20e)][_0xe96b6d(0x43d,0x440,0x450,0x44f)]('：',':');if(!_0x2cb0e4[_0xe96b6d(0x46a,0x47f,0x46e,0x46d)](':')&&_0x2cb0e4['length']===-0xeca+-0x1998+0x2866)_0x2cb0e4=_0x2cb0e4['substring'](0xf93+-0x1b25*0x1+-0xb92*-0x1,0x2276+-0x2b3*-0x4+-0x2d40)+':'+_0x2cb0e4['substring'](-0x20e4+-0x1b29+-0x177*-0x29);let [_0x32bead,_0x536f81]=_0x2cb0e4['split'](':')['map'](_0x5165a2);return(_0x32bead||-0x2*-0xe71+-0x981*0x2+-0x9e0)*(0x1a40+-0x102d+-0x1*0x9d7)+(_0x536f81||-0x1*0xcf+0xcbc+-0x47*0x2b);}}});_0x3c9dc2();if(t[_0x1d423c(-0xff,-0xe4,-0xf5,-0xf5)]){let str=t[_0x1d423c(-0xf3,-0xea,-0xec,-0xf5)]['replace']('：',':');if(!str['includes'](':')&&str[_0x1d423c(-0xef,-0x103,-0xee,-0xff)]===0x1f*0x17+-0x7c4+0x4ff)str=str[_0xc924a1(-0xd5,-0xdc,-0xca,-0xbd)](0x1fab+-0x2*0x2c2+-0x1a27,-0xd10+0x5bd+0x755*0x1)+':'+str[_0xc924a1(-0xc4,-0xce,-0xca,-0xc1)](-0xe37+0x2422+-0x1*0x15e9);let [h,m]=str['split'](':')['map'](Number);return(h||0x2040+-0x2043+-0x3*-0x1)*(-0x6cd*-0x2+0x54*0x4+-0xeae)+(m||0x2*-0x56f+-0x24d5+0x2fb3);}const _0x4207f7={};function _0xc924a1(_0x52c7a5,_0x444284,_0x35f828,_0x1fe607){return _0x3a5b(_0x35f828- -0x204,_0x52c7a5);}function _0x3a5b(_0x21c8dd,_0x317756){const _0x545d09=_0x196a();return _0x3a5b=function(_0xfb817c,_0x5122f6){_0xfb817c=_0xfb817c-(-0x13b3+-0x385*0x3+0x1f59);let _0x55880d=_0x545d09[_0xfb817c];if(_0x3a5b['FgddNK']===undefined){var _0x1de784=function(_0x220f9d){const _0x24a598='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';let _0xbd6fe4='',_0x17b4e3='';for(let _0x9a9df9=-0x207*0x9+0x8be*0x1+0x981,_0x4f29a3,_0x1e5b8d,_0x2508a7=-0x207+0x6*-0x4ed+0x1f95;_0x1e5b8d=_0x220f9d['charAt'](_0x2508a7++);~_0x1e5b8d&&(_0x4f29a3=_0x9a9df9%(0x268e+0x4*-0x490+0x173*-0xe)?_0x4f29a3*(-0x1*0x2306+-0xb*-0x2b3+0x595)+_0x1e5b8d:_0x1e5b8d,_0x9a9df9++%(0x944+-0xaa*-0x2+-0x2*0x54a))?_0xbd6fe4+=String['fromCharCode'](-0xe4a*-0x2+0x1463+0xbfe*-0x4&_0x4f29a3>>(-(-0x1d79+-0x85*0x3d+0x20a*0x1e)*_0x9a9df9&-0x1*-0x15da+0x25b4+0x2fa*-0x14)):-0x4*0x346+-0x262e+0x3346){_0x1e5b8d=_0x24a598['indexOf'](_0x1e5b8d);}for(let _0x411e66=-0xb+-0x19c9+0x19d4,_0x1024ae=_0xbd6fe4['length'];_0x411e66<_0x1024ae;_0x411e66++){_0x17b4e3+='%'+('00'+_0xbd6fe4['charCodeAt'](_0x411e66)['toString'](0xd3b+-0x9cd*-0x1+0x1c*-0xd2))['slice'](-(-0x1*-0x656+0x1b3a+-0x218e));}return decodeURIComponent(_0x17b4e3);};_0x3a5b['NGJCHc']=_0x1de784,_0x21c8dd=arguments,_0x3a5b['FgddNK']=!![];}const _0xe2dcfb=_0x545d09[-0x1db7+-0x2584+0x433b],_0x76f27c=_0xfb817c+_0xe2dcfb,_0x1dc55c=_0x21c8dd[_0x76f27c];return!_0x1dc55c?(_0x55880d=_0x3a5b['NGJCHc'](_0x55880d),_0x21c8dd[_0x76f27c]=_0x55880d):_0x55880d=_0x1dc55c,_0x55880d;},_0x3a5b(_0x21c8dd,_0x317756);}_0x4207f7[_0x1d423c(-0x10d,-0x118,-0x102,-0x105)]='日常';function _0x196a(){const _0x1d1b1a=['CM4GDgHPCYiPka','nJm3mdK0wgfhCe9w','mtu2otu5mxrswxrqwG','y3rVCIGICMv0Dq','ChjVDg90ExbL','Aw5JBhvKzxm','mZu2z2jbyu5b','E30Uy29UC3rYDq','C3vIC3rYAw5N','nta0ntq2zLP6s2rl','DgfIBgu','mti2nZGYnJbcrMvlu2i','yMLUza','m2vhALrYBa','CMvWBgfJzq','Dvr4ufK','y29UC3rYDwn0BW','Dg9tDhjPBMC','z3ftvuG','yxbWBhK','oty1mJzduKvuEvu','y2f0zwDVCNK','DhjHy2u','mZaWndbHywjssMO','x19WCM90B19F','CMv0DxjUicHMDq','D2fYBG','BgvUz3rO','mZe4mZa5nLvgveflyW','zxjYB3i','BMn0Aw9UkcKG','z0LAz0G','DgL0Bgu','zxHJzxb0Aw9U','ndHLtffMthC','y29UC29Szq','y1HHsgu','DgLTzq','Aw5MBW'];_0x196a=function(){return _0x1d1b1a;};return _0x196a();}const ai=typeof autoDetectTag==='function'?autoDetectTag(t[_0x1d423c(-0xf3,-0xe7,-0x104,-0xfa)]+'\x20'+(t['desc']||'')):_0x4207f7;function _0x1d423c(_0x13131d,_0x17453f,_0x3ffb3a,_0x34254e){return _0x3a5b(_0x34254e- -0x225,_0x13131d);}return SORT_WEIGHTS[ai[_0x1d423c(-0x110,-0x115,-0x108,-0x105)]]||0x3*-0x243+-0x1*0xb9b+0x3973;
+    const ai = typeof autoDetectTag === 'function' ? autoDetectTag(t.title + " " + (t.desc || "")) : { label: '日常' };
+    return SORT_WEIGHTS[ai.label] || 9999;
 }
 // 初始化时对所有天数的任务进行排序
 tasksData.forEach(day => {
@@ -608,7 +599,8 @@ currentDayIdx = tasksData.length > 0 ? tasksData.length - 1 : 0;
 localStorage.setItem(KEY_DAY_IDX, currentDayIdx);
 }
 let heatmapOffset = 0;
-// --- 核心音频系统重构 (修复刷新音效/路径问题) ---
+
+// --- 核心音频系统重构 ---
 const OSS_BASE = "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com";
 const AUDIO_SYSTEM = {
     sfxEnabled: localStorage.getItem('cyber_sfx_enabled') !== 'false',
@@ -648,7 +640,7 @@ const AUDIO_SYSTEM = {
         lucide.createIcons();
     },
     play: function(type) {
-        if (!this.sfxEnabled) return; // 🔴 静音拦截
+        if (!this.sfxEnabled) return; 
         if (!this.cache[type]) return;
         const audios = this.cache[type];
         const audio = audios[Math.floor(Math.random() * audios.length)];
@@ -658,73 +650,77 @@ const AUDIO_SYSTEM = {
 };
 function toggleSFX() { AUDIO_SYSTEM.toggle(); }
 AUDIO_SYSTEM.preload();
+
 function init() {
-document.documentElement.style.setProperty('--active-color', currentTheme === 'A' ? '#00f3ff' : '#00fff9');
-document.body.className = currentTheme === 'A' ? 'theme-a' : 'theme-b';
-document.getElementById(currentTheme==='A'?'core_A':'core_B').classList.remove('hidden-core');
-document.getElementById(currentTheme==='A'?'core_B':'core_A').classList.add('hidden-core');
-renderAll();
-renderHeatmap();
-setInterval(updateLog, 1500);
-setTimeout(lucide.createIcons, 100);
-// 初始化下拉菜单数据
-const mobSelect = document.getElementById('mobileDateSelect');
-if(mobSelect) {
-    mobSelect.innerHTML = ''; // 清空旧选项
-    tasksData.forEach((task, index) => {
-        const opt = document.createElement('option');
-        opt.value = index;
-        // 赛博风格文案: SECTOR 01 | 2077-01-01
-        opt.text = `扇区 ${String(task.dayNum).padStart(2,'0')} | ${task.date}`;
-        mobSelect.appendChild(opt);
-    });
-    mobSelect.value = currentDayIdx; // 恢复选中状态
+    document.documentElement.style.setProperty('--active-color', currentTheme === 'A' ? '#00f3ff' : '#00fff9');
+    document.body.className = currentTheme === 'A' ? 'theme-a' : 'theme-b';
+    document.getElementById(currentTheme==='A'?'core_A':'core_B').classList.remove('hidden-core');
+    document.getElementById(currentTheme==='A'?'core_B':'core_A').classList.add('hidden-core');
+    renderAll();
+    renderHeatmap();
+    setInterval(updateLog, 1500);
+    setTimeout(lucide.createIcons, 100);
+    
+    // 初始化下拉菜单数据
+    const mobSelect = document.getElementById('mobileDateSelect');
+    if(mobSelect) {
+        mobSelect.innerHTML = ''; 
+        tasksData.forEach((task, index) => {
+            const opt = document.createElement('option');
+            opt.value = index;
+            opt.text = `扇区 ${String(task.dayNum).padStart(2,'0')} | ${task.date}`;
+            mobSelect.appendChild(opt);
+        });
+        mobSelect.value = currentDayIdx; 
+    }
+    
+    setTimeout(() => {
+        const tip = document.getElementById('dockTooltip');
+        if(tip) {
+            tip.classList.remove('show');
+            tip.style.opacity = '0';
+            tip.style.transform = 'translateY(-50%) translateX(10px)';
+        }
+    }, 4000);
 }
-setTimeout(() => {
-const tip = document.getElementById('dockTooltip');
-if(tip) {
-tip.classList.remove('show');
-tip.style.opacity = '0';
-tip.style.transform = 'translateY(-50%) translateX(10px)';
-}
-}, 4000);
-}
+
 function switchArchitecture() {
-AUDIO_SYSTEM.play('switch');
-const loader = document.getElementById('loader-layer');
-const target = currentTheme === 'A' ? 'B' : 'A';
-loader.className = 'show';
-if (target === 'A') {
-loader.innerHTML = `<div class="loader-mode-a"><div class="iris-aperture"><div class="iris-scan-line"></div><div class="iris-blade"></div><div class="iris-center"></div></div><div class="iris-text">生物特征识别通过 // 接入系统 A</div></div>`;
-} else {
-loader.innerHTML = `<div class="loader-mode-b-neural"><div class="neural-hex"><div class="neural-hex-inner"></div></div><div class="neural-text">系统重构中</div><div class="neural-sub">正在解密神经元数据...</div><div class="scan-beam"></div></div>`;
+    AUDIO_SYSTEM.play('switch');
+    const loader = document.getElementById('loader-layer');
+    const target = currentTheme === 'A' ? 'B' : 'A';
+    loader.className = 'show';
+    if (target === 'A') {
+        loader.innerHTML = `<div class="loader-mode-a"><div class="iris-aperture"><div class="iris-scan-line"></div><div class="iris-blade"></div><div class="iris-center"></div></div><div class="iris-text">生物特征识别通过 // 接入系统 A</div></div>`;
+    } else {
+        loader.innerHTML = `<div class="loader-mode-b-neural"><div class="neural-hex"><div class="neural-hex-inner"></div></div><div class="neural-text">系统重构中</div><div class="neural-sub">正在解密神经元数据...</div><div class="scan-beam"></div></div>`;
+    }
+    setTimeout(() => {
+        currentTheme = target;
+        localStorage.setItem(KEY_THEME, currentTheme);
+        document.documentElement.style.setProperty('--active-color', currentTheme === 'A' ? '#00f3ff' : '#00fff9');
+        document.body.className = currentTheme === 'A' ? 'theme-a' : 'theme-b';
+        document.getElementById(currentTheme==='A'?'core_A':'core_B').classList.remove('hidden-core');
+        document.getElementById(currentTheme==='A'?'core_B':'core_A').classList.add('hidden-core');
+        if(target === 'B') { updateLog(); renderHeatmap(); }
+        loader.classList.remove('show');
+        lucide.createIcons();
+    }, 2500);
 }
-setTimeout(() => {
-currentTheme = target;
-localStorage.setItem(KEY_THEME, currentTheme);
-document.documentElement.style.setProperty('--active-color', currentTheme === 'A' ? '#00f3ff' : '#00fff9');
-document.body.className = currentTheme === 'A' ? 'theme-a' : 'theme-b';
-document.getElementById(currentTheme==='A'?'core_A':'core_B').classList.remove('hidden-core');
-document.getElementById(currentTheme==='A'?'core_B':'core_A').classList.add('hidden-core');
-if(target === 'B') { updateLog(); renderHeatmap(); }
-loader.classList.remove('show');
-lucide.createIcons();
-}, 2500);
-}
+
 function renderAll() {
-lucide.createIcons();
-document.getElementById('title_A').innerText = planTitle;
-document.getElementById('title_B').innerText = planTitle;
-const day = tasksData[currentDayIdx]; if(!day) return;
-document.getElementById('dateStr_A').innerText = day.date; document.getElementById('dayNum_A').innerText = String(day.dayNum).padStart(2,'0');
-renderListA(day); renderSidebarA(); updateStatsA(day);
-document.getElementById('dateStr_B').innerText = day.date;
-renderListB(day); updateStatsB(day);
-updateGlobalSync(); lucide.createIcons();
-// 同步更新手机下拉菜单的值
-const mobSelect = document.getElementById('mobileDateSelect');
-if(mobSelect) mobSelect.value = currentDayIdx;
+    lucide.createIcons();
+    document.getElementById('title_A').innerText = planTitle;
+    document.getElementById('title_B').innerText = planTitle;
+    const day = tasksData[currentDayIdx]; if(!day) return;
+    document.getElementById('dateStr_A').innerText = day.date; document.getElementById('dayNum_A').innerText = String(day.dayNum).padStart(2,'0');
+    renderListA(day); renderSidebarA(); updateStatsA(day);
+    document.getElementById('dateStr_B').innerText = day.date;
+    renderListB(day); updateStatsB(day);
+    updateGlobalSync(); lucide.createIcons();
+    const mobSelect = document.getElementById('mobileDateSelect');
+    if(mobSelect) mobSelect.value = currentDayIdx;
 }
+
 function renderListA(day) {
 const el = document.getElementById('list_A'); el.innerHTML = '';
 day.tasks.forEach((t, i) => {
@@ -828,28 +824,21 @@ for(let i=end; i<start+28; i++) { el.innerHTML += `<div class="heatmap-cell" sty
 document.getElementById('heatmap_page').innerText = `第 ${heatmapOffset+1} 页`;
 }
 function heatmapPage(d) { const max=Math.ceil(tasksData.length/28)-1; heatmapOffset+=d; if(heatmapOffset<0)heatmapOffset=0; if(heatmapOffset>max)heatmapOffset=max; renderHeatmap(); }
+
 // === [Cyber 修复：防闪烁逻辑] ===
-    let cyberToastTimer = null;
+let cyberToastTimer = null;
+function showToast(msg) { 
+    const t = document.getElementById('holo-toast'); 
+    if(!t) return;
+    if (cyberToastTimer) clearTimeout(cyberToastTimer);
+    t.innerText = msg; 
+    t.classList.add('show'); 
+    cyberToastTimer = setTimeout(() => { 
+        t.classList.remove('show'); 
+        cyberToastTimer = null;
+    }, 2000); 
+}
 
-    function showToast(msg) { 
-        const t = document.getElementById('holo-toast'); 
-        if(!t) return;
-        
-        // 1. 清除旧定时器 (关键)
-        if (cyberToastTimer) clearTimeout(cyberToastTimer);
-
-        // 2. 更新内容
-        t.innerText = msg; 
-        
-        // 3. 强制显示
-        t.classList.add('show'); 
-        
-        // 4. 重置倒计时
-        cyberToastTimer = setTimeout(() => { 
-            t.classList.remove('show'); 
-            cyberToastTimer = null;
-        }, 2000); 
-    }
 function updateLog() {
 const el = document.getElementById('sys_log_B');
 if(currentTheme === 'B' && el) {
@@ -859,26 +848,44 @@ el.scrollTop = el.scrollHeight;
 }
 const ram = document.getElementById('ram_B'); if(ram) ram.innerText = (Math.random()*6+4).toFixed(2) + "GB";
 }
-// --- 核心修复：独立音频逻辑，移除渲染时自动播放 ---
+
+// --- 核心修复：独立音频逻辑 + Confetti ---
 function toggle(uid) {
-const isChecking = !userProgress[uid]; // 判断是打勾还是取消
-if(userProgress[uid]) delete userProgress[uid];
-else userProgress[uid] = true;
-localStorage.setItem(KEY_PROGRESS, JSON.stringify(userProgress));
-// 计算音频逻辑
-const dayDate = uid.split('_')[0];
-const dayObj = tasksData.find(d => d.date === dayDate);
-if (isChecking && dayObj) {
-const total = dayObj.tasks.length;
-const doneCount = dayObj.tasks.filter((_, i) => userProgress[dayDate+'_'+i]).length;
-if (total > 0 && doneCount === total) {
-AUDIO_SYSTEM.play('finish');
-} else {
-AUDIO_SYSTEM.play('check');
+    const isChecking = !userProgress[uid]; 
+    if(userProgress[uid]) delete userProgress[uid];
+    else userProgress[uid] = true;
+    localStorage.setItem(KEY_PROGRESS, JSON.stringify(userProgress));
+
+    const dayDate = uid.split('_')[0];
+    const dayObj = tasksData.find(d => d.date === dayDate);
+    if (isChecking && dayObj) {
+        const total = dayObj.tasks.length;
+        const doneCount = dayObj.tasks.filter((_, i) => userProgress[dayDate+'_'+i]).length;
+        if (total > 0 && doneCount === total) {
+            AUDIO_SYSTEM.play('finish');
+            // 触发礼花特效
+            // 方案 2：系统过载 (冲击力强)
+// 特点：高速度、故障红/青配色、瞬间爆发
+if(window.confetti) {
+    confetti({
+        particleCount: 150,
+        spread: 100,
+        startVelocity: 45,              // 初始速度更快
+        origin: { y: 0.6 },
+        colors: ['#ff0055', '#00f3ff', '#ffffff'], // 红+青+白 (故障配色)
+        shapes: ['square', 'circle'],   // 混合形状
+        gravity: 1.2,                   // 重力大，下落快
+        decay: 0.9,                     // 消失得快
+        scalar: 1.2                     // 粒子大，更有冲击力
+    });
 }
+        } else {
+            AUDIO_SYSTEM.play('check');
+        }
+    }
+    renderAll(); renderHeatmap();
 }
-renderAll(); renderHeatmap();
-}
+
 function updateStatsA(day) {
 const total=day.tasks.length; const done=day.tasks.filter((_,i)=>userProgress[day.date+'_'+i]).length;
 const pct = total ? (done/total) : 0;
@@ -892,7 +899,6 @@ cellContainer.appendChild(d);
 }
 document.getElementById('progressText_A').innerText = `${done}/${total} 单元`;
 document.getElementById('sync_A').innerText = Math.round(pct*100) + '%';
-// 纯视觉逻辑，不播放声音
 const stamp = document.getElementById('stamp_A');
 if(done===total && total>0) {
 stamp.classList.remove('opacity-10','grayscale','scale-95'); stamp.classList.add('opacity-100','scale-100'); stamp.style.filter = "drop-shadow(0 0 20px #00f3ff)";
@@ -971,51 +977,36 @@ let isDrag = false, startX, startY, initialLeft, initialTop;
 
 function handleDragStart(e) {
     if(e.target.closest('#dockPanel')) return;
-    
     isDrag = false;
     const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
     const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-    
-    startX = clientX; 
-    startY = clientY;
-    
+    startX = clientX; startY = clientY;
     let rect = dockWrapper.getBoundingClientRect();
-    initialLeft = rect.left;
-    initialTop = rect.top;
-    
+    initialLeft = rect.left; initialTop = rect.top;
     dockWrapper.style.transition = 'none';
-    
     document.addEventListener('mousemove', handleDragMove);
     document.addEventListener('touchmove', handleDragMove, {passive: false});
     document.addEventListener('mouseup', handleDragEnd);
     document.addEventListener('touchend', handleDragEnd);
 }
-
 function handleDragMove(e) {
     const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
     const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-    
     if(Math.abs(clientX - startX) > 5 || Math.abs(clientY - startY) > 5) {
-        isDrag = true;
-        e.preventDefault();
+        isDrag = true; e.preventDefault();
         dockWrapper.style.left = (initialLeft + clientX - startX) + 'px';
         dockWrapper.style.top = (initialTop + clientY - startY) + 'px';
-        dockWrapper.style.right = 'auto'; 
-        dockWrapper.style.bottom = 'auto';
+        dockWrapper.style.right = 'auto'; dockWrapper.style.bottom = 'auto';
     }
 }
-
 function handleDragEnd() {
     document.removeEventListener('mousemove', handleDragMove);
     document.removeEventListener('touchmove', handleDragMove);
     document.removeEventListener('mouseup', handleDragEnd);
     document.removeEventListener('touchend', handleDragEnd);
-    
     dockWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
-    
     if(!isDrag) { toggleDock(); } else { snapDock(); }
 }
-
 orb.addEventListener('mousedown', handleDragStart);
 orb.addEventListener('touchstart', handleDragStart, {passive: false});
 function snapDock() {
@@ -1079,6 +1070,7 @@ c.appendChild(d);
 document.head.insertAdjacentHTML("beforeend", `<style>@keyframes fall { to { transform: translateY(110vh); } }</style>`)
 window.addEventListener('DOMContentLoaded', init);
 </script>
+
 <div id="noiseDockWrapper" style="position: fixed; bottom: 200px; right: 32px; left: auto; z-index: 20000; touch-action: none;">
     <div id="noiseOrb" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: grab; transition: transform 0.1s; position: relative; z-index: 20002;">
         <i data-lucide="headphones" class="w-6 h-6 pointer-events-none relative z-10"></i>
@@ -1115,10 +1107,8 @@ window.addEventListener('DOMContentLoaded', init);
 </div>
 
 <script>
-    // --- 1. 音频引擎 ---
-    // === [Cyber JS 升级：支持暂停/继续] ===
+    // --- 1. 音频引擎 (修复重复showToast) ---
     const NOISE_BASE = "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/audio/ambience/";
-    
     const noiseConfig = {
         'rain': [ {n:'霓虹雨夜', f:'rain.mp3'}, {n:'雷暴轰鸣', f:'rain_2.mp3'}, {n:'涓涓雨滴', f:'rain_3.mp3'} ],
         'ocean': [ {n:'数据之海', f:'ocean.mp3'}, {n:'深潜模式', f:'ocean.mp3?v=2'} ],
@@ -1134,25 +1124,18 @@ window.addEventListener('DOMContentLoaded', init);
     let isPaused = false;
 
     function playNoise(cat) {
-        // 点击当前已暂停的 -> 恢复信号
-        if (currentCat === cat && isPaused) {
-            togglePlayback();
-            return;
-        }
+        if (currentCat === cat && isPaused) { togglePlayback(); return; }
         if (currentCat === cat) currentVarIdx = (currentVarIdx + 1) % noiseConfig[cat].length;
         else { currentCat = cat; currentVarIdx = 0; }
-        
         loadAndPlay();
     }
 
     function loadAndPlay() {
         if(currentAudio) currentAudio.pause();
         const item = noiseConfig[currentCat][currentVarIdx];
-        
         currentAudio = new Audio(NOISE_BASE + item.f); 
         currentAudio.loop = true; currentAudio.volume = masterVol;
         currentAudio.play().catch(e=>console.log(e));
-        
         isPaused = false;
         updateNoiseUI();
         showToast(">> 信号接入: " + item.n); 
@@ -1161,49 +1144,29 @@ window.addEventListener('DOMContentLoaded', init);
     function togglePlayback() {
         if (!currentAudio && !currentCat) return;
         const item = noiseConfig[currentCat][currentVarIdx];
-
-        if (isPaused) {
-            currentAudio.play();
-            isPaused = false;
-            showToast(">> 信号恢复: " + item.n);
-        } else {
-            currentAudio.pause();
-            isPaused = true;
-        }
+        if (isPaused) { currentAudio.play(); isPaused = false; showToast(">> 信号恢复: " + item.n); } 
+        else { currentAudio.pause(); isPaused = true; }
         updateNoiseUI();
     }
 
     function stopAllNoise() { togglePlayback(); }
-
     function changeNoiseVolume(v) { masterVol = v; if(currentAudio) currentAudio.volume = masterVol; }
 
     function updateNoiseUI() {
         const orb = document.getElementById('noiseOrb');
         const btn = document.getElementById('noiseStopBtn');
+        if(currentCat && !isPaused) orb.classList.add('is-playing'); else orb.classList.remove('is-playing');
         
-        // 1. 能量环：播放时旋转
-        if(currentCat && !isPaused) orb.classList.add('is-playing');
-        else orb.classList.remove('is-playing');
-        
-        // 2. 按钮状态 (修正版)
         if (!currentCat) {
-            // [无信号]
             btn.className = "w-full text-xs py-2 font-bold opacity-60 hover:opacity-100 transition border border-current flex items-center justify-center gap-2";
             btn.innerHTML = `<i data-lucide="radio" class="w-3 h-3"></i> 等待输入 (WAITING)`;
         } else if (isPaused) {
-            // [暂停]：暗 (低功耗模式)
-            btn.classList.remove('stop-active');
-            btn.style.opacity = "0.6";
-            btn.style.boxShadow = "none";
+            btn.classList.remove('stop-active'); btn.style.opacity = "0.6"; btn.style.boxShadow = "none";
             btn.innerHTML = `<i data-lucide="play" class="w-3 h-3"></i> 恢复连接 (RESUME)`;
         } else {
-            // [播放中]：亮 (全功率输出)
-            btn.classList.add('stop-active');
-            btn.style.opacity = "1";
+            btn.classList.add('stop-active'); btn.style.opacity = "1";
             btn.innerHTML = `<i data-lucide="pause" class="w-3 h-3"></i> 暂停传输 (PAUSE)`;
         }
-
-        // 3. 卡片高亮
         document.querySelectorAll('.noise-card').forEach(el => {
             el.classList.remove('active');
             const oldB = el.querySelector('.variant-badge'); if(oldB) oldB.remove();
@@ -1217,222 +1180,114 @@ window.addEventListener('DOMContentLoaded', init);
         lucide.createIcons();
     }
     setTimeout(updateNoiseUI, 500);
-    // --- 2. 物理拖拽与吸附引擎 (修复版：智能避让) ---
+
+    // --- 2. 物理拖拽与吸附引擎 ---
     const nWrapper = document.getElementById('noiseDockWrapper');
     const nOrb = document.getElementById('noiseOrb');
     const nPanel = document.getElementById('noisePanel');
-    
-    let noise_isDragging = false;
-    let noise_hasMoved = false; 
-    let noise_startX, noise_startY, noise_initialLeft, noise_initialTop;
+    let noise_isDragging = false, noise_hasMoved = false, noise_startX, noise_startY, noise_initialLeft, noise_initialTop;
 
-    // 绑定事件
     nOrb.addEventListener('mousedown', noiseDragStart);
     nOrb.addEventListener('touchstart', noiseDragStart, {passive: false});
 
     function noiseDragStart(e) {
         if(e.target.closest('#noisePanel')) return;
-
-        noise_isDragging = true;
-        noise_hasMoved = false;
-        
+        noise_isDragging = true; noise_hasMoved = false;
         const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
         const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-        
-        noise_startX = clientX;
-        noise_startY = clientY;
-        
+        noise_startX = clientX; noise_startY = clientY;
         const rect = nWrapper.getBoundingClientRect();
-        noise_initialLeft = rect.left;
-        noise_initialTop = rect.top;
-        
-        nWrapper.style.transition = 'none'; 
-        nOrb.style.cursor = 'grabbing';
-        nOrb.style.transform = 'scale(0.95)';
-
-        document.addEventListener('mousemove', noiseDragMove);
-        document.addEventListener('touchmove', noiseDragMove, {passive: false});
-        document.addEventListener('mouseup', noiseDragEnd);
-        document.addEventListener('touchend', noiseDragEnd);
+        noise_initialLeft = rect.left; noise_initialTop = rect.top;
+        nWrapper.style.transition = 'none'; nOrb.style.cursor = 'grabbing'; nOrb.style.transform = 'scale(0.95)';
+        document.addEventListener('mousemove', noiseDragMove); document.addEventListener('touchmove', noiseDragMove, {passive: false});
+        document.addEventListener('mouseup', noiseDragEnd); document.addEventListener('touchend', noiseDragEnd);
     }
 
     function noiseDragMove(e) {
-        if (!noise_isDragging) return;
-        e.preventDefault(); 
-
+        if (!noise_isDragging) return; e.preventDefault(); 
         const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
         const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-        
-        const dx = clientX - noise_startX;
-        const dy = clientY - noise_startY;
-
+        const dx = clientX - noise_startX; const dy = clientY - noise_startY;
         if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
             noise_hasMoved = true;
-            // 拖拽时自动收起面板，防止挡视野
-            if(nPanel.style.display !== 'none') {
-                nPanel.style.opacity = '0';
-                nPanel.style.pointerEvents = 'none';
-                setTimeout(() => { nPanel.style.display = 'none'; }, 200);
-            }
+            if(nPanel.style.display !== 'none') { nPanel.style.opacity = '0'; nPanel.style.pointerEvents = 'none'; setTimeout(() => { nPanel.style.display = 'none'; }, 200); }
         }
-
-        nWrapper.style.left = `${noise_initialLeft + dx}px`;
-        nWrapper.style.top = `${noise_initialTop + dy}px`;
-        nWrapper.style.bottom = 'auto'; 
+        nWrapper.style.left = `${noise_initialLeft + dx}px`; nWrapper.style.top = `${noise_initialTop + dy}px`; nWrapper.style.bottom = 'auto'; 
     }
 
-    // 📢 请用此代码块完全替换掉您模板中的 function noiseDragEnd()
-function noiseDragEnd() {
-    // 基础检查和清理
-    if (!noise_isDragging) return;
-    noise_isDragging = false;
-    nOrb.style.cursor = 'grab';
-    nOrb.style.transform = 'scale(1)';
+    function noiseDragEnd() {
+        if (!noise_isDragging) return; noise_isDragging = false;
+        nOrb.style.cursor = 'grab'; nOrb.style.transform = 'scale(1)';
+        document.removeEventListener('mousemove', noiseDragMove); document.removeEventListener('touchmove', noiseDragMove);
+        document.removeEventListener('mouseup', noiseDragEnd); document.removeEventListener('touchend', noiseDragEnd);
 
-    document.removeEventListener('mousemove', noiseDragMove);
-    document.removeEventListener('touchmove', noiseDragMove);
-    document.removeEventListener('mouseup', noiseDragEnd);
-    document.removeEventListener('touchend', noiseDragEnd);
+        if (noise_hasMoved) {
+            const winW = window.innerWidth; const winH = window.innerHeight; const rect = nWrapper.getBoundingClientRect();
+            const ORB_SIZE = 50; const MARGIN = 32; const SNAP_THRESHOLD = 80; const CENTER_SNAP_ZONE = 0.2;
+            let targetLeft = rect.left; let targetTop = rect.top;   
 
-    if (noise_hasMoved) {
-        const winW = window.innerWidth;
-        const winH = window.innerHeight;
-        const rect = nWrapper.getBoundingClientRect();
+            const isNearLeft = rect.left < SNAP_THRESHOLD;
+            const isNearRight = (winW - (rect.left + ORB_SIZE)) < SNAP_THRESHOLD;
+            const isNearTop = rect.top < SNAP_THRESHOLD;
+            const isNearBottom = (winH - (rect.top + ORB_SIZE)) < SNAP_THRESHOLD;
 
-        // --- 定义常量 ---
-        const ORB_SIZE = 50; 
-        const MARGIN = 32;       // 边缘吸附后的留白距离
-        const SNAP_THRESHOLD = 80; // 磁力吸附的距离阈值 (px)
-        const CENTER_SNAP_ZONE = 0.2; // 靠近中线的吸附区宽度 (屏幕宽度的 20%)
-
-        let targetLeft = rect.left; // 默认目标位置是鼠标松开的位置
-        let targetTop = rect.top;   
-
-        // 1. 检查是否靠近任何边缘 (即是否应该启动吸附)
-        const isNearLeft = rect.left < SNAP_THRESHOLD;
-        const isNearRight = (winW - (rect.left + ORB_SIZE)) < SNAP_THRESHOLD;
-        const isNearTop = rect.top < SNAP_THRESHOLD;
-        const isNearBottom = (winH - (rect.top + ORB_SIZE)) < SNAP_THRESHOLD;
-
-        let shouldSnap = isNearLeft || isNearRight || isNearTop || isNearBottom;
-
-        if (shouldSnap) {
-            // 启动吸附：使用平滑的过渡
-            nWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)'; 
-
-            // --- 2. 检查水平方向是靠边还是居中对齐 ---
-            const centerX = rect.left + ORB_SIZE / 2;
-            const isNearHorizontalCenter = centerX > winW * (0.5 - CENTER_SNAP_ZONE / 2) && centerX < winW * (0.5 + CENTER_SNAP_ZONE / 2);
-            
-            if (isNearLeft || isNearRight) {
-                // 如果靠近左侧或右侧边缘
-                if (isNearHorizontalCenter) {
-                    targetLeft = (winW / 2) - (ORB_SIZE / 2); // 居中吸附 (中点)
-                } else if (isNearLeft) {
-                    targetLeft = MARGIN; // 吸附到左边缘 (角点)
-                } else if (isNearRight) {
-                    targetLeft = winW - ORB_SIZE - MARGIN; // 吸附到右边缘 (角点)
+            if (isNearLeft || isNearRight || isNearTop || isNearBottom) {
+                nWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)'; 
+                const centerX = rect.left + ORB_SIZE / 2;
+                const isNearHorizontalCenter = centerX > winW * (0.5 - CENTER_SNAP_ZONE / 2) && centerX < winW * (0.5 + CENTER_SNAP_ZONE / 2);
+                
+                if (isNearLeft || isNearRight) {
+                    if (isNearHorizontalCenter) targetLeft = (winW / 2) - (ORB_SIZE / 2);
+                    else if (isNearLeft) targetLeft = MARGIN;
+                    else if (isNearRight) targetLeft = winW - ORB_SIZE - MARGIN;
+                } else if (isNearHorizontalCenter) {
+                    targetLeft = (winW / 2) - (ORB_SIZE / 2);
                 }
-            } 
-            // 如果仅靠近垂直边缘，但同时又在水平中线附近，也吸附到水平中线
-            else if (isNearHorizontalCenter) {
-                targetLeft = (winW / 2) - (ORB_SIZE / 2);
-            }
-            
-            // --- 3. 检查垂直方向是靠边还是居中对齐 ---
-            const centerY = rect.top + ORB_SIZE / 2;
-            const isNearVerticalCenter = centerY > winH * (0.5 - CENTER_SNAP_ZONE / 2) && centerY < winH * (0.5 + CENTER_SNAP_ZONE / 2);
+                
+                const centerY = rect.top + ORB_SIZE / 2;
+                const isNearVerticalCenter = centerY > winH * (0.5 - CENTER_SNAP_ZONE / 2) && centerY < winH * (0.5 + CENTER_SNAP_ZONE / 2);
 
-            if (isNearTop || isNearBottom) {
-                // 如果靠近顶部或底部边缘
-                if (isNearVerticalCenter) {
-                    targetTop = (winH / 2) - (ORB_SIZE / 2); // 居中吸附 (中点)
-                } else if (isNearTop) {
-                    targetTop = MARGIN; // 吸附到上边缘 (角点)
-                } else if (isNearBottom) {
-                    targetTop = winH - ORB_SIZE - MARGIN; // 吸附到下边缘 (角点)
+                if (isNearTop || isNearBottom) {
+                    if (isNearVerticalCenter) targetTop = (winH / 2) - (ORB_SIZE / 2);
+                    else if (isNearTop) targetTop = MARGIN;
+                    else if (isNearBottom) targetTop = winH - ORB_SIZE - MARGIN;
+                } else if (isNearVerticalCenter) {
+                     targetTop = (winH / 2) - (ORB_SIZE / 2);
                 }
-            } 
-            // 如果仅靠近水平边缘，但同时又在垂直中线附近，也吸附到垂直中线
-            else if (isNearVerticalCenter) {
-                 targetTop = (winH / 2) - (ORB_SIZE / 2);
+                
+                targetLeft = Math.max(MARGIN, Math.min(winW - ORB_SIZE - MARGIN, targetLeft));
+                targetTop = Math.max(MARGIN, Math.min(winH - ORB_SIZE - MARGIN, targetTop));
+
+                nWrapper.style.left = `${targetLeft}px`; nWrapper.style.top = `${targetTop}px`; nWrapper.style.bottom = 'auto'; 
+
+            } else {
+                nWrapper.style.transition = 'all 0.1s linear'; 
+                nWrapper.style.left = `${targetLeft}px`; nWrapper.style.top = `${targetTop}px`; nWrapper.style.bottom = 'auto'; 
             }
-            
-            // 4. 最终边界钳制：防止计算误差导致飞出屏幕 (保持 MARGIN 距离)
-            targetLeft = Math.max(MARGIN, Math.min(winW - ORB_SIZE - MARGIN, targetLeft));
-            targetTop = Math.max(MARGIN, Math.min(winH - ORB_SIZE - MARGIN, targetTop));
-
-            // 应用计算后的吸附位置
-            nWrapper.style.left = `${targetLeft}px`;
-            nWrapper.style.top = `${targetTop}px`;
-            nWrapper.style.bottom = 'auto'; 
-
         } else {
-            // 自由悬停区 (No Snap Zone): 留在原地
-            // 使用快速过渡，让它立即停止在松手的位置
-            nWrapper.style.transition = 'all 0.1s linear'; 
-            nWrapper.style.left = `${targetLeft}px`;
-            nWrapper.style.top = `${targetTop}px`;
-            nWrapper.style.bottom = 'auto'; 
+            toggleNoisePanel();
         }
-
-    } else {
-        // 点击事件：触发面板
-        toggleNoisePanel();
     }
-}
 
-    // === 核心修复：智能避让展开逻辑 ===
     function toggleNoisePanel() {
         const isOpen = nPanel.style.display === 'block' && nPanel.style.opacity !== '0';
-        
         if (isOpen) {
-            // 关闭逻辑
-            nPanel.style.opacity = '0';
-            nPanel.style.transform = 'scale(0.9)';
-            setTimeout(() => { nPanel.style.display = 'none'; }, 200);
+            nPanel.style.opacity = '0'; nPanel.style.transform = 'scale(0.9)'; setTimeout(() => { nPanel.style.display = 'none'; }, 200);
         } else {
-            // 开启逻辑
-            nPanel.style.display = 'block';
-            nPanel.style.pointerEvents = 'auto';
+            nPanel.style.display = 'block'; nPanel.style.pointerEvents = 'auto';
+            const wrapperRect = nWrapper.getBoundingClientRect(); const winW = window.innerWidth; const winH = window.innerHeight;
+            nPanel.style.top = ''; nPanel.style.bottom = ''; nPanel.style.left = ''; nPanel.style.right = '';
             
-            // 1. 获取位置信息
-            const wrapperRect = nWrapper.getBoundingClientRect();
-            const winW = window.innerWidth;
-            const winH = window.innerHeight;
-            
-            // 2. 清除旧定位
-            nPanel.style.top = ''; nPanel.style.bottom = '';
-            nPanel.style.left = ''; nPanel.style.right = '';
-            
-            // 3. 智能判断水平方向 (左/右)
-            // 如果球在屏幕右半边，面板往左弹；反之往右弹
-            if (wrapperRect.left > winW / 2) {
-                nPanel.style.right = '0px';  // 对齐右侧
-                nPanel.style.transformOrigin = 'bottom right'; 
-            } else {
-                nPanel.style.left = '0px';   // 对齐左侧
-                nPanel.style.transformOrigin = 'bottom left'; 
-            }
+            if (wrapperRect.left > winW / 2) { nPanel.style.right = '0px'; nPanel.style.transformOrigin = 'bottom right'; } 
+            else { nPanel.style.left = '0px'; nPanel.style.transformOrigin = 'bottom left'; }
 
-            // 4. 智能判断垂直方向 (上/下)
-            // 如果球在屏幕下半边，面板往上弹；反之往下弹
-            if (wrapperRect.top > winH / 2) {
-                nPanel.style.bottom = '65px'; // 向上展开
-                nPanel.style.transformOrigin = nPanel.style.transformOrigin.replace('top', 'bottom');
-            } else {
-                nPanel.style.top = '65px';    // 向下展开
-                nPanel.style.transformOrigin = nPanel.style.transformOrigin.replace('bottom', 'top');
-            }
+            if (wrapperRect.top > winH / 2) { nPanel.style.bottom = '65px'; nPanel.style.transformOrigin = nPanel.style.transformOrigin.replace('top', 'bottom'); } 
+            else { nPanel.style.top = '65px'; nPanel.style.transformOrigin = nPanel.style.transformOrigin.replace('bottom', 'top'); }
 
-            // 5. 触发动画
-            nPanel.offsetHeight; // 强制重绘
-            nPanel.style.opacity = '1';
-            nPanel.style.transform = 'scale(1)';
+            nPanel.offsetHeight; nPanel.style.opacity = '1'; nPanel.style.transform = 'scale(1)';
         }
     }
     
-    // 初始化图标
     setTimeout(lucide.createIcons, 500);
 </script>
 </body>

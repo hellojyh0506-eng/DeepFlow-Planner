@@ -1,29 +1,36 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/lucide.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<link rel="icon" href="favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="manifest" href="manifest.json"> 
-<meta name="theme-color" content="#020617"> 
-
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="DeepFlow">
-
-<link rel="apple-touch-icon" href="icon-192.png">
     <title>DeepFlow Pro - {{PLAN_TITLE}}</title>
+    <meta name="theme-color" content="#020617">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DeepFlow">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
 
-    
+    <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/tailwind.js"></script>
+    <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/confetti.min.js"></script>
+    <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/lucide.min.js"></script>
+
     <style>
-        /* 2. 字体修复：系统原生字体栈 */
-        :root { --primary: #007AFF; --primary-dark: #0056b3; --primary-light: rgba(0, 122, 255, 0.08); --text-on-primary: #ffffff; --surface: #f5f5f7; --glass-border: rgba(255, 255, 255, 0.6); --seal-red: #b91c1c;  }
+        /* 2. 基础样式与字体修复 */
+        :root { --primary: #007AFF; --primary-dark: #0056b3; --primary-light: rgba(0, 122, 255, 0.08); --text-on-primary: #ffffff; --surface: #f5f5f7; --glass-border: rgba(255, 255, 255, 0.6); --seal-red: #b91c1c; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; background-color: var(--surface); color: #1d1d1f; transition: background-color 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); -webkit-font-smoothing: antialiased; }
         
+        /* 滚动条隐藏工具类 (修复缺失) */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
         .bg-spotlight { position: fixed; top: -20%; left: -20%; width: 140vw; height: 140vh; z-index: -1; background: radial-gradient(circle at 50% 30%, var(--primary-light), transparent 70%); opacity: 1; transition: background 0.8s ease; pointer-events: none; }
         .ios-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); box-shadow: 0 4px 24px rgba(0,0,0,0.04); transition: all 0.3s; }
         .ios-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.08); border-color: rgba(255,255,255,0.9); }
+        
+        /* 调色盘 */
         .palette-wrapper { position: relative; z-index: 50; }
         .palette-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: var(--text-on-primary); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px var(--primary-light); transition: transform 0.2s, background-color 0.5s ease; }
         .palette-btn:active { transform: scale(0.92); }
@@ -37,6 +44,8 @@
         .mix-dot { background: linear-gradient(135deg, #FF3B30, #FF9500, #34C759, #007AFF, #AF52DE); }
         .picker-dot { background: conic-gradient(from 0deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); }
         .mix-icon, .picker-icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        
+        /* 任务列表 */
         .task-item { border-left: 4px solid transparent; }
         .task-checked { background-color: var(--primary-light) !important; border-left-color: var(--primary) !important; }
         .task-checked h4 { text-decoration: line-through; color: #86868b; opacity: 0.8; }
@@ -85,6 +94,8 @@
         }
         #customTimeOverlay.show { opacity: 1; pointer-events: auto; }
         .pro-input { background: transparent; border: none; border-bottom: 2px solid var(--primary); font-size: 2rem; font-weight: 800; text-align: center; color: #1d1d1f; width: 80%; outline: none; margin-bottom: 10px; font-family: monospace; }
+        
+        /* 沉浸模式 */
         #immersiveLayer { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.6s ease; }
         #immersiveLayer.active { opacity: 1; pointer-events: auto; }
         .aurora-bg { position: absolute; inset: -50%; background: radial-gradient(circle at 50% 50%, var(--primary), #000 70%); opacity: 0.6; filter: blur(100px); animation: pulse-aurora 8s ease-in-out infinite; }
@@ -108,119 +119,81 @@
         .ios-modal-btn:last-child { border-right: none; font-weight: 600; }
         .ios-modal-btn:active { background: rgba(0,0,0,0.1); }
         .ios-modal-btn.destructive { color: #FF3B30; }
+        
         /* --- Pro Theme Noise UI --- */
-#noiseOrb {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255,255,255,0.6);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    color: #1d1d1f;
-}
-#noisePanel {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(25px);
-    border: 1px solid rgba(255,255,255,0.5);
-    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-    color: #1d1d1f;
-    transform: scale(0.9); /* 初始缩放 */
-}
-/* 网格卡片 */
-.noise-card {
-    height: 40px;
-    background: rgba(255,255,255,0.5);
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: all 0.2s;
-    color: #666;
-}
-.noise-card:hover { background: #fff; transform: scale(1.05); color: #007AFF; }
-.noise-card.active {
-    background: #007AFF; color: white; box-shadow: 0 4px 10px rgba(0,122,255,0.3);
-}
-#noiseRipple { background-color: #007AFF; }
-/* === [Pro CSS 新增] === */
-#noiseOrb {
-    background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.5); color: #1d1d1f;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: visible !important;
-}
-/* 呼吸光晕 */
-#noiseOrb::before, #noiseOrb::after {
-    content: ''; position: absolute; inset: 0; border-radius: 50%;
-    background: var(--primary); z-index: -1; opacity: 0; transform: scale(0.8); transition: 0.5s;
-}
-#noiseOrb.is-playing {
-    background: #fff; color: var(--primary); border-color: var(--primary);
-}
-#noiseOrb.is-playing::before { animation: pro-breath 3s ease-in-out infinite; }
-#noiseOrb.is-playing::after { animation: pro-breath 3s ease-in-out infinite; animation-delay: 1.5s; }
-@keyframes pro-breath {
-    0% { transform: scale(0.9); opacity: 0.3; }
-    50% { transform: scale(1.4); opacity: 0; }
-    100% { transform: scale(0.9); opacity: 0; }
-}
+        #noiseOrb {
+            background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.5); color: #1d1d1f;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: visible !important;
+        }
+        /* 呼吸光晕 */
+        #noiseOrb::before, #noiseOrb::after {
+            content: ''; position: absolute; inset: 0; border-radius: 50%;
+            background: var(--primary); z-index: -1; opacity: 0; transform: scale(0.8); transition: 0.5s;
+        }
+        #noiseOrb.is-playing {
+            background: #fff; color: var(--primary); border-color: var(--primary);
+        }
+        #noiseOrb.is-playing::before { animation: pro-breath 3s ease-in-out infinite; }
+        #noiseOrb.is-playing::after { animation: pro-breath 3s ease-in-out infinite; animation-delay: 1.5s; }
+        @keyframes pro-breath {
+            0% { transform: scale(0.9); opacity: 0.3; }
+            50% { transform: scale(1.4); opacity: 0; }
+            100% { transform: scale(0.9); opacity: 0; }
+        }
 
-/* 停止按钮 (iOS绿色成功态) */
-.stop-active {
-    background: #34C759 !important; border-color: #34C759 !important; color: white !important; opacity: 1 !important;
-}
-/* iOS 红点 */
-.variant-badge {
-    position: absolute; top: -5px; right: -5px; width: 16px; height: 16px;
-    background: #FF3B30; color: white; border-radius: 50%; font-size: 10px; font-weight: 600;
-    display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}/* === [Pro 修复：强制提示框置顶] === */
-#toast {
-    z-index: 20005 !important; /* 必须比白噪音(20000)高 */
-    bottom: 120px !important; /* 稍微抬高，避开底部 */
-    top: auto !important;     /* 覆盖原有的 top定位 */
-    opacity: 0; 
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-#toast.show-toast-active {
-    opacity: 1 !important;
-    transform: translate(-50%, 0) !important;
-}
-/* === [Pro 视觉升级：跟随主题色] === */
+        /* 白噪音面板卡片 */
+        .noise-card {
+            height: 40px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s;
+            color: #666;
+        }
+        .noise-card:hover { background: #fff; transform: scale(1.05); color: #007AFF; }
+        
+        /* 选中态跟随主题 */
+        .noise-card.active {
+            background: var(--primary) !important; 
+            color: #fff !important; 
+            box-shadow: 0 4px 12px var(--primary-light) !important;
+            border-color: transparent !important;
+        }
+        
+        /* 按钮激活态跟随主题 */
+        .stop-active {
+            background: var(--primary) !important; 
+            border-color: var(--primary) !important; 
+            color: #fff !important; 
+            opacity: 1 !important;
+        }
 
-/* 1. 选中卡片：背景色跟随主题 */
-.noise-card.active {
-    background: var(--primary) !important; 
-    color: #fff !important; 
-    box-shadow: 0 4px 12px var(--primary-light) !important;
-    border-color: transparent !important;
-}
-
-/* 2. 停止/暂停按钮（激活态）：跟随主题 */
-.stop-active {
-    background: var(--primary) !important; 
-    border-color: var(--primary) !important; 
-    color: #fff !important; /* 确保文字是白色 */
-    opacity: 1 !important;
-}
-
-/* 3. 悬浮球：播放时边框和图标跟随主题 */
-#noiseOrb.is-playing {
-    color: var(--primary) !important; 
-    border-color: var(--primary) !important;
-    background: #fff !important;
-}
-
-/* 4. 呼吸光晕：必须跟随主题 */
-#noiseOrb.is-playing::before, 
-#noiseOrb.is-playing::after {
-    background: var(--primary) !important; /* 核心修改：光晕变色 */
-}
-
-/* 5. 变体角标：改为更协调的红色或跟随主题 (这里保留红色作为通知色，更显眼) */
-.variant-badge {
-    background: #ff3b30; 
-    color: white;
-}
+        /* iOS 红点 */
+        .variant-badge {
+            position: absolute; top: -5px; right: -5px; width: 16px; height: 16px;
+            background: #ff3b30; color: white; border-radius: 50%; font-size: 10px; font-weight: 600;
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        /* 提示框强制置顶 (修复层级问题) */
+        #toast {
+            z-index: 20005 !important;
+            bottom: 120px !important;
+            top: auto !important;
+            opacity: 0; 
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        #toast.show-toast-active {
+            opacity: 1 !important;
+            transform: translate(-50%, 0) !important;
+        }
     </style>
 </head>
+
 <body class="h-screen flex flex-col overflow-hidden {{BODY_CLASS}}">
     <div class="bg-spotlight theme-transition"></div>
+    
     <header class="ios-card z-40 relative m-3 md:m-4 rounded-2xl flex-none">
         <div class="px-5 py-3 flex justify-between items-center">
             <div class="flex items-center gap-4">
@@ -243,8 +216,9 @@
     <div class="flex flex-1 overflow-hidden max-w-7xl mx-auto w-full px-3 md:px-4 pb-4">
         <aside class="hidden md:flex w-64 flex-col ios-card mr-4 rounded-2xl overflow-hidden my-0 flex-none">
             <div class="p-4 border-b border-slate-100 font-bold text-slate-700 text-sm flex justify-between bg-white/50"><span>🗓️ 日程表</span><span class="text-slate-400 font-mono text-xs" id="totalDaysLabel">--</span></div>
-            <div class="flex-1 overflow-y-auto p-2 space-y-1" id="dateList"></div>
+            <div class="flex-1 overflow-y-auto p-2 space-y-1 no-scrollbar" id="dateList"></div>
         </aside>
+        
         <main class="flex-1 overflow-y-auto relative no-scrollbar rounded-2xl" id="mainScroll">
             <div class="max-w-3xl mx-auto py-2 md:py-4 min-h-[80vh]">
                 <div class="md:hidden mb-4 px-1">
@@ -254,6 +228,7 @@
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400"><i data-lucide="chevron-down" class="w-4 h-4"></i></div>
                     </div>
                 </div>
+                
                 <div class="ios-card rounded-2xl p-6 md:p-8 mb-6 relative overflow-hidden group">
                     <div class="absolute -right-8 -top-8 w-40 h-40 opacity-15 rounded-full blur-3xl transition-colors duration-700 theme-transition" style="background: var(--primary)"></div> 
                     <div class="relative z-10 flex justify-between items-end">
@@ -265,26 +240,103 @@
                         <div id="trophyContainer" class="cursor-pointer hover:scale-105 transition-transform" onclick="confettiEffect()"></div>
                     </div>
                 </div>
+                
                 <div id="contentLocker" class="transition-all duration-700 space-y-3"><div id="dynamicTasksContainer"></div></div>
             </div>
         </main>
     </div>
     
     <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 flex items-center gap-3 px-5 py-2.5 bg-slate-900/90 backdrop-blur text-white rounded-full shadow-2xl transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none z-[100]"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i><span id="toastMsg" class="font-bold text-xs tracking-wide">已完成</span></div>
+    
     <div id="ritualOverlay" class="fixed inset-0 z-40 flex flex-col items-center justify-center bg-white/80 backdrop-blur-xl transition-all duration-500" style="display: none;"><div class="ios-card p-10 rounded-3xl shadow-2xl fade-in-up max-w-sm w-full text-center border border-white"><div class="lock-icon-bg mb-6 inline-flex p-5 rounded-full shadow-sm theme-transition" style="background: var(--primary-light)"><i data-lucide="lock" class="w-8 h-8 theme-transition" style="color: var(--primary)"></i></div><h3 class="text-2xl font-black text-slate-800 mb-2">Ready?</h3><p class="text-slate-500 text-sm mb-8 px-2">今日任务已锁定。点击开始，全情投入。</p><button onclick="startDay()" class="w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-transform hover:-translate-y-0.5 active:scale-95 theme-transition" style="background: var(--primary)">开启今日计划</button></div></div>
 
     <div id="proModalOverlay"><div class="ios-modal"><div class="ios-modal-header"><div class="ios-modal-title" id="proModalTitle">Title</div><div class="ios-modal-desc" id="proModalDesc">Description</div><input type="text" id="proModalInput" class="ios-modal-input" style="display: none;"></div><div class="ios-modal-actions"><button class="ios-modal-btn" onclick="closeProModal()">取消</button><button class="ios-modal-btn" id="proModalConfirmBtn" onclick="">确定</button></div></div></div>
     
     <div id="focusDockWrapper"><div id="dockTooltip" class="show"><span>启动心流进程</span> <i data-lucide="activity" class="w-4 h-4"></i></div><div id="dockOrb"><i data-lucide="activity" class="w-6 h-6 dock-icon theme-transition" style="color: var(--primary)"></i></div><div id="dockPanel"><div class="flex justify-between items-center mb-6"><span class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">PHYSIO-SYNC CLOCK</span><button onclick="toggleDock()" class="p-1 hover:bg-slate-100 rounded-full"><i data-lucide="x" class="w-4 h-4 text-slate-400"></i></button></div><div class="flex items-center justify-between mb-6 bg-slate-50 rounded-2xl p-2 relative overflow-hidden"><button onclick="adjustTime(-5)" class="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-white text-slate-400 font-bold transition active:scale-95">-5</button><div id="dockTime" onclick="showTimeInput()" title="点击修改时间" class="text-4xl font-black text-slate-800 font-mono tracking-tight cursor-pointer hover:opacity-80 transition">25:00</div><button onclick="adjustTime(5)" class="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-white text-slate-400 font-bold transition active:scale-95">+5</button><div id="customTimeOverlay"><input type="text" id="customTimeInput" class="pro-input" placeholder="25:00" onkeydown="if(event.key==='Enter') submitTime()"><div class="flex gap-2"><button onclick="submitTime()" class="text-xs bg-slate-900 text-white px-3 py-1 rounded-lg">确认</button><button onclick="hideTimeInput()" class="text-xs text-slate-400 px-2 py-1">取消</button></div></div></div><button id="mainBtn" onclick="toggleTimer()" class="w-full py-4 rounded-xl font-bold text-white shadow-lg shadow-blue-500/20 active:scale-95 transition flex items-center justify-center gap-2 mb-2 theme-transition" style="background: var(--primary)"><i data-lucide="play" class="w-4 h-4"></i> <span>开始</span></button><button onclick="enterImmersive()" class="w-full py-3 rounded-xl font-bold text-slate-500 border border-slate-200 hover:bg-slate-50 active:scale-95 transition text-xs flex items-center justify-center gap-2"><i data-lucide="maximize" class="w-3 h-3"></i> 流光模式</button></div></div>
+    
     <div id="immersiveLayer"><div class="aurora-bg theme-transition" style="background: radial-gradient(circle at 50% 50%, var(--primary), #000 70%);"></div><div class="z-10 text-center"><div class="text-white/50 text-sm font-bold tracking-[0.2em] mb-4 uppercase">Flow State</div><div id="immTime" class="giant-time mb-12">25:00</div><div class="flex gap-8 justify-center"><button onclick="toggleTimer()" class="p-6 rounded-full bg-white/10 backdrop-blur border border-white/20 text-white hover:bg-white/20 transition active:scale-95"><i id="immIcon" data-lucide="pause" class="w-8 h-8"></i></button><button onclick="exitImmersive()" class="p-6 rounded-full bg-white/10 backdrop-blur border border-white/20 text-white hover:bg-red-500/20 hover:border-red-500 hover:text-red-400 transition active:scale-95"><i data-lucide="x" class="w-8 h-8"></i></button></div></div></div>
     
-    <script src="rules_db.js"></script>
+    <div id="noiseDockWrapper" style="position: fixed; bottom: 100px; left: 20px; z-index: 20000; touch-action: none;">
+        <div id="noiseTooltip" style="position: absolute; left: 70px; top: 50%; transform: translateY(-50%); background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); color: #1d1d1f; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 600; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.5s; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05);">
+            白噪音 & 音效设置
+            <div style="position: absolute; left: -5px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-right: 5px solid rgba(255,255,255,0.9);"></div>
+        </div>
+        <div id="noiseOrb" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: grab; transition: transform 0.1s; position: relative; z-index: 20002;">
+            <i data-lucide="headphones" class="w-6 h-6 pointer-events-none relative z-10"></i>
+        </div>
+        
+        <div id="noisePanel" style="position: absolute; bottom: 0; width: 260px; padding: 20px; border-radius: 20px; display: none; opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 20001;">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-bold uppercase tracking-widest opacity-60">Soundscape</span>
+                    <button id="sfxToggleBtn" onclick="toggleSFX()" class="text-[10px] bg-slate-100 px-2 py-1 rounded-md text-slate-500 font-bold hover:bg-slate-200 transition-colors flex items-center gap-1">
+                        <i data-lucide="volume-2" class="w-3 h-3"></i> UI音
+                    </button>
+                </div>
+                <input type="range" min="0" max="1" step="0.1" value="0.6" oninput="changeNoiseVolume(this.value)" class="w-20 h-1 rounded-lg appearance-none bg-gray-500/30 cursor-pointer accent-current">
+            </div>
+            
+            <div class="grid grid-cols-4 gap-3 mb-4">
+                <div class="noise-card relative" onclick="playNoise('rain')"><i data-lucide="cloud-rain"></i></div>
+                <div class="noise-card relative" onclick="playNoise('ocean')"><i data-lucide="waves"></i></div>
+                <div class="noise-card relative" onclick="playNoise('forest')"><i data-lucide="trees"></i></div>
+                <div class="noise-card relative" onclick="playNoise('fire')"><i data-lucide="flame"></i></div>
+                <div class="noise-card relative" onclick="playNoise('cafe')"><i data-lucide="coffee"></i></div>
+                <div class="noise-card relative" onclick="playNoise('train')"><i data-lucide="train"></i></div>
+                <div class="noise-card relative" onclick="playNoise('night')"><i data-lucide="moon"></i></div>
+                <div class="noise-card relative" onclick="playNoise('keyboard')"><i data-lucide="keyboard"></i></div>
+            </div>
+            
+            <button id="noiseStopBtn" onclick="stopAllNoise()" class="w-full text-xs py-2 rounded-lg font-bold opacity-60 hover:opacity-100 transition border border-current flex items-center justify-center gap-2">
+                <i data-lucide="square" class="w-3 h-3"></i> 停止播放
+            </button>
+        </div>
+    </div>
+
     <script>
+        // 尝试加载 rules_db.js，如果不存在则忽略
+        const script = document.createElement('script');
+        script.src = 'rules_db.js';
+        script.onerror = () => console.warn('rules_db.js not found, skipping.');
+        document.head.appendChild(script);
+
+        // --- 全局变量定义 ---
         const DOPAMINE_COLORS = ['#007AFF', '#FF3B30', '#FF9500', '#AF52DE', '#34C759', '#32ADE6', '#FF2D55', '#5856D6', '#FFCC00', '#00C7BE'];
         const RAW_DATA = '{{TASKS_DATA}}';
-        
-        // --- 统一音频系统 ---
         const OSS_BASE = "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com";
+        const NOISE_BASE = "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/audio/ambience/";
+        
+        let tasksData = []; let planId = 'pro_v4_demo';
+        let userProgress = {}; let startedDays = []; 
+        let currentMode = 'mix'; let currentSingleColor = DOPAMINE_COLORS[0]; let currentDayIdx = 0;
+        let timer = null, timeLeft = 25 * 60, isRunning = false;
+        
+        // --- 1. 核心工具函数 ---
+        // 修复的 showToast：定义在全局作用域，支持图标和防抖
+        window.showToast = function(msg) { 
+            const t = document.getElementById('toast'); 
+            const m = document.getElementById('toastMsg');
+            if(m) m.innerText = msg || "已完成"; 
+            
+            const icon = t.querySelector('i');
+            if(icon) {
+                if(msg && msg.includes('播放')) icon.setAttribute('data-lucide', 'music'); 
+                else if(msg && msg.includes('音效')) icon.setAttribute('data-lucide', 'volume-2');
+                else icon.setAttribute('data-lucide', 'check-circle-2');
+                if(window.lucide) lucide.createIcons();
+            }
+
+            t.style.opacity = '1'; 
+            t.style.transform = 'translate(-50%, 0)'; 
+            
+            if(window.toastTimer) clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => { 
+                t.style.opacity = '0'; 
+                t.style.transform = 'translate(-50%, -20px)'; 
+            }, 2000); 
+        };
+
+        // --- 2. 音频系统 ---
         const AUDIO_SYSTEM = {
             sfxEnabled: localStorage.getItem('pro_sfx_enabled') !== 'false',
             pools: {
@@ -298,7 +350,7 @@
                 this.sfxEnabled = !this.sfxEnabled;
                 localStorage.setItem('pro_sfx_enabled', this.sfxEnabled);
                 this.updateBtn();
-                if(typeof showToast === 'function') showToast(this.sfxEnabled ? "界面音效: 已开启" : "界面音效: 已静音");
+                showToast(this.sfxEnabled ? "界面音效: 已开启" : "界面音效: 已静音");
             },
             updateBtn: function() {
                 const btn = document.getElementById('sfxToggleBtn');
@@ -313,31 +365,112 @@
                     btn.style.background = "transparent";
                     icon.setAttribute('data-lucide', 'volume-x');
                 }
-                lucide.createIcons();
+                if(window.lucide) lucide.createIcons();
             },
             play: function(type) { 
-                if (!this.sfxEnabled) return; // 🔴 静音拦截
+                if (!this.sfxEnabled) return; 
                 if (!this.cache[type]) return; 
                 const audios = this.cache[type]; 
                 const audio = audios[Math.floor(Math.random() * audios.length)]; 
-                audio.volume = 1.0; audio.currentTime = 0; audio.play(); 
+                audio.volume = 1.0; audio.currentTime = 0; audio.play().catch(e=>{}); 
             }
         };
-        function toggleSFX() { AUDIO_SYSTEM.toggle(); }
-        AUDIO_SYSTEM.preload();
 
-        let tasksData = []; let planId = 'pro_v4_demo';
+        // --- 3. 白噪音系统 ---
+        const noiseConfig = {
+            'rain': [ {n:'绵绵细雨', f:'rain.mp3'}, {n:'雷雨交加', f:'rain_2.mp3'}, {n:'屋檐雨滴', f:'rain_3.mp3'} ],
+            'ocean': [ {n:'轻柔海浪', f:'ocean.mp3'}, {n:'深海潜流', f:'ocean.mp3?v=2'} ],
+            'forest': [ {n:'清晨鸟鸣', f:'forest.mp3'}, {n:'夏日蝉鸣', f:'forest.mp3?v=2'}, {n:'林间风声', f:'forest.mp3?v=3'} ],
+            'fire': [ {n:'壁炉篝火', f:'fire.mp3'} ],
+            'cafe': [ {n:'午后咖啡', f:'cafe.mp3'} ],
+            'train': [ {n:'远行列车', f:'train.mp3'} ],
+            'night': [ {n:'静谧夏夜', f:'night.mp3'} ],
+            'keyboard': [ {n:'机械键盘', f:'keyboard.mp3'} ]
+        };
+        
+        let currentCat = null; let currentVarIdx = 0; let currentAudio = null; let masterVol = 0.6; let isPaused = false;
+
+        function playNoise(cat) {
+            if (currentCat === cat && isPaused) { togglePlayback(); return; }
+            if (currentCat === cat) currentVarIdx = (currentVarIdx + 1) % noiseConfig[cat].length;
+            else { currentCat = cat; currentVarIdx = 0; }
+            loadAndPlay();
+        }
+
+        function loadAndPlay() {
+            if(currentAudio) currentAudio.pause();
+            const item = noiseConfig[currentCat][currentVarIdx];
+            currentAudio = new Audio(NOISE_BASE + item.f); 
+            currentAudio.loop = true; currentAudio.volume = masterVol;
+            currentAudio.play().catch(e=>console.log(e));
+            isPaused = false;
+            updateNoiseUI();
+            showToast("正在播放: " + item.n);
+        }
+
+        function togglePlayback() {
+            if (!currentAudio && !currentCat) return;
+            const item = noiseConfig[currentCat][currentVarIdx];
+            if (isPaused) { currentAudio.play(); isPaused = false; showToast("继续播放: " + item.n); } 
+            else { currentAudio.pause(); isPaused = true; }
+            updateNoiseUI();
+        }
+
+        function stopAllNoise() { togglePlayback(); }
+        function changeNoiseVolume(v) { masterVol = v; if(currentAudio) currentAudio.volume = masterVol; }
+
+        function updateNoiseUI() {
+            const orb = document.getElementById('noiseOrb');
+            const btn = document.getElementById('noiseStopBtn');
+            
+            if(currentCat && !isPaused) orb.classList.add('is-playing'); else orb.classList.remove('is-playing');
+            
+            if (!currentCat) {
+                btn.className = "w-full text-xs py-2 rounded-lg font-bold opacity-60 hover:opacity-100 transition border border-current flex items-center justify-center gap-2";
+                btn.innerHTML = `<i data-lucide="headphones" class="w-3 h-3"></i> 选择音效`;
+                btn.style.background = ""; btn.style.color = ""; btn.style.borderColor = "";
+            } else if (isPaused) {
+                btn.classList.remove('stop-active');
+                btn.style.background = "transparent"; btn.style.color = "inherit"; btn.style.borderColor = "currentColor"; btn.style.opacity = "0.7";
+                btn.innerHTML = `<i data-lucide="play" class="w-3 h-3"></i> 继续: ${noiseConfig[currentCat][currentVarIdx].n}`;
+            } else {
+                btn.classList.add('stop-active'); 
+                btn.style.background = ""; btn.style.color = ""; btn.style.borderColor = ""; btn.style.opacity = "1";
+                btn.innerHTML = `<i data-lucide="pause" class="w-3 h-3"></i> 暂停`;
+            }
+
+            document.querySelectorAll('.noise-card').forEach(el => {
+                el.classList.remove('active');
+                const oldB = el.querySelector('.variant-badge'); if(oldB) oldB.remove();
+                if(el.getAttribute('onclick').includes(`'${currentCat}'`)) {
+                    el.classList.add('active');
+                    if(noiseConfig[currentCat].length > 1) {
+                        el.insertAdjacentHTML('beforeend', `<span class="variant-badge">${currentVarIdx+1}</span>`);
+                    }
+                }
+            });
+            if(window.lucide) lucide.createIcons();
+        }
+
+        function toggleSFX() { AUDIO_SYSTEM.toggle(); }
+
+        // --- 4. 任务与渲染逻辑 ---
         if (RAW_DATA.includes('{{')) { const today = new Date(); for(let i=0; i<7; i++) { let d = new Date(today); d.setDate(today.getDate() + i); tasksData.push({ date: d.toISOString().split('T')[0], dayNum: i+1, tasks: [{ title: 'Core Vocabulary', desc: 'Memorize 50 words', tag: 'Input' }, { title: 'Speaking Practice', desc: 'Record Part 2 topic', tag: 'Output' }] }); } } else { tasksData = JSON.parse(RAW_DATA); planId = '{{PLAN_ID}}'; }
+        
         const STORAGE_KEY = 'v4_prog_' + planId; const START_KEY = 'v4_start_' + planId; const THEME_MODE_KEY = 'v4_mode_' + planId; const THEME_COLOR_KEY = 'v4_color_' + planId; const TITLE_KEY = 'v4_title_' + planId; const CURRENT_DAY_KEY = 'v4_current_day_' + planId; 
-        let userProgress = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); let startedDays = JSON.parse(localStorage.getItem(START_KEY) || '[]'); let currentMode = localStorage.getItem(THEME_MODE_KEY) || 'mix'; let currentSingleColor = localStorage.getItem(THEME_COLOR_KEY) || DOPAMINE_COLORS[0]; let currentDayIdx = 0;
+        
+        // 加载数据
+        userProgress = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); 
+        startedDays = JSON.parse(localStorage.getItem(START_KEY) || '[]'); 
+        currentMode = localStorage.getItem(THEME_MODE_KEY) || 'mix'; 
+        currentSingleColor = localStorage.getItem(THEME_COLOR_KEY) || DOPAMINE_COLORS[0]; 
 
         function initPalette() { const container = document.getElementById('palettePopover'); container.innerHTML = ''; const mixBtn = document.createElement('div'); mixBtn.className = 'color-dot mix-dot'; mixBtn.innerHTML = '<div class="mix-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></div>'; mixBtn.onclick = (e) => { e.stopPropagation(); switchToMixMode(); closePalette(); }; if(currentMode === 'mix') mixBtn.classList.add('active-swatch'); container.appendChild(mixBtn); DOPAMINE_COLORS.forEach(color => { const dot = document.createElement('div'); dot.className = 'color-dot'; dot.style.backgroundColor = color; dot.onclick = (e) => { e.stopPropagation(); switchToSingleColor(color); closePalette(); }; if(currentMode === 'single' && color.toUpperCase() === currentSingleColor.toUpperCase()) dot.classList.add('active-swatch'); container.appendChild(dot); }); const custom = document.createElement('div'); custom.className = 'color-dot picker-dot'; custom.innerHTML = '<div class="picker-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg></div>'; custom.onclick = (e) => { e.stopPropagation(); document.getElementById('customPickerInput').click(); }; container.appendChild(custom); }
         function getDayColor(dayIndex) { return currentMode === 'mix' ? DOPAMINE_COLORS[dayIndex % DOPAMINE_COLORS.length] : currentSingleColor; }
         function switchToMixMode() { currentMode = 'mix'; localStorage.setItem(THEME_MODE_KEY, 'mix'); document.getElementById('modeLabel').innerText = "DOPAMINE MIX"; renderDay(currentDayIdx); }
         function switchToSingleColor(hex) { currentMode = 'single'; currentSingleColor = hex; localStorage.setItem(THEME_MODE_KEY, 'single'); localStorage.setItem(THEME_COLOR_KEY, hex); document.getElementById('modeLabel').innerText = "PRO FOCUS"; renderDay(currentDayIdx); }
         function applyThemeColor(hex) { const root = document.documentElement; const rgb = hexToRgb(hex); const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000; root.style.setProperty('--primary', hex); root.style.setProperty('--primary-dark', adjustBrightness(hex, -20)); root.style.setProperty('--primary-light', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.1)`); root.style.setProperty('--text-on-primary', brightness < 128 ? '#ffffff' : '#1d1d1f'); initPalette(); }
-        
-        // --- 核心修复：找回标签渲染逻辑 (Render Logic Restored) ---
+
         function autoDetectTag(text) {
             const map = {
                 '核心': {color:'#007AFF', emoji:'🎯'}, 'Core': {color:'#007AFF', emoji:'🎯'},
@@ -382,135 +515,96 @@
                     const badge = displayTag ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded border opacity-80" style="color:${displayColor}; border-color:${displayColor}">${displayTag}</span>` : ''; 
                     let timeInfoHtml = (t.time || t.duration) ? `<div class="flex gap-3 text-xs font-mono font-bold text-slate-400 mb-1">${t.time ? `<span>⏰ ${t.time}</span>` : ''}${t.duration ? `<span>⏳ ${t.duration}m</span>` : ''}</div>` : ''; 
                     const div = document.createElement('div'); 
+                    // [修复点] 添加唯一ID，方便 toggleTask 查找
+                    div.id = 'task-card-' + tid; 
                     div.className = `task-item ios-card p-4 rounded-xl flex gap-4 cursor-pointer hover:bg-white transition-all ${checked ? 'task-checked' : ''} fade-in-up`; 
                     div.style.animationDelay = `${i * 0.05}s`;
                     div.onclick = () => toggleTask(tid); 
                     div.innerHTML = `<div class="checkbox-ios flex-shrink-0"><svg class="w-3.5 h-3.5 text-white ${checked ? 'opacity-100' : 'opacity-0'}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div><div class="flex-1">${timeInfoHtml}<div class="flex justify-between items-start mb-1"><h4 class="font-bold text-slate-800 text-base leading-tight transition-colors"><span class="mr-1">${autoInfo.emoji}</span> ${t.title}</h4>${badge}</div><p class="text-sm text-slate-500 font-medium leading-relaxed">${t.desc}</p></div>`; container.appendChild(div); 
                 }); 
             } 
-            checkLock(day.date); lucide.createIcons(); 
+            checkLock(day.date); if(window.lucide) lucide.createIcons(); 
         }
         
-        async function toggleTask(tid) { if(document.getElementById('contentLocker').style.filter.includes('blur')) return; const isChecking = !userProgress[tid]; if(userProgress[tid]) { delete userProgress[tid]; } else { userProgress[tid] = true; } localStorage.setItem(STORAGE_KEY, JSON.stringify(userProgress)); const dayDate = tid.split('_')[0]; const dayObj = tasksData.find(d => d.date === dayDate); const total = dayObj.tasks.length; const doneCount = dayObj.tasks.filter((_, i) => userProgress[dayDate+'_'+i]).length; const isAllDone = (doneCount === total && total > 0); if (isChecking) { if (isAllDone) { AUDIO_SYSTEM.play('finish'); confettiEffect(); } else { AUDIO_SYSTEM.play('check'); showToast(); } if(navigator.vibrate) navigator.vibrate(10); } renderDay(currentDayIdx); const currentTask = tasksData[currentDayIdx].tasks[parseInt(tid.split('_')[1])]; if (currentTask && currentTask.duration) { setTime(parseInt(currentTask.duration)); } }
+        async function toggleTask(tid) { 
+            if(document.getElementById('contentLocker').style.filter.includes('blur')) return; 
+            
+            const isChecking = !userProgress[tid]; 
+            
+            // 1. 更新数据状态
+            if(userProgress[tid]) { delete userProgress[tid]; } else { userProgress[tid] = true; } 
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(userProgress)); 
+            
+            // 2. [核心修复] 局部更新 DOM，防止列表闪烁
+            const taskEl = document.getElementById('task-card-' + tid);
+            if (taskEl) {
+                const checkIcon = taskEl.querySelector('.checkbox-ios svg');
+                if (isChecking) {
+                    taskEl.classList.add('task-checked');
+                    if(checkIcon) { checkIcon.classList.remove('opacity-0'); checkIcon.classList.add('opacity-100'); }
+                } else {
+                    taskEl.classList.remove('task-checked');
+                    if(checkIcon) { checkIcon.classList.remove('opacity-100'); checkIcon.classList.add('opacity-0'); }
+                }
+            }
+
+            // 3. 计算进度并更新头部（不重绘列表）
+            const dayDate = tid.split('_')[0]; 
+            const dayObj = tasksData.find(d => d.date === dayDate); 
+            const total = dayObj.tasks.length; 
+            const doneCount = dayObj.tasks.filter((_, i) => userProgress[dayDate+'_'+i]).length; 
+            const isAllDone = (doneCount === total && total > 0); 
+            
+            // 4. 触发音效和反馈
+            if (isChecking) { 
+                if (isAllDone) { AUDIO_SYSTEM.play('finish'); confettiEffect(); } 
+                else { AUDIO_SYSTEM.play('check'); showToast(); } 
+                if(navigator.vibrate) navigator.vibrate(10); 
+            } 
+            
+            // 5. 仅更新统计数据栏
+            updateStats(tasksData[currentDayIdx]);
+            
+            // 6. 自动设置倒计时逻辑
+            const currentTask = tasksData[currentDayIdx].tasks[parseInt(tid.split('_')[1])]; 
+            if (currentTask && currentTask.duration) { setTime(parseInt(currentTask.duration)); } 
+        }        
+        function updateStats(day) { const total = day.tasks.length; const done = day.tasks.filter((_, i) => userProgress[day.date+'_'+i]).length; const pct = total ? (done/total)*100 : 0; document.getElementById('dailyProgressBar').style.width = pct + '%'; document.getElementById('dailyProgressText').innerText = done + '/' + total; const trophy = document.getElementById('trophyContainer'); trophy.innerHTML = (done === total && total > 0) ? `<div class="p-3 rounded-full text-white shadow-lg animate-bounce theme-bg-target" style="background: var(--primary)"><i data-lucide="award" class="w-6 h-6"></i></div>` : `<div class="bg-slate-100 p-3 rounded-full text-slate-300"><i data-lucide="target" class="w-6 h-6"></i></div>`; let allT=0, allD=0; tasksData.forEach(d => { allT += d.tasks.length; allD += d.tasks.filter((_,i) => userProgress[d.date+'_'+i]).length; }); const gPct = allT ? Math.round((allD/allT)*100) : 0; document.getElementById('totalCompletionDisplay').innerText = gPct + '%'; document.getElementById('overallProgressBar').style.width = gPct + '%'; if(window.lucide) lucide.createIcons(); }
+        
+        function startDay() { const d = tasksData[currentDayIdx].date; if(!startedDays.includes(d)) { startedDays.push(d); localStorage.setItem(START_KEY, JSON.stringify(startedDays)); } AUDIO_SYSTEM.play('start'); document.getElementById('ritualOverlay').style.opacity = '0'; setTimeout(() => { document.getElementById('ritualOverlay').style.display = 'none'; unlockContent(); }, 500); }
+        
+        function checkLock(date) { 
+            const overlay = document.getElementById('ritualOverlay'); 
+            const locker = document.getElementById('contentLocker'); 
+            const hasStarted = startedDays.includes(date) || Object.keys(userProgress).some(k => k.startsWith(date)); 
+            if(hasStarted) { 
+                overlay.style.opacity = '0'; overlay.style.display = 'none'; overlay.style.pointerEvents = 'none'; unlockContent(); 
+            } else { 
+                overlay.style.display = 'flex'; overlay.offsetHeight; overlay.style.opacity = '1'; overlay.style.pointerEvents = 'auto'; 
+                locker.style.filter = 'blur(8px)'; locker.style.pointerEvents = 'none'; locker.style.opacity = '0.5'; 
+            } 
+        }
+        function unlockContent() { const locker = document.getElementById('contentLocker'); locker.style.filter = 'none'; locker.style.pointerEvents = 'auto'; locker.style.opacity = '1'; }
+        
+        // --- Modal & Utils ---
         function openResetModal() { const overlay = document.getElementById('proModalOverlay'); document.getElementById('proModalTitle').innerText = "重置进度"; document.getElementById('proModalDesc').innerText = "确定要清空所有打卡记录吗？此操作无法撤销。"; document.getElementById('proModalInput').style.display = 'none'; const confirmBtn = document.getElementById('proModalConfirmBtn'); confirmBtn.innerText = "重置"; confirmBtn.classList.add('destructive'); confirmBtn.onclick = confirmReset; overlay.classList.add('show'); }
         function confirmReset() { userProgress = {}; startedDays = []; localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(START_KEY); localStorage.removeItem(CURRENT_DAY_KEY); switchToMixMode(); location.reload(); }
         function openRenameModal() { const overlay = document.getElementById('proModalOverlay'); const titleEl = document.getElementById('planTitleText'); document.getElementById('proModalTitle').innerText = "重命名计划"; document.getElementById('proModalDesc').innerText = "为当前的计划输入一个新的名称。"; const input = document.getElementById('proModalInput'); input.style.display = 'block'; input.value = titleEl.innerText; const confirmBtn = document.getElementById('proModalConfirmBtn'); confirmBtn.innerText = "保存"; confirmBtn.classList.remove('destructive'); confirmBtn.onclick = confirmRename; overlay.classList.add('show'); setTimeout(() => input.focus(), 100); }
         function confirmRename() { const val = document.getElementById('proModalInput').value; if(val) { document.getElementById('planTitleText').innerText = val; localStorage.setItem(TITLE_KEY, val); closeProModal(); } }
         function closeProModal() { document.getElementById('proModalOverlay').classList.remove('show'); }
-        function updateStats(day) { const total = day.tasks.length; const done = day.tasks.filter((_, i) => userProgress[day.date+'_'+i]).length; const pct = total ? (done/total)*100 : 0; document.getElementById('dailyProgressBar').style.width = pct + '%'; document.getElementById('dailyProgressText').innerText = done + '/' + total; const trophy = document.getElementById('trophyContainer'); trophy.innerHTML = (done === total && total > 0) ? `<div class="p-3 rounded-full text-white shadow-lg animate-bounce theme-bg-target" style="background: var(--primary)"><i data-lucide="award" class="w-6 h-6"></i></div>` : `<div class="bg-slate-100 p-3 rounded-full text-slate-300"><i data-lucide="target" class="w-6 h-6"></i></div>`; let allT=0, allD=0; tasksData.forEach(d => { allT += d.tasks.length; allD += d.tasks.filter((_,i) => userProgress[d.date+'_'+i]).length; }); const gPct = allT ? Math.round((allD/allT)*100) : 0; document.getElementById('totalCompletionDisplay').innerText = gPct + '%'; document.getElementById('overallProgressBar').style.width = gPct + '%'; lucide.createIcons(); }
-        function startDay() { const d = tasksData[currentDayIdx].date; if(!startedDays.includes(d)) { startedDays.push(d); localStorage.setItem(START_KEY, JSON.stringify(startedDays)); } AUDIO_SYSTEM.play('start'); document.getElementById('ritualOverlay').style.opacity = '0'; setTimeout(() => { document.getElementById('ritualOverlay').style.display = 'none'; unlockContent(); }, 500); }
-        // 🔍 在 template_pro.html 中找到 checkLock 函数并替换为：
-
-function checkLock(date) { 
-    const overlay = document.getElementById('ritualOverlay'); 
-    const locker = document.getElementById('contentLocker'); 
-    
-    // 检查是否已开始
-    const hasStarted = startedDays.includes(date) || Object.keys(userProgress).some(k => k.startsWith(date)); 
-    
-    if(hasStarted) { 
-        // 🔓 已解锁状态
-        overlay.style.opacity = '0'; // 确保透明度为0
-        overlay.style.display = 'none'; // 隐藏遮罩
-        overlay.style.pointerEvents = 'none'; // 穿透点击
-        unlockContent(); 
-    } else { 
-        // 🔒 锁定状态 (修复白屏的关键)
-        overlay.style.display = 'flex'; // 先强制显示
-        // 强制浏览器重绘，确保 display:flex 生效后再执行 opacity 动画
-        overlay.offsetHeight; 
-        overlay.style.opacity = '1'; 
-        overlay.style.pointerEvents = 'auto'; // 恢复点击响应
-        
-        // 模糊背景
-        locker.style.filter = 'blur(8px)'; 
-        locker.style.pointerEvents = 'none'; 
-        locker.style.opacity = '0.5'; 
-    } 
-}
-        function unlockContent() { const locker = document.getElementById('contentLocker'); locker.style.filter = 'none'; locker.style.pointerEvents = 'auto'; locker.style.opacity = '1'; }
-        function showToast() { const t = document.getElementById('toast'); t.style.opacity = '1'; t.style.transform = 'translate(-50%, 0)'; setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translate(-50%, -20px)'; }, 1500); }
         function confettiEffect(colors) { if(window.confetti) confetti({ particleCount: 80, spread: 60, origin: { y: 0.65 }, colors: colors || [getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()] }); }
         function togglePalette(e) { if(e) e.stopPropagation(); const p = document.getElementById('palettePopover'); if(!p.classList.contains('active')) initPalette(); p.classList.toggle('active'); }
         function closePalette() { document.getElementById('palettePopover').classList.remove('active'); }
         function hexToRgb(hex) { let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex); return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : {r:0,g:0,b:0}; }
         function adjustBrightness(hex, percent) { let num = parseInt(hex.replace("#",""),16), amt = Math.round(2.55 * percent), R = (num >> 16) + amt, B = (num >> 8 & 0x00FF) + amt, G = (num & 0x0000FF) + amt; return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (B<255?B<1?0:B:255)*0x100 + (G<255?G<1?0:G:255)).toString(16).slice(1); }
-        function renamePlan() { openRenameModal(); } 
-        function init() { if (!RAW_DATA.includes('{{')) { const st = localStorage.getItem(TITLE_KEY); if(st) document.getElementById('planTitleText').innerText = st; } document.getElementById('totalDaysLabel').innerText = tasksData.length; const mobSelect = document.getElementById('mobileDateSelect'); if(mobSelect) { tasksData.forEach((d, i) => { const opt = document.createElement('option'); opt.value = i; opt.text = `📅 ${d.date} - Day ${d.dayNum}`; mobSelect.appendChild(opt); }); } let initialDayIdx = parseInt(localStorage.getItem(CURRENT_DAY_KEY) || '0'); const hashMatch = window.location.hash.match(/day=(\d+)/); if (hashMatch) { initialDayIdx = parseInt(hashMatch[1]); } const urlParams = new URLSearchParams(window.location.search); if (urlParams.has('day')) { const urlDayIdx = parseInt(urlParams.get('day')); if (!isNaN(urlDayIdx) && urlDayIdx >= 0 && urlDayIdx < tasksData.length) { initialDayIdx = urlDayIdx; } } renderDay(initialDayIdx); document.getElementById('modeLabel').innerText = currentMode === 'mix' ? "DOPAMINE MIX" : "PRO FOCUS"; document.addEventListener('click', (e) => { if(!e.target.closest('.palette-wrapper')) closePalette(); }); setTimeout(() => { const tip = document.getElementById('dockTooltip'); if(tip) { tip.classList.remove('show'); tip.style.opacity = '0'; tip.style.transform = 'translateY(-50%) translateX(10px)'; } }, 4000); window.addEventListener('hashchange', () => { const hashMatch = window.location.hash.match(/day=(\d+)/); if (hashMatch) { renderDay(parseInt(hashMatch[1])); } }); }
-        // === [新增] 引导序列 ===
-    setTimeout(() => {
-        // 1. 右边 Dock 提示
-        const dockTip = document.getElementById('dockTooltip');
-        if(dockTip) dockTip.classList.add('show');
 
-        setTimeout(() => {
-            if(dockTip) dockTip.classList.remove('show');
-
-            // 2. 左边 白噪音 提示
-            const noiseTip = document.getElementById('noiseTooltip');
-            if(noiseTip) {
-                noiseTip.style.opacity = '1';
-                setTimeout(() => { noiseTip.style.opacity = '0'; }, 4000);
-            }
-        }, 4000);
-    }, 1500);
-    
-        window.addEventListener('DOMContentLoaded', init);
-
-        // --- 番茄钟 ---
-        let timer = null, timeLeft = 25 * 60, isRunning = false;
+        // --- 5. 番茄钟逻辑 ---
         const dockWrapper = document.getElementById('focusDockWrapper'); const orb = document.getElementById('dockOrb');
         let isDrag = false, startX, startY, initialLeft, initialTop;
-
-function handleDragStart(e) {
-    if(e.target.closest('#dockPanel')) return;
-    
-    isDrag = false;
-    const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-    const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-    
-    startX = clientX; 
-    startY = clientY;
-    
-    let rect = dockWrapper.getBoundingClientRect();
-    initialLeft = rect.left;
-    initialTop = rect.top;
-    
-    dockWrapper.style.transition = 'none';
-    
-    document.addEventListener('mousemove', handleDragMove);
-    document.addEventListener('touchmove', handleDragMove, {passive: false});
-    document.addEventListener('mouseup', handleDragEnd);
-    document.addEventListener('touchend', handleDragEnd);
-}
-
-function handleDragMove(e) {
-    const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-    const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-    
-    if(Math.abs(clientX - startX) > 5 || Math.abs(clientY - startY) > 5) {
-        isDrag = true;
-        e.preventDefault();
-        dockWrapper.style.left = (initialLeft + clientX - startX) + 'px';
-        dockWrapper.style.top = (initialTop + clientY - startY) + 'px';
-        dockWrapper.style.right = 'auto'; 
-        dockWrapper.style.bottom = 'auto';
-    }
-}
-
-function handleDragEnd() {
-    document.removeEventListener('mousemove', handleDragMove);
-    document.removeEventListener('touchmove', handleDragMove);
-    document.removeEventListener('mouseup', handleDragEnd);
-    document.removeEventListener('touchend', handleDragEnd);
-    
-    dockWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
-    
-    if(!isDrag) { toggleDock(); } else { snapDock(); }
-}
-
-orb.addEventListener('mousedown', handleDragStart);
-orb.addEventListener('touchstart', handleDragStart, {passive: false});
+        function handleDragStart(e) { if(e.target.closest('#dockPanel')) return; isDrag = false; const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; startX = clientX; startY = clientY; let rect = dockWrapper.getBoundingClientRect(); initialLeft = rect.left; initialTop = rect.top; dockWrapper.style.transition = 'none'; document.addEventListener('mousemove', handleDragMove); document.addEventListener('touchmove', handleDragMove, {passive: false}); document.addEventListener('mouseup', handleDragEnd); document.addEventListener('touchend', handleDragEnd); }
+        function handleDragMove(e) { const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; if(Math.abs(clientX - startX) > 5 || Math.abs(clientY - startY) > 5) { isDrag = true; e.preventDefault(); dockWrapper.style.left = (initialLeft + clientX - startX) + 'px'; dockWrapper.style.top = (initialTop + clientY - startY) + 'px'; dockWrapper.style.right = 'auto'; dockWrapper.style.bottom = 'auto'; } }
+        function handleDragEnd() { document.removeEventListener('mousemove', handleDragMove); document.removeEventListener('touchmove', handleDragMove); document.removeEventListener('mouseup', handleDragEnd); document.removeEventListener('touchend', handleDragEnd); dockWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)'; if(!isDrag) { toggleDock(); } else { snapDock(); } }
+        orb.addEventListener('mousedown', handleDragStart); orb.addEventListener('touchstart', handleDragStart, {passive: false});
         function snapDock() { const rect = dockWrapper.getBoundingClientRect(); const winW = window.innerWidth; const winH = window.innerHeight; const SNAP_THRESHOLD = 100; const MARGIN = 32; let targetLeft = rect.left; let targetTop = rect.top; if (rect.left < SNAP_THRESHOLD) targetLeft = MARGIN; else if (winW - rect.right < SNAP_THRESHOLD) targetLeft = winW - rect.width - MARGIN; if (rect.top < SNAP_THRESHOLD) targetTop = MARGIN; else if (winH - rect.bottom < SNAP_THRESHOLD) targetTop = winH - rect.height - MARGIN; dockWrapper.style.left = `${Math.max(MARGIN, Math.min(winW - rect.width - MARGIN, targetLeft))}px`; dockWrapper.style.top = `${Math.max(MARGIN, Math.min(winH - rect.height - MARGIN, targetTop))}px`; }
         function updatePanelPosition() { const rect = dockWrapper.getBoundingClientRect(); const panel = document.getElementById('dockPanel'); const winH = window.innerHeight; const winW = window.innerWidth; panel.style.top = ''; panel.style.bottom = ''; panel.style.left = ''; panel.style.right = ''; panel.style.transformOrigin = ''; if (rect.top > winH / 2) { panel.style.bottom = '80px'; panel.style.transformOrigin = 'bottom '; } else { panel.style.top = '80px'; panel.style.transformOrigin = 'top '; } if (rect.left > winW / 2) { panel.style.right = '0'; panel.style.transformOrigin += 'right'; } else { panel.style.left = '0'; panel.style.transformOrigin += 'left'; } }
         function toggleDock() { const panel = document.getElementById('dockPanel'); if (!panel.classList.contains('open')) { updatePanelPosition(); } panel.classList.toggle('open'); }
@@ -521,370 +615,97 @@ orb.addEventListener('touchstart', handleDragStart, {passive: false});
         function setTime(m) { if(isRunning) return; timeLeft = m * 60; updateUI(); }
         function toggleTimer() { if(isRunning) { clearInterval(timer); isRunning = false; } else { isRunning = true; timer = setInterval(() => { if(timeLeft>0) { timeLeft--; updateUI(); } else { finish(); } }, 1000); } updateUI(); }
         function finish() { clearInterval(timer); isRunning = false; AUDIO_SYSTEM.play('finish'); alert("Focus Complete!"); confettiEffect(); timeLeft=25*60; exitImmersive(); updateUI(); }
-        function updateUI() { const str = Math.floor(timeLeft/60).toString().padStart(2,'0') + ':' + (timeLeft%60).toString().padStart(2,'0'); document.getElementById('dockTime').innerText = str; document.getElementById('immTime').innerText = str; const btn = document.getElementById('mainBtn'); btn.innerHTML = isRunning ? `<i data-lucide="pause" class="w-4 h-4"></i> <span>暂停</span>` : `<i data-lucide="play" class="w-4 h-4"></i> <span>开始专注</span>`; document.getElementById('immIcon').setAttribute('data-lucide', isRunning ? 'pause' : 'play'); lucide.createIcons(); }
+        function updateUI() { const str = Math.floor(timeLeft/60).toString().padStart(2,'0') + ':' + (timeLeft%60).toString().padStart(2,'0'); document.getElementById('dockTime').innerText = str; document.getElementById('immTime').innerText = str; const btn = document.getElementById('mainBtn'); btn.innerHTML = isRunning ? `<i data-lucide="pause" class="w-4 h-4"></i> <span>暂停</span>` : `<i data-lucide="play" class="w-4 h-4"></i> <span>开始专注</span>`; document.getElementById('immIcon').setAttribute('data-lucide', isRunning ? 'pause' : 'play'); if(window.lucide) lucide.createIcons(); }
         function enterImmersive() { document.getElementById('immersiveLayer').classList.add('active'); document.getElementById('dockPanel').classList.remove('open'); if(!isRunning) toggleTimer(); }
         function exitImmersive() { document.getElementById('immersiveLayer').classList.remove('active'); }
-    </script>
-    <div id="noiseDockWrapper" style="position: fixed; bottom: 100px; left: 20px; z-index: 20000; touch-action: none;">
-        <div id="noiseTooltip" style="position: absolute; left: 70px; top: 50%; transform: translateY(-50%); background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); color: #1d1d1f; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 600; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.5s; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05);">
-        白噪音 & 音效设置
-        <div style="position: absolute; left: -5px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-right: 5px solid rgba(255,255,255,0.9);"></div>
-    </div>
-    <div id="noiseOrb" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: grab; transition: transform 0.1s; position: relative; z-index: 20002;">
-        <i data-lucide="headphones" class="w-6 h-6 pointer-events-none relative z-10"></i>
-    </div>
-    
-    <div id="noisePanel" style="position: absolute; bottom: 0; width: 260px; padding: 20px; border-radius: 20px; display: none; opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 20001;">
-        <div class="flex justify-between items-center mb-4">
-    <div class="flex items-center gap-2">
-        <span class="text-[10px] font-bold uppercase tracking-widest opacity-60">Soundscape</span>
-        <button id="sfxToggleBtn" onclick="toggleSFX()" class="text-[10px] bg-slate-100 px-2 py-1 rounded-md text-slate-500 font-bold hover:bg-slate-200 transition-colors flex items-center gap-1">
-            <i data-lucide="volume-2" class="w-3 h-3"></i> UI音
-        </button>
-    </div>
-    <input type="range" min="0" max="1" step="0.1" value="0.6" oninput="changeNoiseVolume(this.value)" class="w-20 h-1 rounded-lg appearance-none bg-gray-500/30 cursor-pointer accent-current">
-</div>
-        
-        <div class="grid grid-cols-4 gap-3 mb-4">
-            <div class="noise-card relative" onclick="playNoise('rain')"><i data-lucide="cloud-rain"></i></div>
-            <div class="noise-card relative" onclick="playNoise('ocean')"><i data-lucide="waves"></i></div>
-            <div class="noise-card relative" onclick="playNoise('forest')"><i data-lucide="trees"></i></div>
-            <div class="noise-card relative" onclick="playNoise('fire')"><i data-lucide="flame"></i></div>
-            <div class="noise-card relative" onclick="playNoise('cafe')"><i data-lucide="coffee"></i></div>
-            <div class="noise-card relative" onclick="playNoise('train')"><i data-lucide="train"></i></div>
-            <div class="noise-card relative" onclick="playNoise('night')"><i data-lucide="moon"></i></div>
-            <div class="noise-card relative" onclick="playNoise('keyboard')"><i data-lucide="keyboard"></i></div>
-        </div>
-        
-        <button id="noiseStopBtn" onclick="stopAllNoise()" class="w-full text-xs py-2 rounded-lg font-bold opacity-60 hover:opacity-100 transition border border-current flex items-center justify-center gap-2">
-            <i data-lucide="square" class="w-3 h-3"></i> 停止播放
-        </button>
-    </div>
-</div>
-    
-    <div id="noisePanel" style="position: absolute; bottom: 0; width: 260px; padding: 20px; border-radius: 20px; display: none; opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 20001;">
-        <div class="flex justify-between items-center mb-4">
-            <span class="text-[10px] font-bold uppercase tracking-widest opacity-60">白噪音</span>
-            <input type="range" min="0" max="1" step="0.1" value="0.6" oninput="changeNoiseVolume(this.value)" class="w-20 h-1 rounded-lg appearance-none bg-gray-500/30 cursor-pointer accent-current">
-        </div>
-        
-        <div class="grid grid-cols-4 gap-3 mb-4">
-            <div class="noise-card" onclick="playNoise('rain')" title="雨声"><i data-lucide="cloud-rain"></i></div>
-            <div class="noise-card" onclick="playNoise('ocean')" title="海浪"><i data-lucide="waves"></i></div>
-            <div class="noise-card" onclick="playNoise('forest')" title="森林"><i data-lucide="trees"></i></div>
-            <div class="noise-card" onclick="playNoise('fire')" title="篝火"><i data-lucide="flame"></i></div>
-            <div class="noise-card" onclick="playNoise('cafe')" title="咖啡馆"><i data-lucide="coffee"></i></div>
-            <div class="noise-card" onclick="playNoise('train')" title="列车"><i data-lucide="train"></i></div>
-            <div class="noise-card" onclick="playNoise('night')" title="夏夜"><i data-lucide="moon"></i></div>
-            <div class="noise-card" onclick="playNoise('keyboard')" title="键盘"><i data-lucide="keyboard"></i></div>
-        </div>
-        
-        <button onclick="stopAllNoise()" class="w-full text-xs py-2 rounded-lg font-bold opacity-60 hover:opacity-100 transition border border-current flex items-center justify-center gap-2">
-            <i data-lucide="square" class="w-3 h-3"></i> 静音 / 停止
-        </button>
-    </div>
-</div>
 
-<script>
-    // --- 1. 音频引擎 ---
-    // === [Pro JS 最终版：主题跟随 + Toast修复] ===
-    const NOISE_BASE = "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/audio/ambience/";
-    
-    const noiseConfig = {
-        'rain': [ {n:'绵绵细雨', f:'rain.mp3'}, {n:'雷雨交加', f:'rain_2.mp3'}, {n:'屋檐雨滴', f:'rain_3.mp3'} ],
-        'ocean': [ {n:'轻柔海浪', f:'ocean.mp3'}, {n:'深海潜流', f:'ocean.mp3?v=2'} ],
-        'forest': [ {n:'清晨鸟鸣', f:'forest.mp3'}, {n:'夏日蝉鸣', f:'forest.mp3?v=2'}, {n:'林间风声', f:'forest.mp3?v=3'} ],
-        'fire': [ {n:'壁炉篝火', f:'fire.mp3'} ],
-        'cafe': [ {n:'午后咖啡', f:'cafe.mp3'} ],
-        'train': [ {n:'远行列车', f:'train.mp3'} ],
-        'night': [ {n:'静谧夏夜', f:'night.mp3'} ],
-        'keyboard': [ {n:'机械键盘', f:'keyboard.mp3'} ]
-    };
-    
-    let currentCat = null; let currentVarIdx = 0; let currentAudio = null; let masterVol = 0.6;
-    let isPaused = false;
+        // --- 6. 白噪音拖拽与吸附 (修复版) ---
+        const nWrapper = document.getElementById('noiseDockWrapper');
+        const nOrb = document.getElementById('noiseOrb');
+        const nPanel = document.getElementById('noisePanel');
+        let noise_isDragging = false, noise_hasMoved = false, noise_startX, noise_startY, noise_initialLeft, noise_initialTop;
 
-    function playNoise(cat) {
-        // 点击当前暂停项 -> 继续
-        if (currentCat === cat && isPaused) {
-            togglePlayback();
-            return;
-        }
-        if (currentCat === cat) currentVarIdx = (currentVarIdx + 1) % noiseConfig[cat].length;
-        else { currentCat = cat; currentVarIdx = 0; }
-        
-        loadAndPlay();
-    }
+        nOrb.addEventListener('mousedown', noiseDragStart);
+        nOrb.addEventListener('touchstart', noiseDragStart, {passive: false});
 
-    function loadAndPlay() {
-        if(currentAudio) currentAudio.pause();
-        const item = noiseConfig[currentCat][currentVarIdx];
-        
-        currentAudio = new Audio(NOISE_BASE + item.f); 
-        currentAudio.loop = true; currentAudio.volume = masterVol;
-        currentAudio.play().catch(e=>console.log(e));
-        
-        isPaused = false;
-        updateNoiseUI();
-        // 这里的调用会触发下面重写过的 showToast
-        showToast("正在播放: " + item.n);
-    }
-
-    function togglePlayback() {
-        if (!currentAudio && !currentCat) return;
-        const item = noiseConfig[currentCat][currentVarIdx];
-
-        if (isPaused) {
-            currentAudio.play();
-            isPaused = false;
-            showToast("继续播放: " + item.n);
-        } else {
-            currentAudio.pause();
-            isPaused = true;
-        }
-        updateNoiseUI();
-    }
-
-    function stopAllNoise() { togglePlayback(); }
-
-    function changeNoiseVolume(v) { masterVol = v; if(currentAudio) currentAudio.volume = masterVol; }
-
-    function updateNoiseUI() {
-        const orb = document.getElementById('noiseOrb');
-        const btn = document.getElementById('noiseStopBtn');
-        
-        // 1. 光晕：播放时呼吸 (CSS中已绑定 var(--primary))
-        if(currentCat && !isPaused) orb.classList.add('is-playing');
-        else orb.classList.remove('is-playing');
-        
-        // 2. 按钮状态逻辑
-        if (!currentCat) {
-            // [初始状态]
-            btn.className = "w-full text-xs py-2 rounded-lg font-bold opacity-60 hover:opacity-100 transition border border-current flex items-center justify-center gap-2";
-            btn.innerHTML = `<i data-lucide="headphones" class="w-3 h-3"></i> 选择音效`;
-            btn.style.background = ""; btn.style.color = ""; btn.style.borderColor = "";
-        } else if (isPaused) {
-            // [暂停状态]：暗下去 (空心)
-            btn.classList.remove('stop-active');
-            // 手动清除背景色，确保变回空心
-            btn.style.background = "transparent";
-            btn.style.color = "inherit";
-            btn.style.borderColor = "currentColor"; 
-            btn.style.opacity = "0.7";
-            btn.innerHTML = `<i data-lucide="play" class="w-3 h-3"></i> 继续: ${noiseConfig[currentCat][currentVarIdx].n}`;
-        } else {
-            // [播放状态]：亮起来 (实心，跟随主题色)
-            btn.classList.add('stop-active'); // CSS里 .stop-active 已经绑定了 var(--primary)
-            btn.style.background = ""; // 清除内联样式，让CSS类生效
-            btn.style.color = "";
-            btn.style.borderColor = "";
-            btn.style.opacity = "1";
-            btn.innerHTML = `<i data-lucide="pause" class="w-3 h-3"></i> 暂停`;
-        }
-
-        // 3. 卡片高亮 (CSS里 .noise-card.active 已经绑定了 var(--primary))
-        document.querySelectorAll('.noise-card').forEach(el => {
-            el.classList.remove('active');
-            const oldB = el.querySelector('.variant-badge'); if(oldB) oldB.remove();
-            if(el.getAttribute('onclick').includes(`'${currentCat}'`)) {
-                el.classList.add('active');
-                if(noiseConfig[currentCat].length > 1) {
-                    el.insertAdjacentHTML('beforeend', `<span class="variant-badge">${currentVarIdx+1}</span>`);
-                }
-            }
-        });
-        lucide.createIcons();
-    }
-    
-    // === 核心修复：重写 showToast 解决“已完成”Bug ===
-    // 强制挂载到 window 对象，确保覆盖掉之前的定义
-    window.showToast = function(msg) { 
-        const t = document.getElementById('toast'); 
-        const m = document.getElementById('toastMsg');
-        
-        // 关键：如果没传 msg，才显示默认值。现在我们传了，所以会显示具体内容。
-        if(m) m.innerText = msg || "已完成"; 
-        
-        // 图标逻辑
-        const icon = t.querySelector('i');
-        if(icon) {
-            if(msg && msg.includes('播放')) icon.setAttribute('data-lucide', 'music'); 
-            else icon.setAttribute('data-lucide', 'check-circle-2');
-            lucide.createIcons();
-        }
-
-        // 显示动画
-        t.style.opacity = '1'; 
-        t.style.transform = 'translate(-50%, 0)'; 
-        
-        // 简单的防抖倒计时
-        if(window.toastTimer) clearTimeout(window.toastTimer);
-        window.toastTimer = setTimeout(() => { 
-            t.style.opacity = '0'; 
-            t.style.transform = 'translate(-50%, -20px)'; 
-        }, 2000); 
-    };
-    
-    setTimeout(updateNoiseUI, 500);
-    // --- 2. 物理拖拽与吸附引擎 (修复版：智能避让) ---
-    const nWrapper = document.getElementById('noiseDockWrapper');
-    const nOrb = document.getElementById('noiseOrb');
-    const nPanel = document.getElementById('noisePanel');
-    
-    let noise_isDragging = false;
-    let noise_hasMoved = false; 
-    let noise_startX, noise_startY, noise_initialLeft, noise_initialTop;
-
-    // 绑定事件
-    nOrb.addEventListener('mousedown', noiseDragStart);
-    nOrb.addEventListener('touchstart', noiseDragStart, {passive: false});
-
-    function noiseDragStart(e) {
-        if(e.target.closest('#noisePanel')) return;
-
-        noise_isDragging = true;
-        noise_hasMoved = false;
-        
-        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-        const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-        
-        noise_startX = clientX;
-        noise_startY = clientY;
-        
-        const rect = nWrapper.getBoundingClientRect();
-        noise_initialLeft = rect.left;
-        noise_initialTop = rect.top;
-        
-        nWrapper.style.transition = 'none'; 
-        nOrb.style.cursor = 'grabbing';
-        nOrb.style.transform = 'scale(0.95)';
-
-        document.addEventListener('mousemove', noiseDragMove);
-        document.addEventListener('touchmove', noiseDragMove, {passive: false});
-        document.addEventListener('mouseup', noiseDragEnd);
-        document.addEventListener('touchend', noiseDragEnd);
-    }
-
-    function noiseDragMove(e) {
-        if (!noise_isDragging) return;
-        e.preventDefault(); 
-
-        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-        const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-        
-        const dx = clientX - noise_startX;
-        const dy = clientY - noise_startY;
-
-        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-            noise_hasMoved = true;
-            // 拖拽时自动收起面板，防止挡视野
-            if(nPanel.style.display !== 'none') {
-                nPanel.style.opacity = '0';
-                nPanel.style.pointerEvents = 'none';
-                setTimeout(() => { nPanel.style.display = 'none'; }, 200);
-            }
-        }
-
-        nWrapper.style.left = `${noise_initialLeft + dx}px`;
-        nWrapper.style.top = `${noise_initialTop + dy}px`;
-        nWrapper.style.bottom = 'auto'; 
-    }
-
-    function noiseDragEnd() {
-        if (!noise_isDragging) return;
-        noise_isDragging = false;
-        nOrb.style.cursor = 'grab';
-        nOrb.style.transform = 'scale(1)';
-
-        document.removeEventListener('mousemove', noiseDragMove);
-        document.removeEventListener('touchmove', noiseDragMove);
-        document.removeEventListener('mouseup', noiseDragEnd);
-        document.removeEventListener('touchend', noiseDragEnd);
-
-        if (noise_hasMoved) {
-            // 吸附逻辑：松手后自动贴边
-            const winW = window.innerWidth;
-            const winH = window.innerHeight;
+        function noiseDragStart(e) {
+            if(e.target.closest('#noisePanel')) return;
+            noise_isDragging = true; noise_hasMoved = false;
+            const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+            noise_startX = clientX; noise_startY = clientY;
             const rect = nWrapper.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            
-            nWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
-            
-            let targetLeft;
-            // 左右吸附
-            if (centerX < winW / 2) {
-                targetLeft = 20; 
-            } else {
-                targetLeft = winW - 70; // 50px宽 + 20px距
-            }
-            
-            // 上下边界限制
-            let targetTop = rect.top;
-            if (targetTop < 50) targetTop = 50;
-            if (targetTop > winH - 100) targetTop = winH - 100;
-
-            nWrapper.style.left = `${targetLeft}px`;
-            nWrapper.style.top = `${targetTop}px`;
-            
-        } else {
-            // 点击事件：触发智能展开
-            toggleNoisePanel();
+            noise_initialLeft = rect.left; noise_initialTop = rect.top;
+            nWrapper.style.transition = 'none'; nOrb.style.cursor = 'grabbing'; nOrb.style.transform = 'scale(0.95)';
+            document.addEventListener('mousemove', noiseDragMove); document.addEventListener('touchmove', noiseDragMove, {passive: false});
+            document.addEventListener('mouseup', noiseDragEnd); document.addEventListener('touchend', noiseDragEnd);
         }
-    }
 
-    // === 核心修复：智能避让展开逻辑 ===
-    function toggleNoisePanel() {
-        const isOpen = nPanel.style.display === 'block' && nPanel.style.opacity !== '0';
-        
-        if (isOpen) {
-            // 关闭逻辑
-            nPanel.style.opacity = '0';
-            nPanel.style.transform = 'scale(0.9)';
-            setTimeout(() => { nPanel.style.display = 'none'; }, 200);
-        } else {
-            // 开启逻辑
-            nPanel.style.display = 'block';
-            nPanel.style.pointerEvents = 'auto';
-            
-            // 1. 获取位置信息
-            const wrapperRect = nWrapper.getBoundingClientRect();
-            const winW = window.innerWidth;
-            const winH = window.innerHeight;
-            
-            // 2. 清除旧定位
-            nPanel.style.top = ''; nPanel.style.bottom = '';
-            nPanel.style.left = ''; nPanel.style.right = '';
-            
-            // 3. 智能判断水平方向 (左/右)
-            // 如果球在屏幕右半边，面板往左弹；反之往右弹
-            if (wrapperRect.left > winW / 2) {
-                nPanel.style.right = '0px';  // 对齐右侧
-                nPanel.style.transformOrigin = 'bottom right'; 
-            } else {
-                nPanel.style.left = '0px';   // 对齐左侧
-                nPanel.style.transformOrigin = 'bottom left'; 
+        function noiseDragMove(e) {
+            if (!noise_isDragging) return; e.preventDefault();
+            const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+            const dx = clientX - noise_startX; const dy = clientY - noise_startY;
+            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+                noise_hasMoved = true;
+                if(nPanel.style.display !== 'none') { nPanel.style.opacity = '0'; nPanel.style.pointerEvents = 'none'; setTimeout(() => { nPanel.style.display = 'none'; }, 200); }
             }
-
-            // 4. 智能判断垂直方向 (上/下)
-            // 如果球在屏幕下半边，面板往上弹；反之往下弹
-            if (wrapperRect.top > winH / 2) {
-                nPanel.style.bottom = '65px'; // 向上展开
-                nPanel.style.transformOrigin = nPanel.style.transformOrigin.replace('top', 'bottom');
-            } else {
-                nPanel.style.top = '65px';    // 向下展开
-                nPanel.style.transformOrigin = nPanel.style.transformOrigin.replace('bottom', 'top');
-            }
-
-            // 5. 触发动画
-            nPanel.offsetHeight; // 强制重绘
-            nPanel.style.opacity = '1';
-            nPanel.style.transform = 'scale(1)';
+            nWrapper.style.left = `${noise_initialLeft + dx}px`; nWrapper.style.top = `${noise_initialTop + dy}px`; nWrapper.style.bottom = 'auto';
         }
-    }
-    
-    // 初始化图标
-    setTimeout(lucide.createIcons, 500);
-    
-</script>
+
+        function noiseDragEnd() {
+            if (!noise_isDragging) return; noise_isDragging = false;
+            nOrb.style.cursor = 'grab'; nOrb.style.transform = 'scale(1)';
+            document.removeEventListener('mousemove', noiseDragMove); document.removeEventListener('touchmove', noiseDragMove);
+            document.removeEventListener('mouseup', noiseDragEnd); document.removeEventListener('touchend', noiseDragEnd);
+            if (noise_hasMoved) {
+                const winW = window.innerWidth; const winH = window.innerHeight; const rect = nWrapper.getBoundingClientRect(); const centerX = rect.left + rect.width / 2;
+                nWrapper.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
+                let targetLeft = (centerX < winW / 2) ? 20 : winW - 70;
+                let targetTop = Math.max(50, Math.min(winH - 100, rect.top));
+                nWrapper.style.left = `${targetLeft}px`; nWrapper.style.top = `${targetTop}px`;
+            } else { toggleNoisePanel(); }
+        }
+
+        function toggleNoisePanel() {
+            const isOpen = nPanel.style.display === 'block' && nPanel.style.opacity !== '0';
+            if (isOpen) {
+                nPanel.style.opacity = '0'; nPanel.style.transform = 'scale(0.9)'; setTimeout(() => { nPanel.style.display = 'none'; }, 200);
+            } else {
+                nPanel.style.display = 'block'; nPanel.style.pointerEvents = 'auto';
+                const wrapperRect = nWrapper.getBoundingClientRect(); const winW = window.innerWidth; const winH = window.innerHeight;
+                nPanel.style.top = ''; nPanel.style.bottom = ''; nPanel.style.left = ''; nPanel.style.right = '';
+                if (wrapperRect.left > winW / 2) { nPanel.style.right = '0px'; nPanel.style.transformOrigin = 'bottom right'; } else { nPanel.style.left = '0px'; nPanel.style.transformOrigin = 'bottom left'; }
+                if (wrapperRect.top > winH / 2) { nPanel.style.bottom = '65px'; nPanel.style.transformOrigin = nPanel.style.transformOrigin.replace('top', 'bottom'); } else { nPanel.style.top = '65px'; nPanel.style.transformOrigin = nPanel.style.transformOrigin.replace('bottom', 'top'); }
+                nPanel.offsetHeight; nPanel.style.opacity = '1'; nPanel.style.transform = 'scale(1)';
+            }
+        }
+
+        // --- 7. 初始化 ---
+        function init() { 
+            if (!RAW_DATA.includes('{{')) { const st = localStorage.getItem(TITLE_KEY); if(st) document.getElementById('planTitleText').innerText = st; } 
+            document.getElementById('totalDaysLabel').innerText = tasksData.length; 
+            const mobSelect = document.getElementById('mobileDateSelect'); if(mobSelect) { tasksData.forEach((d, i) => { const opt = document.createElement('option'); opt.value = i; opt.text = `📅 ${d.date} - Day ${d.dayNum}`; mobSelect.appendChild(opt); }); } 
+            let initialDayIdx = parseInt(localStorage.getItem(CURRENT_DAY_KEY) || '0'); 
+            const hashMatch = window.location.hash.match(/day=(\d+)/); if (hashMatch) { initialDayIdx = parseInt(hashMatch[1]); } 
+            const urlParams = new URLSearchParams(window.location.search); if (urlParams.has('day')) { const urlDayIdx = parseInt(urlParams.get('day')); if (!isNaN(urlDayIdx) && urlDayIdx >= 0 && urlDayIdx < tasksData.length) { initialDayIdx = urlDayIdx; } } 
+            renderDay(initialDayIdx); 
+            document.getElementById('modeLabel').innerText = currentMode === 'mix' ? "DOPAMINE MIX" : "PRO FOCUS"; 
+            document.addEventListener('click', (e) => { if(!e.target.closest('.palette-wrapper')) closePalette(); }); 
+            window.addEventListener('hashchange', () => { const hashMatch = window.location.hash.match(/day=(\d+)/); if (hashMatch) { renderDay(parseInt(hashMatch[1])); } });
+            
+            // 引导序列
+            setTimeout(() => {
+                const dockTip = document.getElementById('dockTooltip'); if(dockTip) dockTip.classList.add('show');
+                setTimeout(() => { if(dockTip) dockTip.classList.remove('show'); const noiseTip = document.getElementById('noiseTooltip'); if(noiseTip) { noiseTip.style.opacity = '1'; setTimeout(() => { noiseTip.style.opacity = '0'; }, 4000); } }, 4000);
+            }, 1500);
+            
+            AUDIO_SYSTEM.preload();
+            if(window.lucide) lucide.createIcons();
+        }
+
+        // 统一入口，解决执行时机问题
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
 </html>
