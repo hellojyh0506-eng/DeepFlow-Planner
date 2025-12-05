@@ -248,7 +248,7 @@
     
     <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 flex items-center gap-3 px-5 py-2.5 bg-slate-900/90 backdrop-blur text-white rounded-full shadow-2xl transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none z-[100]"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i><span id="toastMsg" class="font-bold text-xs tracking-wide">已完成</span></div>
     
-    <div id="ritualOverlay" class="fixed inset-0 z-40 flex flex-col items-center justify-center bg-white/80 backdrop-blur-xl transition-all duration-500" style="display: none;"><div class="ios-card p-10 rounded-3xl shadow-2xl fade-in-up max-w-sm w-full text-center border border-white"><div class="lock-icon-bg mb-6 inline-flex p-5 rounded-full shadow-sm theme-transition" style="background: var(--primary-light)"><i data-lucide="lock" class="w-8 h-8 theme-transition" style="color: var(--primary)"></i></div><h3 class="text-2xl font-black text-slate-800 mb-2">Ready?</h3><p class="text-slate-500 text-sm mb-8 px-2">今日任务已锁定。点击开始，全情投入。</p><button onclick="startDay()" class="w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-transform hover:-translate-y-0.5 active:scale-95 theme-transition" style="background: var(--primary)">开启今日计划</button></div></div>
+    <div id="ritualOverlay" class="fixed inset-0 z-40 flex flex-col items-center justify-center bg-white/80 backdrop-blur-xl transition-all duration-500" style="display: none;"><div class="ios-card p-10 rounded-3xl shadow-2xl max-w-sm w-full text-center border border-white"><div class="lock-icon-bg mb-6 inline-flex p-5 rounded-full shadow-sm theme-transition" style="background: var(--primary-light)"><i data-lucide="lock" class="w-8 h-8 theme-transition" style="color: var(--primary)"></i></div><h3 class="text-2xl font-black text-slate-800 mb-2">Ready?</h3><p class="text-slate-500 text-sm mb-8 px-2">今日任务已锁定。点击开始，全情投入。</p><button onclick="startDay()" class="w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-transform hover:-translate-y-0.5 active:scale-95 theme-transition" style="background: var(--primary)">开启今日计划</button></div></div>
 
     <div id="proModalOverlay"><div class="ios-modal"><div class="ios-modal-header"><div class="ios-modal-title" id="proModalTitle">Title</div><div class="ios-modal-desc" id="proModalDesc">Description</div><input type="text" id="proModalInput" class="ios-modal-input" style="display: none;"></div><div class="ios-modal-actions"><button class="ios-modal-btn" onclick="closeProModal()">取消</button><button class="ios-modal-btn" id="proModalConfirmBtn" onclick="">确定</button></div></div></div>
     
@@ -594,22 +594,26 @@ window.addEventListener('load', initLucideSafe);
 let overlayTimer = null; 
 
 function startDay() { 
+    // 获取当前日期
     const d = tasksData[currentDayIdx].date; 
+    
+    // 记录开始状态
     if(!startedDays.includes(d)) { 
         startedDays.push(d); 
         localStorage.setItem(START_KEY, JSON.stringify(startedDays)); 
     } 
     
+    // 播放音效
     AUDIO_SYSTEM.play('start'); 
     
     const overlay = document.getElementById('ritualOverlay');
     overlay.style.opacity = '0'; 
     
-    // 【修复核心】：先清除可能存在的旧定时器
-    if(overlayTimer) clearTimeout(overlayTimer);
+    // 【修复核心】：使用 window.proTimer 确保全局均可访问
+    if(window.proTimer) clearTimeout(window.proTimer);
     
-    // 重新设置定时器
-    overlayTimer = setTimeout(() => { 
+    // 重新设置定时器，500ms 后隐藏
+    window.proTimer = setTimeout(() => { 
         overlay.style.display = 'none'; 
         unlockContent(); 
     }, 500); 
@@ -617,13 +621,35 @@ function startDay() {
         function checkLock(date) { 
     const overlay = document.getElementById('ritualOverlay'); 
     const locker = document.getElementById('contentLocker'); 
+    
+    // 检查该日期是否已解锁
     const hasStarted = startedDays.includes(date) || Object.keys(userProgress).some(k => k.startsWith(date)); 
     
-    // 【修复核心】：切换天数时，立即清除任何正在进行的“隐藏覆盖层”的定时器
-    if(overlayTimer) {
-        clearTimeout(overlayTimer);
-        overlayTimer = null;
+    // 【修复核心】：切换天数时，只要检测到有正在跑的定时器，立刻杀掉！
+    // 这样就阻止了“上一步的隐藏命令”执行到“这一步的界面”上
+    if(window.proTimer) {
+        clearTimeout(window.proTimer);
+        window.proTimer = null;
     }
+
+    if(hasStarted) { 
+        // 状态：已开始 -> 立即隐藏遮罩，显示内容
+        overlay.style.opacity = '0'; 
+        overlay.style.display = 'none'; 
+        overlay.style.pointerEvents = 'none'; 
+        unlockContent(); 
+    } else { 
+        // 状态：未开始 -> 立即显示遮罩，模糊内容
+        overlay.style.display = 'flex'; 
+        overlay.offsetHeight; // 强制浏览器重绘一帧，确保显示生效
+        overlay.style.opacity = '1'; 
+        overlay.style.pointerEvents = 'auto'; 
+        
+        locker.style.filter = 'blur(8px)'; 
+        locker.style.pointerEvents = 'none'; 
+        locker.style.opacity = '0.5'; 
+    } 
+}
 
     if(hasStarted) { 
         // 如果已开始，确保强制隐藏
