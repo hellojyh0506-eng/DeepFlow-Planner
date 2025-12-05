@@ -501,48 +501,68 @@
         function saveNote() { const val = document.getElementById('dailyNote').value; const date = tasksData[currentIndex].date; if(val.trim()) dailyNotes[date] = val; else delete dailyNotes[date]; localStorage.setItem(NOTE_KEY, JSON.stringify(dailyNotes)); }
         
         function checkLock(dateStr) { 
-            const overlay = document.getElementById('zenOverlay'); 
-            const content = document.getElementById('taskList'); 
-            const stamp = document.getElementById('stampContainer'); 
-            const isStarted = startedDays.includes(dateStr) || Object.keys(userProgress).some(k => k.startsWith(dateStr)); 
-            if(isStarted) { 
-                overlay.style.display = 'none'; 
-                content.style.filter = 'none'; 
-                content.style.pointerEvents = 'auto'; 
-                content.style.maxHeight = 'none'; 
-                content.style.overflow = 'visible'; 
-            } else { 
-                overlay.style.display = 'flex'; 
-                overlay.style.opacity = '1'; 
-                content.style.filter = 'blur(4px) grayscale(100%)'; 
-                content.style.pointerEvents = 'none'; 
-                stamp.classList.remove('show'); 
-                content.style.maxHeight = '400px'; 
-                content.style.overflow = 'hidden'; 
-            } 
-        }
+    const overlay = document.getElementById('zenOverlay'); 
+    const content = document.getElementById('taskList'); 
+    const stamp = document.getElementById('stampContainer'); 
+    const isStarted = startedDays.includes(dateStr) || Object.keys(userProgress).some(k => k.startsWith(dateStr)); 
+    
+    // 【修复核心】：切换天数时，立即取消正在进行的隐藏动画
+    if(overlayTimer) {
+        clearTimeout(overlayTimer);
+        overlayTimer = null;
+    }
+
+    if(isStarted) { 
+        // 强制显示内容，隐藏遮罩
+        overlay.style.display = 'none'; 
+        overlay.style.opacity = '0'; // 确保透明度也重置
         
-        function unlockDay() { 
-            const day = tasksData[currentIndex]; 
-            if(!startedDays.includes(day.date)) { 
-                startedDays.push(day.date); 
-                localStorage.setItem(START_KEY, JSON.stringify(startedDays)); 
-            } 
-            
-            AUDIO_SYSTEM.play('start'); 
-            
-            const overlay = document.getElementById('zenOverlay'); 
-            overlay.style.opacity = '0'; 
-            setTimeout(() => { 
-                overlay.style.display = 'none'; 
-                const content = document.getElementById('taskList'); 
-                content.style.filter = 'none'; 
-                content.style.pointerEvents = 'auto'; 
-                content.style.maxHeight = 'none'; 
-                content.style.overflow = 'visible'; 
-            }, 500); 
-            checkStamp(day); 
-        }
+        content.style.filter = 'none'; 
+        content.style.pointerEvents = 'auto'; 
+        content.style.maxHeight = 'none'; 
+        content.style.overflow = 'visible'; 
+    } else { 
+        // 强制显示遮罩，锁住内容
+        overlay.style.display = 'flex'; 
+        overlay.offsetHeight; // 强制重绘
+        overlay.style.opacity = '1'; 
+        
+        content.style.filter = 'blur(4px) grayscale(100%)'; 
+        content.style.pointerEvents = 'none'; 
+        stamp.classList.remove('show'); 
+        content.style.maxHeight = '400px'; 
+        content.style.overflow = 'hidden'; 
+    } 
+}
+        
+        let overlayTimer = null; // 【新增】全局变量控制定时器
+
+function unlockDay() { 
+    const day = tasksData[currentIndex]; 
+    if(!startedDays.includes(day.date)) { 
+        startedDays.push(day.date); 
+        localStorage.setItem(START_KEY, JSON.stringify(startedDays)); 
+    } 
+    
+    AUDIO_SYSTEM.play('start'); 
+    
+    const overlay = document.getElementById('zenOverlay'); 
+    overlay.style.opacity = '0'; 
+    
+    // 【修复核心】：清除旧的定时器，防止冲突
+    if(overlayTimer) clearTimeout(overlayTimer);
+
+    overlayTimer = setTimeout(() => { 
+        overlay.style.display = 'none'; 
+        const content = document.getElementById('taskList'); 
+        content.style.filter = 'none'; 
+        content.style.pointerEvents = 'auto'; 
+        content.style.maxHeight = 'none'; 
+        content.style.overflow = 'visible'; 
+    }, 500); 
+    
+    checkStamp(day); 
+}
         
         function updateProgress() { let total = 0, done = 0; tasksData.forEach(d => { d.tasks.forEach((_, tIdx) => { total++; if(userProgress[d.date + '-' + tIdx]) done++; }); }); const pct = total === 0 ? 0 : Math.round((done/total)*100); document.getElementById('progressText').innerText = pct + '%'; }
         function renamePlan() { openRenameModal(); }

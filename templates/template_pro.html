@@ -590,19 +590,59 @@ window.addEventListener('load', initLucideSafe);
         }        
         function updateStats(day) { const total = day.tasks.length; const done = day.tasks.filter((_, i) => userProgress[day.date+'_'+i]).length; const pct = total ? (done/total)*100 : 0; document.getElementById('dailyProgressBar').style.width = pct + '%'; document.getElementById('dailyProgressText').innerText = done + '/' + total; const trophy = document.getElementById('trophyContainer'); trophy.innerHTML = (done === total && total > 0) ? `<div class="p-3 rounded-full text-white shadow-lg animate-bounce theme-bg-target" style="background: var(--primary)"><i data-lucide="award" class="w-6 h-6"></i></div>` : `<div class="bg-slate-100 p-3 rounded-full text-slate-300"><i data-lucide="target" class="w-6 h-6"></i></div>`; let allT=0, allD=0; tasksData.forEach(d => { allT += d.tasks.length; allD += d.tasks.filter((_,i) => userProgress[d.date+'_'+i]).length; }); const gPct = allT ? Math.round((allD/allT)*100) : 0; document.getElementById('totalCompletionDisplay').innerText = gPct + '%'; document.getElementById('overallProgressBar').style.width = gPct + '%'; if(window.lucide) initLucideSafe(); }
         
-        function startDay() { const d = tasksData[currentDayIdx].date; if(!startedDays.includes(d)) { startedDays.push(d); localStorage.setItem(START_KEY, JSON.stringify(startedDays)); } AUDIO_SYSTEM.play('start'); document.getElementById('ritualOverlay').style.opacity = '0'; setTimeout(() => { document.getElementById('ritualOverlay').style.display = 'none'; unlockContent(); }, 500); }
-        
+        // 在 script 标签顶部或 startDay 函数外部定义这个变量，防止报错
+let overlayTimer = null; 
+
+function startDay() { 
+    const d = tasksData[currentDayIdx].date; 
+    if(!startedDays.includes(d)) { 
+        startedDays.push(d); 
+        localStorage.setItem(START_KEY, JSON.stringify(startedDays)); 
+    } 
+    
+    AUDIO_SYSTEM.play('start'); 
+    
+    const overlay = document.getElementById('ritualOverlay');
+    overlay.style.opacity = '0'; 
+    
+    // 【修复核心】：先清除可能存在的旧定时器
+    if(overlayTimer) clearTimeout(overlayTimer);
+    
+    // 重新设置定时器
+    overlayTimer = setTimeout(() => { 
+        overlay.style.display = 'none'; 
+        unlockContent(); 
+    }, 500); 
+}
         function checkLock(date) { 
-            const overlay = document.getElementById('ritualOverlay'); 
-            const locker = document.getElementById('contentLocker'); 
-            const hasStarted = startedDays.includes(date) || Object.keys(userProgress).some(k => k.startsWith(date)); 
-            if(hasStarted) { 
-                overlay.style.opacity = '0'; overlay.style.display = 'none'; overlay.style.pointerEvents = 'none'; unlockContent(); 
-            } else { 
-                overlay.style.display = 'flex'; overlay.offsetHeight; overlay.style.opacity = '1'; overlay.style.pointerEvents = 'auto'; 
-                locker.style.filter = 'blur(8px)'; locker.style.pointerEvents = 'none'; locker.style.opacity = '0.5'; 
-            } 
-        }
+    const overlay = document.getElementById('ritualOverlay'); 
+    const locker = document.getElementById('contentLocker'); 
+    const hasStarted = startedDays.includes(date) || Object.keys(userProgress).some(k => k.startsWith(date)); 
+    
+    // 【修复核心】：切换天数时，立即清除任何正在进行的“隐藏覆盖层”的定时器
+    if(overlayTimer) {
+        clearTimeout(overlayTimer);
+        overlayTimer = null;
+    }
+
+    if(hasStarted) { 
+        // 如果已开始，确保强制隐藏
+        overlay.style.opacity = '0'; 
+        overlay.style.display = 'none'; 
+        overlay.style.pointerEvents = 'none'; 
+        unlockContent(); 
+    } else { 
+        // 如果未开始（锁定状态），强制显示
+        overlay.style.display = 'flex'; 
+        overlay.offsetHeight; // 强制浏览器重绘，确保动画生效
+        overlay.style.opacity = '1'; 
+        overlay.style.pointerEvents = 'auto'; 
+        
+        locker.style.filter = 'blur(8px)'; 
+        locker.style.pointerEvents = 'none'; 
+        locker.style.opacity = '0.5'; 
+    } 
+}
         function unlockContent() { const locker = document.getElementById('contentLocker'); locker.style.filter = 'none'; locker.style.pointerEvents = 'auto'; locker.style.opacity = '1'; }
         
         // --- Modal & Utils ---
