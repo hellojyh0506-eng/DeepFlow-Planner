@@ -14,19 +14,34 @@
     <link rel="apple-touch-icon" href="icon-192.png">
 
     <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/tailwind.js"></script>
-    <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/confetti.min.js"></script>
+    <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/confetti.browser.min.js"></script>
     <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/lucide.min.js"></script>
 
     <style>
         /* 2. 基础样式与字体修复 */
         :root { --primary: #007AFF; --primary-dark: #0056b3; --primary-light: rgba(0, 122, 255, 0.08); --text-on-primary: #ffffff; --surface: #f5f5f7; --glass-border: rgba(255, 255, 255, 0.6); --seal-red: #b91c1c; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; background-color: var(--surface); color: #1d1d1f; transition: background-color 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); -webkit-font-smoothing: antialiased; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; background-color: var(--surface); color: #1d1d1f; transition: background-color 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); -webkit-font-smoothing: antialiased; visibility: visible !important; opacity: 1 !important;}
         
         /* 滚动条隐藏工具类 (修复缺失) */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        .bg-spotlight { position: fixed; top: -20%; left: -20%; width: 140vw; height: 140vh; z-index: -1; background: radial-gradient(circle at 50% 30%, var(--primary-light), transparent 70%); opacity: 1; transition: background 0.8s ease; pointer-events: none; }
+        .bg-spotlight { 
+    position: fixed; 
+    top: -20%; 
+    left: -20%; 
+    width: 140vw; 
+    height: 140vh; 
+    z-index: -1; 
+    /* 核心修改：使用更细腻的径向渐变，制造“呼吸感”光晕 */
+    background: radial-gradient(circle at 50% 30%, var(--primary-light), transparent 60%); 
+    opacity: 1; 
+    transition: background 0.8s ease; 
+    pointer-events: none; 
+}
+.ios-card .blur-3xl {
+    filter: blur(64px); /* 增大模糊半径 */
+    opacity: 0.2;       /*稍微增加不透明度让颜色更显眼 */
+}
         .ios-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); box-shadow: 0 4px 24px rgba(0,0,0,0.04); transition: all 0.3s; }
         .ios-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.08); border-color: rgba(255,255,255,0.9); }
         
@@ -35,14 +50,77 @@
         .palette-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: var(--text-on-primary); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px var(--primary-light); transition: transform 0.2s, background-color 0.5s ease; }
         .palette-btn:active { transform: scale(0.92); }
         .reset-btn { background: #ff3b30 !important; color: white; box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3); }
-        .palette-popover { position: absolute; top: 120%; right: 0; width: 210px; padding: 12px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(24px); border-radius: 16px; box-shadow: 0 12px 48px rgba(0,0,0,0.12); opacity: 0; transform: scale(0.9) translateY(-10px); pointer-events: none; transition: all 0.3s; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        /* --- 修复版：调色盘样式 --- */
+.palette-popover { 
+    position: absolute; 
+    top: 120%; 
+    right: 0; 
+    width: 210px; 
+    padding: 12px; 
+    background: rgba(255, 255, 255, 0.95); 
+    backdrop-filter: blur(24px); 
+    border-radius: 16px; 
+    box-shadow: 0 12px 48px rgba(0,0,0,0.12); 
+    opacity: 0; 
+    transform: scale(0.9) translateY(-10px); 
+    pointer-events: none; 
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); /* 更丝滑的弹窗动画 */
+    display: grid; 
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 10px; 
+    z-index: 100; /* 确保不被遮挡 */
+}
+.palette-popover.active { 
+    opacity: 1 !important; 
+    transform: scale(1) translateY(0) !important; 
+    pointer-events: auto !important; 
+}
+
+/* 彩虹渐变球 (Mix Mode) */
+.mix-dot { 
+    background: linear-gradient(135deg, #FF3B30, #FF9500, #34C759, #007AFF, #AF52DE) !important; 
+    border: 2px solid white;
+}
+
+/* 色环取色球 (Picker) */
+.picker-dot { 
+    background: conic-gradient(from 0deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000) !important; 
+    border: 2px solid white;
+}
+
+/* 选中状态的光圈动画 */
+.color-dot.active-swatch::after { 
+    content: ''; 
+    position: absolute; 
+    inset: -4px; 
+    border-radius: 50%; 
+    border: 2px solid var(--primary); 
+    animation: ringSnap 0.4s forwards; 
+}
         .palette-popover.active { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
         .color-dot { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; position: relative; transition: transform 0.2s; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
         .color-dot:hover { transform: scale(1.15); z-index: 2; }
         .color-dot.active-swatch::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid var(--primary); animation: ringSnap 0.4s forwards; }
-        @keyframes ringSnap { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        .mix-dot { background: linear-gradient(135deg, #FF3B30, #FF9500, #34C759, #007AFF, #AF52DE); }
-        .picker-dot { background: conic-gradient(from 0deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); }
+.mix-dot { 
+    background: linear-gradient(135deg, #FF3B30, #FF9500, #34C759, #007AFF, #AF52DE); 
+}
+/* 色环拾色器球 */
+.picker-dot { 
+    background: conic-gradient(from 0deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); 
+}
+/* 选中时的呼吸光环 */
+.color-dot.active-swatch::after { 
+    content: ''; 
+    position: absolute; 
+    inset: -4px; 
+    border-radius: 50%; 
+    border: 2px solid var(--primary); 
+    animation: ringSnap 0.4s forwards; 
+}
+@keyframes ringSnap { 
+    0% { transform: scale(0.8); opacity: 0; } 
+    100% { transform: scale(1); opacity: 1; } 
+}
         .mix-icon, .picker-icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
         
         /* 任务列表 */
@@ -484,7 +562,41 @@ window.addEventListener('load', initLucideSafe);
         currentMode = localStorage.getItem(THEME_MODE_KEY) || 'mix'; 
         currentSingleColor = localStorage.getItem(THEME_COLOR_KEY) || DOPAMINE_COLORS[0]; 
 
-        function initPalette() { const container = document.getElementById('palettePopover'); container.innerHTML = ''; const mixBtn = document.createElement('div'); mixBtn.className = 'color-dot mix-dot'; mixBtn.innerHTML = '<div class="mix-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></div>'; mixBtn.onclick = (e) => { e.stopPropagation(); switchToMixMode(); closePalette(); }; if(currentMode === 'mix') mixBtn.classList.add('active-swatch'); container.appendChild(mixBtn); DOPAMINE_COLORS.forEach(color => { const dot = document.createElement('div'); dot.className = 'color-dot'; dot.style.backgroundColor = color; dot.onclick = (e) => { e.stopPropagation(); switchToSingleColor(color); closePalette(); }; if(currentMode === 'single' && color.toUpperCase() === currentSingleColor.toUpperCase()) dot.classList.add('active-swatch'); container.appendChild(dot); }); const custom = document.createElement('div'); custom.className = 'color-dot picker-dot'; custom.innerHTML = '<div class="picker-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg></div>'; custom.onclick = (e) => { e.stopPropagation(); document.getElementById('customPickerInput').click(); }; container.appendChild(custom); }
+        // --- 🎨 多彩泡泡调色盘生成逻辑 ---
+function initPalette() { 
+    const container = document.getElementById('palettePopover'); 
+    container.innerHTML = ''; 
+    
+    // 1. 创建“混合模式”彩虹球
+    const mixBtn = document.createElement('div'); 
+    mixBtn.className = 'color-dot mix-dot'; // 对应 CSS 里的多彩渐变
+    mixBtn.innerHTML = '<div class="mix-icon"><i data-lucide="aperture" style="width:16px;height:16px"></i></div>'; // 如果没有 lucide，可以换回 svg
+    if(!mixBtn.querySelector('svg')) mixBtn.innerHTML = '<div class="mix-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></div>';
+    
+    mixBtn.onclick = (e) => { e.stopPropagation(); switchToMixMode(); closePalette(); }; 
+    if(currentMode === 'mix') mixBtn.classList.add('active-swatch'); 
+    container.appendChild(mixBtn); 
+    
+    // 2. 创建普通颜色球
+    DOPAMINE_COLORS.forEach(color => { 
+        const dot = document.createElement('div'); 
+        dot.className = 'color-dot'; 
+        dot.style.backgroundColor = color; 
+        dot.onclick = (e) => { e.stopPropagation(); switchToSingleColor(color); closePalette(); }; 
+        if(currentMode === 'single' && color.toUpperCase() === currentSingleColor.toUpperCase()) dot.classList.add('active-swatch'); 
+        container.appendChild(dot); 
+    }); 
+    
+    // 3. 创建自定义取色球
+    const custom = document.createElement('div'); 
+    custom.className = 'color-dot picker-dot'; // 对应 CSS 里的色环
+    custom.innerHTML = '<div class="picker-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg></div>'; 
+    custom.onclick = (e) => { e.stopPropagation(); document.getElementById('customPickerInput').click(); }; 
+    container.appendChild(custom); 
+    
+    // 刷新图标
+    if(window.lucide) window.lucide.createIcons();
+}
         function getDayColor(dayIndex) { return currentMode === 'mix' ? DOPAMINE_COLORS[dayIndex % DOPAMINE_COLORS.length] : currentSingleColor; }
         function switchToMixMode() { currentMode = 'mix'; localStorage.setItem(THEME_MODE_KEY, 'mix'); document.getElementById('modeLabel').innerText = "DOPAMINE MIX"; renderDay(currentDayIdx); }
         function switchToSingleColor(hex) { currentMode = 'single'; currentSingleColor = hex; localStorage.setItem(THEME_MODE_KEY, 'single'); localStorage.setItem(THEME_COLOR_KEY, hex); document.getElementById('modeLabel').innerText = "PRO FOCUS"; renderDay(currentDayIdx); }
@@ -590,10 +702,7 @@ window.addEventListener('load', initLucideSafe);
         }        
         function updateStats(day) { const total = day.tasks.length; const done = day.tasks.filter((_, i) => userProgress[day.date+'_'+i]).length; const pct = total ? (done/total)*100 : 0; document.getElementById('dailyProgressBar').style.width = pct + '%'; document.getElementById('dailyProgressText').innerText = done + '/' + total; const trophy = document.getElementById('trophyContainer'); trophy.innerHTML = (done === total && total > 0) ? `<div class="p-3 rounded-full text-white shadow-lg animate-bounce theme-bg-target" style="background: var(--primary)"><i data-lucide="award" class="w-6 h-6"></i></div>` : `<div class="bg-slate-100 p-3 rounded-full text-slate-300"><i data-lucide="target" class="w-6 h-6"></i></div>`; let allT=0, allD=0; tasksData.forEach(d => { allT += d.tasks.length; allD += d.tasks.filter((_,i) => userProgress[d.date+'_'+i]).length; }); const gPct = allT ? Math.round((allD/allT)*100) : 0; document.getElementById('totalCompletionDisplay').innerText = gPct + '%'; document.getElementById('overallProgressBar').style.width = gPct + '%'; if(window.lucide) initLucideSafe(); }
         
-        // 在 script 标签顶部或 startDay 函数外部定义这个变量，防止报错
-let overlayTimer = null; 
-
-function startDay() { 
+        function startDay() { 
     // 获取当前日期
     const d = tasksData[currentDayIdx].date; 
     
@@ -617,7 +726,7 @@ function startDay() {
         overlay.style.display = 'none'; 
         unlockContent(); 
     }, 500); 
-}
+}        
         function checkLock(date) { 
     const overlay = document.getElementById('ritualOverlay'); 
     const locker = document.getElementById('contentLocker'); 
@@ -650,25 +759,6 @@ function startDay() {
         locker.style.opacity = '0.5'; 
     } 
 }
-
-    if(hasStarted) { 
-        // 如果已开始，确保强制隐藏
-        overlay.style.opacity = '0'; 
-        overlay.style.display = 'none'; 
-        overlay.style.pointerEvents = 'none'; 
-        unlockContent(); 
-    } else { 
-        // 如果未开始（锁定状态），强制显示
-        overlay.style.display = 'flex'; 
-        overlay.offsetHeight; // 强制浏览器重绘，确保动画生效
-        overlay.style.opacity = '1'; 
-        overlay.style.pointerEvents = 'auto'; 
-        
-        locker.style.filter = 'blur(8px)'; 
-        locker.style.pointerEvents = 'none'; 
-        locker.style.opacity = '0.5'; 
-    } 
-
         function unlockContent() { const locker = document.getElementById('contentLocker'); locker.style.filter = 'none'; locker.style.pointerEvents = 'auto'; locker.style.opacity = '1'; }
         
         // --- Modal & Utils ---
@@ -677,7 +767,39 @@ function startDay() {
         function openRenameModal() { const overlay = document.getElementById('proModalOverlay'); const titleEl = document.getElementById('planTitleText'); document.getElementById('proModalTitle').innerText = "重命名计划"; document.getElementById('proModalDesc').innerText = "为当前的计划输入一个新的名称。"; const input = document.getElementById('proModalInput'); input.style.display = 'block'; input.value = titleEl.innerText; const confirmBtn = document.getElementById('proModalConfirmBtn'); confirmBtn.innerText = "保存"; confirmBtn.classList.remove('destructive'); confirmBtn.onclick = confirmRename; overlay.classList.add('show'); setTimeout(() => input.focus(), 100); }
         function confirmRename() { const val = document.getElementById('proModalInput').value; if(val) { document.getElementById('planTitleText').innerText = val; localStorage.setItem(TITLE_KEY, val); closeProModal(); } }
         function closeProModal() { document.getElementById('proModalOverlay').classList.remove('show'); }
-        function confettiEffect(colors) { if(window.confetti) confetti({ particleCount: 80, spread: 60, origin: { y: 0.65 }, colors: colors || [getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()] }); }
+        /* --- 替换开始：高级樱花/礼花特效函数 --- */
+// --- 🌸 樱花/泡泡飘落特效 (Sakura Mode) ---
+function confettiEffect() {
+    // 获取当前主题色
+    const color = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+    
+    // 配置：圆形粒子(模拟花瓣/泡泡) + 慢速下落
+    const count = 200;
+    const defaults = {
+        origin: { y: 0.7 },
+        zIndex: 9999,
+        shapes: ['circle'], // 【核心】改成圆形，看起来像樱花瓣或泡泡
+        colors: [color, '#ffd700', '#ffffff'] // 主题色 + 金色 + 白色
+    };
+
+    function fire(particleRatio, opts) {
+        confetti(Object.assign({}, defaults, opts, {
+            particleCount: Math.floor(count * particleRatio)
+        }));
+    }
+
+    // 1. 像花瓣一样散开
+    fire(0.25, { spread: 26, startVelocity: 55, scalar: 0.8, drift: 0 });
+    // 2. 也是散开，但大一点
+    fire(0.2, { spread: 60, scalar: 1.2, drift: 0.1 }); // drift 增加飘逸感
+    // 3. 中心的强力喷射
+    fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+    // 4. 快速射出的粒子
+    fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+    // 5. 漫天飞舞的余韵
+    fire(0.1, { spread: 120, startVelocity: 45 });
+}
+/* --- 替换结束 --- */
         function togglePalette(e) { if(e) e.stopPropagation(); const p = document.getElementById('palettePopover'); if(!p.classList.contains('active')) initPalette(); p.classList.toggle('active'); }
         function closePalette() { document.getElementById('palettePopover').classList.remove('active'); }
         function hexToRgb(hex) { let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex); return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : {r:0,g:0,b:0}; }

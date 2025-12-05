@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DeepFlow | AI 智能构建 (V27 NLP Enhanced)</title>
+    <title>DeepFlow | AI 智能构建</title>
     <!-- 引入核心库 -->
     <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/lucide.min.js"></script>
     <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/tailwind.js"></script>
@@ -293,6 +293,25 @@
         .ai-time-edit { background: transparent; border: 1px solid transparent; color: #60a5fa; font-family: monospace; font-weight: bold; width: 80px; text-align: center; font-size: 12px; padding: 2px; border-radius: 4px; transition: 0.2s; }
         .ai-time-edit:focus { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); outline: none; }
         
+        .ai-duration-edit { 
+    background: transparent; 
+    border: 1px solid transparent; 
+    color: #fbbf24; /* 琥珀色，区分于时间的蓝色 */
+    font-family: monospace; 
+    font-weight: bold; 
+    width: 60px; /* 稍微窄一点 */
+    text-align: center; 
+    font-size: 12px; 
+    padding: 2px; 
+    border-radius: 4px; 
+    transition: 0.2s; 
+}
+.ai-duration-edit:focus { 
+    border-color: #f59e0b; 
+    background: rgba(245, 158, 11, 0.1); 
+    outline: none; 
+}
+
         .ai-title-edit { flex: 1; background: transparent; border: 1px solid transparent; color: #e2e8f0; font-size: 14px; padding: 2px 6px; border-radius: 4px; transition: 0.2s; width: 100%; min-width: 0; /* 防止溢出 */ }
         .ai-title-edit:focus { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); outline: none; }
         .ai-tag-badge { font-size: 10px; padding: 2px 8px; border-radius: 99px; background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); white-space: nowrap; }
@@ -412,7 +431,7 @@
                             <div class="lg:col-span-6 w-full h-full">
                                 <div class="ai-preview-panel">
                                     <div class="p-4 border-b border-white/10 bg-slate-900/50 flex justify-between items-center">
-                                        <span class="text-sm font-bold text-slate-300 flex items-center gap-2"><i data-lucide="eye" class="w-4 h-4"></i> 识别预览 (可点击删除)</span>
+                                        <span class="text-sm font-bold text-slate-300 flex items-center gap-2"><i data-lucide="eye" class="w-4 h-4"></i> 识别预览 (可点击编辑/删除)</span>
                                         <div class="flex items-center gap-3">
                                             <span id="ai-status" class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-1 rounded border border-blue-500/30">等待输入</span>
                                             <!-- PC端确认按钮，手机端隐藏 -->
@@ -937,14 +956,17 @@
                     cleanContent = cleanContent.replace(/^(准备|开始)\s*/, '').trim();
 
                     if(cleanContent) {
+                        const tagInfo = window.autoDetectTag ? window.autoDetectTag(cleanContent) : {};
+                        
                         dayObj.tasks.push({
                             title: cleanContent,
                             time: displayTime,
                             duration: null,
-                            tag: "",
-                            rawSegment: segment, 
+                            tag: tagInfo.label || "",
+                            tagInfo: tagInfo,
+                            rawSegment: segment,
                             lineIndex: lineIndex,
-                            lineDateWord: matchedDateString || extractLineDateWord(lineTrimmed) // 优先使用智能匹配的词
+                            lineDateWord: matchedDateString || extractLineDateWord(lineTrimmed)
                         });
                     }
                 }
@@ -964,8 +986,11 @@
                     html += `
                     <div class="ai-task-card group">
                         <input type="text" class="ai-time-edit" value="${task.time || ''}" placeholder="时间" onchange="ai_updateTask(${dIdx}, ${tIdx}, 'time', this.value)">
+                        <input type="text" class="ai-duration-edit" value="${task.duration || ''}" placeholder="分钟" onchange="ai_updateTask(${dIdx}, ${tIdx}, 'duration', this.value)">
                         <input type="text" class="ai-title-edit" value="${task.title}" placeholder="任务内容" onchange="ai_updateTask(${dIdx}, ${tIdx}, 'title', this.value)">
-                        <span class="ai-tag-badge">自动</span>
+                        <span class="ai-tag-badge">
+    ${task.tagInfo.emoji ? task.tagInfo.emoji + ' ' : ''}${task.tagInfo.label || '自动'}
+</span>
                         <button onclick="ai_deleteTask('${day.date}', ${tIdx})" class="mobile-delete-btn md:text-slate-600 md:hover:text-red-400 transition p-2 md:px-2" title="删除"><i data-lucide="trash-2" class="w-4 h-4 md:w-3.5 md:h-3.5"></i></button>
                     </div>`;
                 });
@@ -1169,6 +1194,36 @@
         // ============================================
         // 模块3：Excel & 核心生成逻辑
         // ============================================
+        // 【新增】专门处理 Excel/CSV 导入的时间格式问题
+function formatExcelTime(value) {
+    if (!value) return "";
+
+    // 情况1：如果是 Excel 的小数时间 (例如 0.375 代表 09:00)
+    if (typeof value === 'number') {
+        // 24小时 * 60分 * 60秒
+        const totalSeconds = Math.floor(value * 86400); 
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        // 补零，确保是 09:00 格式
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    }
+
+    // 情况2：如果是字符串 (例如 "9:00" 或 "9:00:00" 或 "09:00")
+    if (typeof value === 'string') {
+        const cleanVal = value.trim();
+        // 如果包含秒 (9:00:00)，去掉秒
+        if (cleanVal.includes(':')) {
+            const parts = cleanVal.split(':');
+            // 只取前两部分 HH:MM
+            const h = parts[0].padStart(2, '0');
+            const m = parts[1].padStart(2, '0');
+            return `${h}:${m}`;
+        }
+    }
+
+    // 其他情况直接返回
+    return value;
+}
         function processTasksData(rawArray) {
             if (!rawArray || rawArray.length < 2) return [];
             let headerRowIndex = -1;
@@ -1183,6 +1238,7 @@
                     colMap.desc = rowStr.findIndex(c => c.includes('desc')||c.includes('描述'));
                     colMap.tag = rowStr.findIndex(c => c.includes('tag')||c.includes('标签'));
                     colMap.time = rowStr.findIndex(c => c.includes('time')||c.includes('时间'));
+                    colMap.duration = rowStr.findIndex(c => c.includes('duration')||c.includes('时长')||c.includes('持续')); 
                     break;
                 }
             }
@@ -1209,7 +1265,8 @@
                     title: String(row[colMap.title] || ''),
                     desc: colMap.desc > -1 ? String(row[colMap.desc] || '') : '',
                     tag: colMap.tag > -1 ? String(row[colMap.tag] || '') : '',
-                    time: colMap.time > -1 ? String(row[colMap.time] || '') : ''
+                    time: colMap.time > -1 ? formatExcelTime(row[colMap.time]) : '',
+                    duration: colMap.duration > -1 ? (row[colMap.duration] || null) : null
                 });
             });
 
@@ -1218,14 +1275,22 @@
             });
         }
 
-        function convertAIDataToOriginalFormat(aiData) {
-            return aiData.map((day, index) => ({
-                date: day.date, dayNum: index + 1,
-                tasks: day.tasks.map(task => ({
-                    title: task.title, tag: "", desc: "", time: task.time || "", duration: task.duration || null
-                }))
-            }));
-        }
+        // 大约在第 1072 行
+function convertAIDataToOriginalFormat(aiData) {
+    return aiData.map((day, index) => ({
+        date: day.date, dayNum: index + 1,
+        tasks: day.tasks.map(task => ({
+            title: task.title, 
+            tag: task.tag || (task.tagInfo ? task.tagInfo.label : ""),
+            desc: task.desc || "", 
+            time: task.time || "", 
+            duration: task.duration || null,
+            location: (task.tagInfo && task.tagInfo.location) ? task.tagInfo.location : null, 
+            emoji: (task.tagInfo && task.tagInfo.emoji) ? task.tagInfo.emoji : null, 
+            color: (task.tagInfo && task.tagInfo.color) ? task.tagInfo.color : null
+        }))
+    }));
+}
 
         async function generateApp() {
             if (!selectedTheme) { customAlert('请选择主题！', '提示', 'info'); return; }
@@ -1299,7 +1364,30 @@
                 
                 displayResultOptions(blobUrl, safeFileName);
                 customAlert(`成功生成 ${structuredData.length} 天计划！`, '构建完成', 'check-circle');
+                const previewBtn = document.getElementById('previewButton');
 
+// **我们将目标指向静态注入器文件**
+previewBtn.href = `./preview_injector.html`; 
+previewBtn.target = "_blank"; // 在新标签页打开，用户体验更好
+
+// **核心修改 B：更改按钮文本和行为**
+previewBtn.innerHTML = '<i data-lucide="eye" class="w-4 h-4"></i> <span>实时预览 (PWA 可用)</span>';
+previewBtn.classList.remove('df-btn-secondary');
+previewBtn.classList.add('df-btn-primary');
+previewBtn.onclick = function() {
+    // 关闭结果弹窗
+    closeResultModal();
+    // 简单跳转，由跳转页面读取 localStorage
+    window.open('./preview_injector.html', '_blank');
+    
+    // **同时，给用户一个明确的下载提示 (原下载按钮的功能)**
+    customAlert("文件已生成并下载。请在文件管理器中，找到并用浏览器打开该文件，然后使用 Safari/Chrome 的'分享'菜单添加到主屏幕。", "PWA 启用指南", "info");
+
+    // 触发下载（确保用户能拿到文件）
+    document.getElementById('downloadButton').click();
+    
+    return false; // 阻止默认的链接跳转行为
+};
             } catch (error) {
                 console.error(error); customAlert('错误: ' + error.message, '生成失败', 'x-circle');
             } finally {
@@ -1392,7 +1480,6 @@
                 return await res.text();
             } catch (e) { throw new Error('无法加载模板文件'); }
         }
-        async function getRulesDbContent() { try { const res = await fetch('templates/rules_db.js'); return res.ok ? await res.text() : ''; } catch { return ''; } }
 
         function selectTheme(theme) {
             selectedTheme = theme;
@@ -1466,10 +1553,27 @@
             const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
             XLSX.writeFile(wb, "DeepFlow_Template.xlsx");
         }
-
+                async function getRulesDbContent() { try { const res = await fetch('templates/rules_db.js'); return res.ok ? await res.text() : ''; } catch { return ''; } }
+        async function loadRulesDbIntoMemory() {
+    // 确保 getRulesDbContent 函数可用
+    if (typeof getRulesDbContent === 'function') {
+        const rulesDbContent = await getRulesDbContent();
+        if (rulesDbContent) {
+            try {
+                // 使用 eval 立即执行脚本内容，将其函数（autoDetectTag）引入 window 作用域
+                eval(rulesDbContent);
+                console.log("Rules DB loaded into memory for AI parsing.");
+            } catch (e) {
+                console.error("Failed to execute rules_db.js in Generator:", e);
+            }
+        }
+    }
+}
         window.onload = () => {
+            
             lucide.createIcons();
             initMobileExperience();
+            loadRulesDbIntoMemory();
             const urlParams = new URLSearchParams(window.location.search);
             if(urlParams.get('theme')) selectTheme(urlParams.get('theme'));
             const dropArea = document.querySelector('label[for="excel-file"]');
