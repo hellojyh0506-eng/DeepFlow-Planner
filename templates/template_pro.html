@@ -294,12 +294,31 @@
     </div>
 
     <script>
-        // 尝试加载 rules_db.js，如果不存在则忽略
+        
         const script = document.createElement('script');
-        script.src = 'rules_db.js';
-        script.onerror = () => console.warn('rules_db.js not found, skipping.');
-        document.head.appendChild(script);
+script.src = 'rules_db.js';
+script.onerror = () => console.warn('rules_db.js not found, skipping.');
+document.head.appendChild(script);
 
+// 【⭐ 核心修复：定义正确的安全初始化函数 ⭐】
+function initLucideSafe() {
+    // 检查 Lucide 对象是否存在，并确保 createIcons 方法可用
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons(); // 正确调用 Lucide 的渲染方法
+    } else {
+        // 如果库未加载完成，设置重试机制
+        if (!window.lucideRetries) window.lucideRetries = 0;
+        if (window.lucideRetries < 20) { 
+            window.lucideRetries++;
+            setTimeout(initLucideSafe, 50);
+        }
+    }
+}
+
+// 统一入口，确保在 DOM 内容加载完毕后执行安全初始化 (替换原有 init() 的调用方式)
+window.addEventListener('DOMContentLoaded', init);
+window.addEventListener('DOMContentLoaded', initLucideSafe);
+window.addEventListener('load', initLucideSafe);
         // --- 全局变量定义 ---
         const DOPAMINE_COLORS = ['#007AFF', '#FF3B30', '#FF9500', '#AF52DE', '#34C759', '#32ADE6', '#FF2D55', '#5856D6', '#FFCC00', '#00C7BE'];
         const RAW_DATA = '{{TASKS_DATA}}';
@@ -323,7 +342,7 @@
                 if(msg && msg.includes('播放')) icon.setAttribute('data-lucide', 'music'); 
                 else if(msg && msg.includes('音效')) icon.setAttribute('data-lucide', 'volume-2');
                 else icon.setAttribute('data-lucide', 'check-circle-2');
-                if(window.lucide) lucide.createIcons();
+                if(window.lucide) initLucideSafe();
             }
 
             t.style.opacity = '1'; 
@@ -365,7 +384,7 @@
                     btn.style.background = "transparent";
                     icon.setAttribute('data-lucide', 'volume-x');
                 }
-                if(window.lucide) lucide.createIcons();
+                if(window.lucide) initLucideSafe();
             },
             play: function(type) { 
                 if (!this.sfxEnabled) return; 
@@ -449,7 +468,7 @@
                     }
                 }
             });
-            if(window.lucide) lucide.createIcons();
+            if(window.lucide) initLucideSafe();
         }
 
         function toggleSFX() { AUDIO_SYSTEM.toggle(); }
@@ -523,7 +542,7 @@
                     div.innerHTML = `<div class="checkbox-ios flex-shrink-0"><svg class="w-3.5 h-3.5 text-white ${checked ? 'opacity-100' : 'opacity-0'}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div><div class="flex-1">${timeInfoHtml}<div class="flex justify-between items-start mb-1"><h4 class="font-bold text-slate-800 text-base leading-tight transition-colors"><span class="mr-1">${autoInfo.emoji}</span> ${t.title}</h4>${badge}</div><p class="text-sm text-slate-500 font-medium leading-relaxed">${t.desc}</p></div>`; container.appendChild(div); 
                 }); 
             } 
-            checkLock(day.date); if(window.lucide) lucide.createIcons(); 
+            checkLock(day.date); if(window.lucide) initLucideSafe(); 
         }
         
         async function toggleTask(tid) { 
@@ -569,7 +588,7 @@
             const currentTask = tasksData[currentDayIdx].tasks[parseInt(tid.split('_')[1])]; 
             if (currentTask && currentTask.duration) { setTime(parseInt(currentTask.duration)); } 
         }        
-        function updateStats(day) { const total = day.tasks.length; const done = day.tasks.filter((_, i) => userProgress[day.date+'_'+i]).length; const pct = total ? (done/total)*100 : 0; document.getElementById('dailyProgressBar').style.width = pct + '%'; document.getElementById('dailyProgressText').innerText = done + '/' + total; const trophy = document.getElementById('trophyContainer'); trophy.innerHTML = (done === total && total > 0) ? `<div class="p-3 rounded-full text-white shadow-lg animate-bounce theme-bg-target" style="background: var(--primary)"><i data-lucide="award" class="w-6 h-6"></i></div>` : `<div class="bg-slate-100 p-3 rounded-full text-slate-300"><i data-lucide="target" class="w-6 h-6"></i></div>`; let allT=0, allD=0; tasksData.forEach(d => { allT += d.tasks.length; allD += d.tasks.filter((_,i) => userProgress[d.date+'_'+i]).length; }); const gPct = allT ? Math.round((allD/allT)*100) : 0; document.getElementById('totalCompletionDisplay').innerText = gPct + '%'; document.getElementById('overallProgressBar').style.width = gPct + '%'; if(window.lucide) lucide.createIcons(); }
+        function updateStats(day) { const total = day.tasks.length; const done = day.tasks.filter((_, i) => userProgress[day.date+'_'+i]).length; const pct = total ? (done/total)*100 : 0; document.getElementById('dailyProgressBar').style.width = pct + '%'; document.getElementById('dailyProgressText').innerText = done + '/' + total; const trophy = document.getElementById('trophyContainer'); trophy.innerHTML = (done === total && total > 0) ? `<div class="p-3 rounded-full text-white shadow-lg animate-bounce theme-bg-target" style="background: var(--primary)"><i data-lucide="award" class="w-6 h-6"></i></div>` : `<div class="bg-slate-100 p-3 rounded-full text-slate-300"><i data-lucide="target" class="w-6 h-6"></i></div>`; let allT=0, allD=0; tasksData.forEach(d => { allT += d.tasks.length; allD += d.tasks.filter((_,i) => userProgress[d.date+'_'+i]).length; }); const gPct = allT ? Math.round((allD/allT)*100) : 0; document.getElementById('totalCompletionDisplay').innerText = gPct + '%'; document.getElementById('overallProgressBar').style.width = gPct + '%'; if(window.lucide) initLucideSafe(); }
         
         function startDay() { const d = tasksData[currentDayIdx].date; if(!startedDays.includes(d)) { startedDays.push(d); localStorage.setItem(START_KEY, JSON.stringify(startedDays)); } AUDIO_SYSTEM.play('start'); document.getElementById('ritualOverlay').style.opacity = '0'; setTimeout(() => { document.getElementById('ritualOverlay').style.display = 'none'; unlockContent(); }, 500); }
         
@@ -615,7 +634,7 @@
         function setTime(m) { if(isRunning) return; timeLeft = m * 60; updateUI(); }
         function toggleTimer() { if(isRunning) { clearInterval(timer); isRunning = false; } else { isRunning = true; timer = setInterval(() => { if(timeLeft>0) { timeLeft--; updateUI(); } else { finish(); } }, 1000); } updateUI(); }
         function finish() { clearInterval(timer); isRunning = false; AUDIO_SYSTEM.play('finish'); alert("Focus Complete!"); confettiEffect(); timeLeft=25*60; exitImmersive(); updateUI(); }
-        function updateUI() { const str = Math.floor(timeLeft/60).toString().padStart(2,'0') + ':' + (timeLeft%60).toString().padStart(2,'0'); document.getElementById('dockTime').innerText = str; document.getElementById('immTime').innerText = str; const btn = document.getElementById('mainBtn'); btn.innerHTML = isRunning ? `<i data-lucide="pause" class="w-4 h-4"></i> <span>暂停</span>` : `<i data-lucide="play" class="w-4 h-4"></i> <span>开始专注</span>`; document.getElementById('immIcon').setAttribute('data-lucide', isRunning ? 'pause' : 'play'); if(window.lucide) lucide.createIcons(); }
+        function updateUI() { const str = Math.floor(timeLeft/60).toString().padStart(2,'0') + ':' + (timeLeft%60).toString().padStart(2,'0'); document.getElementById('dockTime').innerText = str; document.getElementById('immTime').innerText = str; const btn = document.getElementById('mainBtn'); btn.innerHTML = isRunning ? `<i data-lucide="pause" class="w-4 h-4"></i> <span>暂停</span>` : `<i data-lucide="play" class="w-4 h-4"></i> <span>开始专注</span>`; document.getElementById('immIcon').setAttribute('data-lucide', isRunning ? 'pause' : 'play'); if(window.lucide) initLucideSafe(); }
         function enterImmersive() { document.getElementById('immersiveLayer').classList.add('active'); document.getElementById('dockPanel').classList.remove('open'); if(!isRunning) toggleTimer(); }
         function exitImmersive() { document.getElementById('immersiveLayer').classList.remove('active'); }
 
@@ -701,7 +720,7 @@
             }, 1500);
             
             AUDIO_SYSTEM.preload();
-            if(window.lucide) lucide.createIcons();
+            if(window.lucide) initLucideSafe();
         }
 
         // 统一入口，解决执行时机问题

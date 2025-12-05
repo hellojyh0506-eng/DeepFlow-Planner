@@ -2,8 +2,9 @@
 <html lang="zh-CN" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeepFlow | 构建中心</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DeepFlow | AI 智能构建 (V27 NLP Enhanced)</title>
+    <!-- 引入核心库 -->
     <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/lucide.min.js"></script>
     <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/tailwind.js"></script>
     <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/xlsx.full.min.js"></script>
@@ -15,6 +16,16 @@
                     fontFamily: { sans: ['"Plus Jakarta Sans"', '"Noto Sans SC"', 'sans-serif'] },
                     animation: { 
                         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'slide-in': 'slideIn 0.3s ease-out forwards',
+                        'fadeIn': 'fadeIn 0.5s ease-out forwards',
+                        'slideUp': 'slideUp 0.3s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-4px)' } },
+                        slideIn: { '0%': { opacity: '0', transform: 'translateX(-10px)' }, '100%': { opacity: '1', transform: 'translateX(0)' } },
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { transform: 'translateY(100%)' }, '100%': { transform: 'translateY(0)' } }
                     }
                 }
             }
@@ -22,9 +33,17 @@
     </script>
     <style>
         /* ==========================================================================
-           1. 核心视觉样式 (Deep Space)
+           1. 核心视觉样式
            ========================================================================== */
-        body { background-color: #020617; color: white; overflow-x: hidden; }
+        html, body {
+            background-color: #020617; 
+            color: white; 
+            overflow-x: hidden; 
+            width: 100%;
+            max-width: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         .glass-nav { background: rgba(2, 6, 23, 0.7); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05); }
 
         .deep-space-bg {
@@ -48,64 +67,237 @@
             border: 1px solid rgba(255,255,255,0.05); 
             backdrop-filter: blur(10px);
             transition: all 0.3s; 
+            overflow: visible; 
+            position: relative;
+            z-index: 1;
         }
         .glass-panel:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
 
         /* ==========================================================================
-           2. 主题卡片特效
+           2. 手机端专属优化 (Mobile First)
            ========================================================================== */
-        .selection-card {
-            position: relative;
-            border-radius: 20px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        @media (max-width: 768px) {
+            .ai-textarea {
+                height: 180px !important;
+                font-size: 16px !important; 
+                padding: 16px !important;
+                background: rgba(255,255,255,0.05) !important;
+                border-color: rgba(255,255,255,0.15) !important;
+            }
+            .desktop-nav-text { display: none !important; }
+            .desktop-btn { display: none !important; }
+            
+            /* 优化：增加底部Padding，防止阴影被截断 */
+            .mobile-scroll-container {
+                display: flex; gap: 10px; overflow-x: auto; padding: 4px 4px 12px 4px;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            .mobile-scroll-container::-webkit-scrollbar { display: none; }
+
+            .mobile-action-bar {
+                display: flex !important;
+                position: fixed; bottom: 0; left: 0; right: 0; z-index: 999;
+                background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px);
+                border-top: 1px solid rgba(255,255,255,0.1);
+                padding: 12px 16px; gap: 12px;
+                box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+                animation: slideUp 0.3s ease-out;
+            }
+            
+            section { padding-top: 80px !important; padding-bottom: 120px !important; } 
+            .glass-panel { padding: 1.25rem !important; border-radius: 20px !important; }
+            h1 { font-size: 2rem !important; line-height: 1.2 !important; }
+            .voice-btn-mobile { display: flex !important; }
+        }
+
+        .mobile-action-bar { display: none; }
+        .voice-btn-mobile { display: none; }
+
+        .voice-recording { 
+            animation: pulse-red 1.5s infinite; 
+            background: rgba(239, 68, 68, 0.2) !important; 
+            border-color: rgba(239, 68, 68, 0.5) !important; 
+            color: #f87171 !important; 
+        }
+        @keyframes pulse-red { 
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } 
+        }
+
+        /* ==========================================================================
+           3. 模式选择器 (Tab Bar)
+           ========================================================================== */
+        .mode-selector {
             display: flex;
-            flex-direction: column;
-            padding: 1.5rem;
-            min-height: 220px;
+            flex-wrap: wrap; 
+            justify-content: center; 
+            align-items: center;
+            gap: 8px; 
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .mode-selector {
+                justify-content: flex-end; 
+                width: auto;
+                flex-wrap: nowrap; 
+            }
+        }
+
+        .tab-btn { 
+            position: relative; 
+            color: #94a3b8; 
+            transition: all 0.3s; 
+            padding: 0.6rem 1.2rem; 
+            border-radius: 10px; 
+            font-size: 14px; 
+            font-weight: 600; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 8px; 
+            flex: 1 0 auto; 
+            min-width: 110px; 
+            max-width: 100%; 
+            white-space: nowrap; 
+        }
+
+        .tab-btn:hover { color: white; background: rgba(255,255,255,0.05); }
+        .tab-btn.active { color: white; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); }
+        .tab-btn-ai.active { background: linear-gradient(135deg, #2563eb, #9333ea); border: none; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4); text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+
+        @media (max-width: 480px) {
+            .mode-selector { gap: 6px; }
+            .tab-btn { padding: 10px 8px; font-size: 13px; min-width: 90px; }
+        }
+
+        /* ==========================================================================
+           4. 核心组件样式
+           ========================================================================== */
+        
+        /* 修复 1: 在线构建输入框 - 强制深色背景 & 标准属性 */
+        .builder-input {
+            background-color: rgba(15, 23, 42, 0.6) !important; /* 强制深色 */
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 10px 12px !important;
+            font-size: 14px !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            -webkit-appearance: none; /* 移除iOS默认样式 */
+            appearance: none; /* 标准属性 */
+        }
+        .builder-input:focus {
+            background-color: rgba(15, 23, 42, 0.9) !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+            outline: none;
+        }
+        .builder-input::placeholder { color: rgba(148, 163, 184, 0.5); }
+
+        /* 修复 2: 示例标签 - 增加点击感 */
+        .mobile-example-chip {
+            flex: 0 0 auto;
+            padding: 8px 14px; 
+            background: rgba(30, 41, 59, 0.6); 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.1);
+            white-space: nowrap;
+            cursor: pointer; 
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none; 
+        }
+        .mobile-example-chip:active {
+            transform: scale(0.95); 
+            background: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+        .mobile-example-chip::after {
+            content: '→';
+            font-family: monospace;
+            opacity: 0.4;
+            font-size: 10px;
+        }
+
+        /* 修复 3: 手机端 AI 预览卡片 删除按钮样式 - 显式可见 */
+        .mobile-delete-btn {
+            opacity: 1 !important; /* 手机端强制显示 */
+            background-color: rgba(239, 68, 68, 0.15); 
+            border-radius: 8px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+        .mobile-delete-btn:active {
+            background-color: rgba(239, 68, 68, 0.3);
+            transform: scale(0.9);
+        }
+        
+        @media (min-width: 768px) {
+            .mobile-delete-btn {
+                opacity: 0 !important; /* 电脑端Hover显示 */
+                background-color: transparent;
+                border: none;
+                color: #475569;
+            }
+            .group:hover .mobile-delete-btn {
+                opacity: 1 !important;
+            }
+            .mobile-delete-btn:hover {
+                color: #f87171;
+            }
+        }
+
+        /* 原有组件 */
+        .selection-card {
+            position: relative; border-radius: 20px; overflow: hidden; cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            display: flex; flex-direction: column; padding: 1.5rem; min-height: 220px;
         }
         .selection-card:hover { transform: translateY(-5px) scale(1.02); }
 
-        /* PRO Theme */
         .card-pro-premium { background: rgba(255, 255, 255, 0.05); color: white; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); }
-        .card-pro-premium::before { content: ''; position: absolute; inset: -50%; background: radial-gradient(circle at 80% 20%, rgba(255, 100, 150, 0.8) 0%, transparent 20%), radial-gradient(circle at 20% 80%, rgba(255, 255, 100, 0.7) 0%, transparent 25%), radial-gradient(circle at 50% 100%, rgba(59, 130, 246, 0.7) 0%, transparent 30%); background-size: 300% 300%; filter: blur(60px) saturate(3.5) contrast(1.5); opacity: 0.4; z-index: 0; pointer-events: none; mix-blend-mode: screen; transition: transform 0.8s ease, opacity 0.5s; }
-        .card-pro-premium:hover::before { transform: scale(1.1) rotate(5deg); opacity: 0.8; }
-        .card-pro-premium:hover { border-color: rgba(236, 72, 153, 0.5); box-shadow: 0 10px 30px rgba(236, 72, 153, 0.2); }
         .card-pro-premium.selected { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5), 0 10px 40px rgba(59, 130, 246, 0.4); }
-
-        /* ZEN Theme */
         .card-zen-matte { background: #ffffff; color: #18181b; border: 1px solid #e4e4e7; }
-        .card-zen-matte .zen-text { color: #52525b; transition: color 0.3s; }
-        .card-zen-matte:hover .zen-text { color: #18181b; }
-        .card-zen-matte:hover { box-shadow: 0 0 30px rgba(255, 255, 255, 0.4); border-color: #d4d4d4; }
         .card-zen-matte.selected { border-color: #18181b; box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.5), 0 0 0 6px #18181b; }
-
-        /* CYBER Theme */
-        .card-cyber-neon { background: #09090b; border: 1px solid rgba(217, 70, 239, 0.3); background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(217, 70, 239, 0.05) 3px); }
-        .card-cyber-neon:hover { box-shadow: 0 0 40px rgba(217, 70, 239, 0.5), inset 0 0 20px rgba(217, 70, 239, 0.1); border-color: #d946ef; }
-        .card-cyber-neon.selected { border-color: #d946ef; box-shadow: 0 0 0 2px #09090b, 0 0 0 4px #d946ef, 0 0 50px rgba(217, 70, 239, 0.6); }
+        .card-cyber-neon { background: #09090b; border: 1px solid rgba(217, 70, 239, 0.3); }
+        .card-cyber-neon.selected { border-color: #d946ef; box-shadow: 0 0 0 2px #09090b, 0 0 0 4px #d946ef; }
 
         .check-circle { position: absolute; top: 1rem; right: 1rem; z-index: 20; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transform: scale(0.5); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
         .selected .check-circle { opacity: 1; transform: scale(1); }
 
-        /* ==========================================================================
-           3. 组件样式 & 弹窗
-           ========================================================================== */
-        .tab-btn { position: relative; color: #94a3b8; transition: all 0.3s; padding-bottom: 0.5rem; }
-        .tab-btn.active { color: white; font-weight: 700; }
-        .tab-btn.active::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 2px; background: #3b82f6; box-shadow: 0 0 10px #3b82f6; }
+        .ai-input-container { display: flex; flex-direction: column; gap: 16px; width: 100%; height: 100%; }
+        .ai-textarea {
+            width: 100%; height: 450px; background: rgba(15, 23, 42, 0.6);
+            border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 20px;
+            color: #e2e8f0; font-size: 16px; line-height: 1.8; resize: none; outline: none;
+            transition: 0.3s; font-family: inherit;
+        }
+        .ai-textarea:focus { border-color: #3b82f6; background: rgba(15, 23, 42, 0.8); box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); }
         
-        .builder-day { border-left: 2px solid rgba(255,255,255,0.1); padding-left: 1rem; margin-bottom: 1.5rem; position: relative; transition: all 0.3s; }
-        .builder-day:hover { border-left-color: #3b82f6; background: rgba(255,255,255,0.02); }
-        .builder-input { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.5rem 0.75rem; border-radius: 0.5rem; width: 100%; outline: none; transition: 0.3s; font-size: 0.9rem; }
-        .builder-input:focus { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+        .ai-preview-panel { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; height: 450px; display: flex; flex-direction: column; overflow: hidden; }
+        .ai-timeline { flex: 1; overflow-y: auto; padding: 20px; }
+        .timeline-day { margin-bottom: 24px; animation: slideIn 0.3s ease-out forwards; }
+        .timeline-date { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(90deg, #2563eb, #3b82f6); color: white; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 800; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
         
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        .ai-task-card { display: flex; align-items: center; gap: 10px; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 10px; margin-bottom: 8px; transition: all 0.2s; position: relative; overflow: hidden; }
+        .ai-task-card:hover { background: rgba(30, 41, 59, 0.8); border-color: rgba(96, 165, 250, 0.3); transform: translateX(2px); }
         
-        /* 结果弹窗 (深色模式) */
+        .ai-time-edit { background: transparent; border: 1px solid transparent; color: #60a5fa; font-family: monospace; font-weight: bold; width: 80px; text-align: center; font-size: 12px; padding: 2px; border-radius: 4px; transition: 0.2s; }
+        .ai-time-edit:focus { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); outline: none; }
+        
+        .ai-title-edit { flex: 1; background: transparent; border: 1px solid transparent; color: #e2e8f0; font-size: 14px; padding: 2px 6px; border-radius: 4px; transition: 0.2s; width: 100%; min-width: 0; /* 防止溢出 */ }
+        .ai-title-edit:focus { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); outline: none; }
+        .ai-tag-badge { font-size: 10px; padding: 2px 8px; border-radius: 99px; background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); white-space: nowrap; }
+
+        /* Sample 样式移植 */
         .df-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
         .df-modal-overlay.active { display: flex; opacity: 1; }
         .df-modal-card { background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); backdrop-filter: blur(16px); color: white; width: 90%; max-width: 420px; border-radius: 24px; padding: 32px 24px; text-align: center; transform: scale(0.95) translateY(10px); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -115,21 +307,16 @@
         .df-modal-desc { font-size: 14px; color: #94a3b8; margin-bottom: 32px; line-height: 1.6; }
         .df-actions { display: flex; flex-direction: column; gap: 12px; }
         .df-btn { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 16px; border-radius: 14px; font-size: 15px; font-weight: 700; text-decoration: none; transition: all 0.2s; cursor: pointer; border: none; }
-        .df-btn:active { transform: scale(0.98); }
         .df-btn-primary { background: linear-gradient(to right, #2563eb, #4f46e5); color: white; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); }
-        .df-btn-primary:hover { background: linear-gradient(to right, #1d4ed8, #4338ca); }
+        .df-btn-primary:hover { background: linear-gradient(to right, #1d4ed8, #4338ca); transform: scale(1.02); }
         .df-btn-secondary { background: rgba(255, 255, 255, 0.05); color: white; border: 1px solid rgba(255, 255, 255, 0.1); }
         .df-btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
         .df-close { margin-top: 24px; background: none; border: none; color: #64748b; font-size: 13px; cursor: pointer; }
         .df-close:hover { color: white; }
 
-        /* 通用动画 */
-        .modal-enter { opacity: 0; transform: translateY(-20px); }
-        .modal-enter-active { opacity: 1; transform: translateY(0); transition: opacity 0.3s ease, transform 0.3s ease; }
-        .modal-bg-enter { opacity: 0; pointer-events: none; }
-        .modal-bg-enter-active { opacity: 1; pointer-events: auto; transition: opacity 0.3s ease; }
-        .modal-content-enter { transform: scale(0.95) translateY(10px); opacity: 0; }
-        .modal-content-enter-active { transform: scale(1) translateY(0); opacity: 1; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
     </style>
 </head>
 <body class="antialiased selection:bg-blue-500/30">
@@ -144,46 +331,116 @@
                 <span class="font-black text-xl tracking-tight">DeepFlow</span>
             </div>
             <a href="index.html" class="bg-white/10 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-white/20 transition border border-white/10">
-                <i data-lucide="arrow-left" class="w-4 h-4 inline mr-1"></i> 返回主页
+                <i data-lucide="arrow-left" class="w-4 h-4 inline mr-1"></i> <span class="desktop-nav-text">返回主页</span>
             </a>
         </div>
     </nav>
 
     <section class="relative pt-32 pb-24 md:pt-48 md:pb-32 min-h-screen">
-        <div class="max-w-4xl mx-auto px-6 relative z-10 text-center">
+        <div class="max-w-6xl mx-auto px-6 relative z-10 text-center">
             <h1 class="text-4xl md:text-5xl font-black mb-4 leading-tight tracking-tight text-white drop-shadow-xl">
                 开始构建你的心流 App
             </h1>
             <p class="text-slate-400 text-lg max-w-2xl mx-auto mb-12">
-                上传 Excel 计划表，或在线直接创建，一键生成。
+                选择最适合你的方式，快速生成个性化计划应用。
             </p>
 
             <div class="space-y-12">
                 
-                <div class="glass-panel p-8 rounded-3xl text-left transition-all duration-300">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-white/5 pb-4">
+                <!-- 1. Data Input Panel -->
+                <div class="glass-panel p-8 rounded-3xl text-left transition-all duration-300 shadow-2xl shadow-blue-900/10">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-white/5 pb-4">
                         <div class="flex items-center gap-4">
                             <span class="text-4xl font-black text-blue-500">1</span>
                             <h2 class="text-2xl font-bold">准备计划数据</h2>
                         </div>
                         
-                        <div class="flex gap-6 text-sm font-bold w-full md:w-auto">
-                            <button onclick="switchMode('upload')" id="tab-upload" class="tab-btn active flex items-center gap-2">
-                                <i data-lucide="upload-cloud" class="w-4 h-4"></i> 上传 Excel
+                        <!-- 核心修复区域：模式选择器 -->
+                        <div class="mode-selector">
+                            <!-- AI Mode -->
+                            <button onclick="switchMode('ai')" id="tab-ai" class="tab-btn tab-btn-ai active">
+                                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                                <span>AI 智能输入</span>
                             </button>
-                            <button onclick="switchMode('builder')" id="tab-builder" class="tab-btn flex items-center gap-2">
-                                <i data-lucide="layout-list" class="w-4 h-4"></i> 在线构建 <span class="text-[10px] bg-blue-500 text-white px-1.5 rounded ml-1">NEW</span>
+                            
+                            <!-- 分隔符 (仅桌面端显示) -->
+                            <div class="h-6 w-px bg-white/10 mx-1 hidden md:block"></div>
+                            
+                            <!-- Legacy Modes -->
+                            <button onclick="switchMode('upload')" id="tab-upload" class="tab-btn">
+                                <i data-lucide="upload-cloud" class="w-4 h-4"></i> Excel 上传
+                            </button>
+                            <button onclick="switchMode('builder')" id="tab-builder" class="tab-btn">
+                                <i data-lucide="layout-list" class="w-4 h-4"></i> 在线构建
                             </button>
                         </div>
                     </div>
 
-                    <div id="mode-upload" class="block animate-[fadeIn_0.5s_ease-out]">
+                    <!-- MODE 1: AI Intelligent Input -->
+                    <div id="mode-ai" class="block animate-fadeIn">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                            <div class="lg:col-span-6 ai-input-container">
+                                <div class="relative group w-full h-full">
+                                    <textarea id="ai-input" class="ai-textarea relative custom-scrollbar" 
+                                        placeholder="请在此用自然语言描述您的计划...&#10;&#10;例如：&#10;周三早上8点背单词，下午2点做数学卷子。&#10;明天全天复习专业课，晚上看电影。&#10;十天后参加考试，第5天开始复习。"
+                                        oninput="ai_handleInput()"></textarea>
+                                    
+                                    <!-- 手机端语音按钮 (默认隐藏) -->
+                                    <button id="voice-btn" onclick="toggleVoiceInput()" class="voice-btn-mobile hidden absolute right-3 bottom-3 bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-full shadow-lg transition-all active:scale-95 items-center justify-center border border-white/20">
+                                        <i data-lucide="mic" class="w-5 h-5"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- 示例库：手机端滑动，PC端普通 -->
+                                <div class="text-xs text-slate-500 px-2">
+                                    <!-- 增加引导文案 -->
+                                    <div class="mb-2 flex items-center gap-2 opacity-60">
+                                        <i data-lucide="mouse-pointer-2" class="w-3 h-3"></i>
+                                        <span>点击下方试用示例：</span>
+                                    </div>
+                                    
+                                    <div class="mobile-scroll-container md:flex-wrap md:gap-2 md:flex md:items-center">
+                                        <!-- 优化后的标签按钮 -->
+                                        <button onclick="ai_loadSample('exam')" class="mobile-example-chip text-blue-400 hover:text-blue-300">📚 考研复习</button>
+                                        <button onclick="ai_loadSample('life')" class="mobile-example-chip text-green-400 hover:text-green-300">🥦 生活日常</button>
+                                        <button onclick="ai_loadSample('mixed')" class="mobile-example-chip text-purple-400 hover:text-purple-300">🔀 混合安排</button>
+                                        <button onclick="ai_loadSample('date')" class="mobile-example-chip text-orange-400 hover:text-orange-300">📅 倒数日</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="lg:col-span-6 w-full h-full">
+                                <div class="ai-preview-panel">
+                                    <div class="p-4 border-b border-white/10 bg-slate-900/50 flex justify-between items-center">
+                                        <span class="text-sm font-bold text-slate-300 flex items-center gap-2"><i data-lucide="eye" class="w-4 h-4"></i> 识别预览 (可点击删除)</span>
+                                        <div class="flex items-center gap-3">
+                                            <span id="ai-status" class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-1 rounded border border-blue-500/30">等待输入</span>
+                                            <!-- PC端确认按钮，手机端隐藏 -->
+                                            <button id="ai-confirm-btn" onclick="confirmAI()" class="desktop-btn text-xs bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded text-white transition font-bold shadow-lg flex items-center gap-1 opacity-50 cursor-not-allowed" disabled>
+                                                <i data-lucide="check" class="w-3 h-3"></i> 确认构建
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="ai-timeline-container" class="ai-timeline custom-scrollbar">
+                                        <!-- 占位符 -->
+                                        <div class="flex flex-col items-center justify-center h-full text-slate-600 opacity-60">
+                                            <i data-lucide="message-square-dashed" class="w-12 h-12 mb-3"></i>
+                                            <p class="text-xs">在左侧输入文字<br>右侧将实时显示解析结果</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MODE 2: Excel Upload -->
+                    <div id="mode-upload" class="hidden animate-fadeIn">
                         <div class="flex justify-end mb-2">
                             <button onclick="downloadSampleExcel()" class="text-xs font-bold text-blue-400 hover:text-white flex items-center gap-1 transition-colors">
                                 <i data-lucide="download" class="w-3 h-3"></i> 下载标准 Excel 模版
                             </button>
                         </div>
-                        <label for="excel-file" class="flex flex-col items-center justify-center p-12 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:bg-white/5 hover:border-blue-500/50 transition-all group bg-slate-900/50">
+                        <label for="excel-file" id="excel-drop-area" class="flex flex-col items-center justify-center p-20 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:bg-white/5 hover:border-blue-500/50 transition-all group bg-slate-900/50">
                             <div class="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                 <i data-lucide="file-spreadsheet" class="w-8 h-8 text-blue-400"></i>
                             </div>
@@ -193,46 +450,38 @@
                         </label>
                     </div>
 
-                    <div id="mode-builder" class="hidden">
-                        <div class="bg-slate-900/50 rounded-2xl border border-white/10 p-6">
-                            
-                            <div class="mb-6 p-4 bg-blue-500/5 rounded-xl border border-blue-500/10">
-                                <div class="flex justify-between items-center mb-2">
-                                    <h3 class="font-bold text-blue-400 text-sm flex items-center gap-2"><i data-lucide="sparkles" class="w-4 h-4"></i> 智能文本解析</h3>
-                                    <button onclick="parseSmartText()" class="text-xs bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded text-white transition font-bold shadow-lg shadow-blue-500/20 flex items-center gap-1">
-                                        <i data-lucide="wand-2" class="w-3 h-3"></i> 生成表格
-                                    </button>
-                                </div>
-                                <textarea id="smart-text-input" class="w-full bg-slate-950/50 border border-white/10 rounded-lg p-3 text-sm text-slate-300 focus:border-blue-500 focus:outline-none h-24 resize-none placeholder-slate-600 font-mono" placeholder="粘贴示例：&#10;核心 高数第一章 刷题 0900 90&#10;运动 晨跑5KM 40"></textarea>
-                                <div class="flex gap-2 mt-3 overflow-x-auto pb-1 no-scrollbar">
-                                    <span class="text-[10px] text-slate-500 self-center mr-2">快速预设:</span>
-                                    <button onclick="loadPreset('ielts')" class="whitespace-nowrap px-2 py-1 rounded border border-white/10 bg-white/5 text-[10px] hover:bg-white/10 text-slate-300 transition">🇬🇧 雅思冲刺</button>
-                                    <button onclick="loadPreset('code')" class="whitespace-nowrap px-2 py-1 rounded border border-white/10 bg-white/5 text-[10px] hover:bg-white/10 text-slate-300 transition">💻 算法周</button>
-                                    <button onclick="loadPreset('habit')" class="whitespace-nowrap px-2 py-1 rounded border border-white/10 bg-white/5 text-[10px] hover:bg-white/10 text-slate-300 transition">🧘 21天习惯</button>
-                                </div>
-                            </div>
-
-                            <div id="builder-container" class="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar mb-6">
-                                <div class="text-center text-slate-500 py-10 border border-dashed border-slate-700 rounded-xl">
-                                    暂无内容，请使用上方智能解析或点击下方按钮添加
-                                </div>
-                            </div>
-
-                            <div class="pt-2 flex justify-center border-t border-white/5 mt-4">
-                                <button onclick="addBuilderDay()" class="w-full py-3 flex items-center justify-center gap-2 text-sm font-bold text-slate-400 hover:text-white transition hover:bg-white/5 rounded-xl border border-dashed border-slate-700 hover:border-slate-500">
-                                    <i data-lucide="plus-circle" class="w-4 h-4"></i> 添加新的一天
-                                </button>
-                            </div>
-                        </div>
+                    <!-- MODE 3: Builder (Full Function) -->
+                    <div id="mode-builder" class="hidden animate-fadeIn">
+                         <div class="bg-slate-900/50 rounded-2xl border border-white/10 p-6">
+                             <div class="flex justify-between items-center mb-6">
+                                 <h3 class="font-bold text-slate-300 flex items-center gap-2"><i data-lucide="pen-tool" class="w-4 h-4"></i> 在线手动构建</h3>
+                                 <div class="flex gap-2">
+                                     <button onclick="addBuilderDay()" class="text-xs bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded text-slate-300 transition font-bold flex items-center gap-1 border border-white/10">
+                                         <i data-lucide="plus-circle" class="w-3 h-3"></i> 加一天
+                                     </button>
+                                     <button id="builder-confirm-btn" onclick="confirmBuilder()" class="text-xs bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded text-white transition font-bold shadow-lg flex items-center gap-1">
+                                         <i data-lucide="check" class="w-3 h-3"></i> 确认构建
+                                     </button>
+                                 </div>
+                             </div>
+                             
+                             <div id="builder-container" class="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                                 <!-- Builder Content will be injected by JS -->
+                             </div>
+                             
+                             <div class="mt-4 text-center">
+                                 <p class="text-xs text-slate-500"><i data-lucide="alert-circle" class="w-3 h-3 inline mr-1"></i> 注意：如果标签栏留空，系统将自动设为 null 值。</p>
+                             </div>
+                         </div>
                     </div>
                 </div>
 
-                <div class="glass-panel p-8 rounded-3xl text-left">
+                <!-- 2. Theme Selection -->
+                <div id="theme-section" class="glass-panel p-8 rounded-3xl text-left">
                     <div class="flex items-center gap-4 mb-6">
                         <span class="text-4xl font-black text-purple-500">2</span>
                         <h2 class="text-2xl font-bold">选择 App 主题</h2>
                     </div>
-                    
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div id="theme-pro" onclick="selectTheme('pro')" class="selection-card card-pro-premium group">
                             <div class="relative z-10 flex flex-col h-full">
@@ -240,9 +489,8 @@
                                     <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center backdrop-blur-md shadow-[0_0_20px_rgba(236,72,153,0.4)]"><i data-lucide="zap" class="w-6 h-6 text-pink-500 fill-pink-500/20"></i></div>
                                     <div class="check-circle bg-blue-500 shadow-lg shadow-blue-500/50"><i data-lucide="check" class="w-4 h-4 text-white"></i></div>
                                 </div>
-                                <h3 class="text-2xl font-black text-white mb-2 tracking-tight group-hover:text-pink-200 transition-colors">DeepFlow Pro</h3>
-                                <p class="text-white/70 text-xs font-medium leading-relaxed mb-4">集效率与美学于大成。内置多巴胺反馈算法，粒子特效与沉浸音效。</p>
-                                <div class="mt-auto flex items-center gap-2 text-[10px] font-mono text-white/50 uppercase"><span class="bg-white/10 px-2 py-1 rounded">多巴胺光效</span><span class="bg-white/10 px-2 py-1 rounded">ASMR</span></div>
+                                <h3 class="text-2xl font-black text-white mb-2">DeepFlow Pro</h3>
+                                <p class="text-white/70 text-xs">内置多巴胺反馈算法，粒子特效与沉浸音效。</p>
                             </div>
                         </div>
                         <div id="theme-zen" onclick="selectTheme('zen')" class="selection-card card-zen-matte group">
@@ -251,9 +499,8 @@
                                     <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center border border-zinc-200 shadow-lg"><i data-lucide="moon" class="w-6 h-6 text-zinc-800"></i></div>
                                     <div class="check-circle bg-zinc-900 shadow-lg"><i data-lucide="check" class="w-4 h-4 text-white"></i></div>
                                 </div>
-                                <h3 class="text-2xl font-black text-zinc-900 mb-2 tracking-tight">Zen Mode</h3>
-                                <p class="text-zinc-500 text-xs font-medium leading-relaxed mb-4 zen-text">极致的黑白灰度设计。去除所有色彩干扰，创造零焦虑的专注环境。</p>
-                                <div class="mt-auto flex items-center gap-2 text-[10px] font-mono text-zinc-400 uppercase"><span class="bg-zinc-100 px-2 py-1 rounded border border-zinc-200">极简主义</span><span class="bg-zinc-100 px-2 py-1 rounded border border-zinc-200">墨水屏感</span></div>
+                                <h3 class="text-2xl font-black text-zinc-900 mb-2">Zen Mode</h3>
+                                <p class="text-zinc-500 text-xs">极致的黑白灰度设计，创造零焦虑的专注环境。</p>
                             </div>
                         </div>
                         <div id="theme-cyberpunk" onclick="selectTheme('cyberpunk')" class="selection-card card-cyber-neon group">
@@ -262,15 +509,15 @@
                                     <div class="w-12 h-12 rounded-2xl bg-transparent border border-fuchsia-500 text-fuchsia-500 flex items-center justify-center shadow-[0_0_15px_rgba(217,70,239,0.3)]"><i data-lucide="gamepad-2" class="w-6 h-6"></i></div>
                                     <div class="check-circle bg-fuchsia-500 shadow-[0_0_15px_rgba(217,70,239,0.5)]"><i data-lucide="check" class="w-4 h-4 text-white"></i></div>
                                 </div>
-                                <h3 class="text-2xl font-black text-white mb-2 tracking-wide" style="text-shadow: 0 0 10px rgba(217,70,239,0.5)">Cyberpunk</h3>
-                                <p class="text-fuchsia-200/60 text-xs font-medium leading-relaxed mb-4">高对比度霓虹网络。将任务列表转化为战斗 HUD 界面。肾上腺素驱动。</p>
-                                <div class="mt-auto flex items-center gap-2 text-[10px] font-mono text-fuchsia-500/70 uppercase"><span class="border border-fuchsia-900 px-2 py-1 rounded bg-fuchsia-900/10">故障艺术</span><span class="border border-fuchsia-900 px-2 py-1 rounded bg-fuchsia-900/10">HUD</span></div>
+                                <h3 class="text-2xl font-black text-white mb-2">Cyberpunk</h3>
+                                <p class="text-fuchsia-200/60 text-xs">高对比度霓虹网络，肾上腺素驱动的 HUD 界面。</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="glass-panel p-8 rounded-3xl text-left">
+                <!-- 3. Final Action -->
+                <div class="glass-panel p-8 rounded-3xl text-left desktop-btn">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-4">
                             <span class="text-4xl font-black text-emerald-500">3</span>
@@ -287,7 +534,18 @@
             </div>
         </div>
     </section>
-    
+
+    <!-- Mobile Bottom Action Bar (手机端专用) -->
+    <div id="mobile-action-bar" class="mobile-action-bar">
+        <button id="mobile-confirm-btn" onclick="confirmAI()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 opacity-50 transition-all" disabled>
+            <i data-lucide="check-circle" class="w-4 h-4"></i> 确认计划
+        </button>
+        <button id="mobile-generate-btn" onclick="generateApp()" class="flex-[2] bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-bold text-sm shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 transition-all hover:scale-[1.02]" disabled>
+            <i data-lucide="rocket" class="w-4 h-4"></i> 生成 App
+        </button>
+    </div>
+
+    <!-- Modals -->
     <div id="custom-alert-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 hidden transition-opacity duration-300">
         <div id="modal-content" class="bg-slate-900 p-8 rounded-2xl shadow-2xl border border-white/10 max-w-md w-full transform scale-95 transition-transform duration-300">
             <h3 id="alert-title" class="text-xl font-black mb-4 flex items-center gap-2 text-white"></h3>
@@ -296,345 +554,729 @@
         </div>
     </div>
 
-    <div id="title-input-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center modal-bg-enter transition-all duration-300">
-        <div id="title-modal-panel" class="bg-slate-900/90 border border-blue-500/20 p-8 rounded-3xl shadow-[0_0_50px_rgba(59,130,246,0.15)] w-full max-w-lg modal-content-enter relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-[50px] pointer-events-none"></div>
+    <div id="title-input-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300">
+        <div id="title-modal-panel" class="bg-slate-900/90 border border-blue-500/20 p-8 rounded-3xl w-full max-w-lg transform scale-95 opacity-0 transition-all duration-300">
             <h3 class="text-2xl font-black text-white mb-2 flex items-center gap-2"><i data-lucide="edit-3" class="w-6 h-6 text-blue-400"></i> 为计划命名</h3>
-            <p class="text-slate-400 text-sm mb-8 leading-relaxed">给生成的 App 起一个专属名字。这将显示在浏览器的标题栏和应用首页。</p>
-            <div class="relative mb-8">
-                <input type="text" id="plan-title-input" class="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-5 py-4 text-white text-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-slate-600 font-bold tracking-wide" placeholder="DeepFlow 个人学习计划" onkeydown="if(event.key === 'Enter') confirmTitleModal(); if(event.key === 'Escape') cancelTitleModal();">
-                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 text-xs font-mono border border-slate-700 px-2 py-1 rounded">ENTER 确认</div>
-            </div>
-            <div class="flex justify-end gap-3">
-                <button onclick="cancelTitleModal()" class="px-6 py-3 text-slate-400 hover:text-white font-bold transition rounded-xl hover:bg-white/5">取消</button>
-                <button onclick="confirmTitleModal()" class="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-bold shadow-lg shadow-blue-600/20 transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center gap-2"><i data-lucide="rocket" class="w-4 h-4"></i> 开始生成</button>
+            <input type="text" id="plan-title-input" class="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-5 py-4 text-white text-lg mt-4 focus:outline-none focus:border-blue-500 font-bold" placeholder="DeepFlow 个人学习计划">
+            <div class="flex justify-end gap-3 mt-8">
+                <button onclick="cancelTitleModal()" class="px-6 py-3 text-slate-400 hover:text-white font-bold transition">取消</button>
+                <button onclick="confirmTitleModal()" class="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold">开始生成</button>
             </div>
         </div>
     </div>
-    
+
+    <!-- Result Modal (完全移植自 Sample) -->
+    <div id="resultModalOverlay" class="df-modal-overlay">
+        <div class="df-modal-card">
+            <div class="df-icon-circle"><i data-lucide="check" class="text-white w-8 h-8"></i></div>
+            <h3 class="df-modal-title">计划已生成 (Ready)</h3>
+            <p class="df-modal-desc">您的 DeepFlow 计划已准备就绪。<br>请根据设备选择打开方式。</p>
+            <div class="df-actions">
+                <a id="previewButton" target="_blank" class="df-btn df-btn-primary">
+                    <i data-lucide="eye" class="w-4 h-4"></i> <span>实时预览 (iOS & Safari推荐)</span>
+                </a>
+                <a id="downloadButton" class="df-btn df-btn-secondary">
+                    <i data-lucide="download" class="w-4 h-4"></i> <span>下载文件 (电脑 / 手机推荐)</span>
+                </a>
+            </div>
+            <button onclick="closeResultModal()" class="df-close">关闭窗口</button>
+        </div>
+    </div>
+
     <script>
-        lucide.createIcons();
-        
-        let currentMode = 'upload'; // 'upload' | 'builder'
-        let uploadedData = null;
+        // ============================================
+        // 全局变量
+        // ============================================
+        let currentMode = 'ai'; 
+        let uploadedData = null; 
         let builderData = []; 
+        let aiData = []; 
         let selectedTheme = null;
         let titlePromiseResolve = null;
-
-        // OSS 资源配置 (国内优化)
-        const OSS_RESOURCES = {
-            tailwind: "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/tailwind.js",
-            lucide: "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/lucide.min.js"
-        };
+        let aiParseTimeout = null;
+        let recognition = null; // 语音识别
 
         // ============================================
-        // 功能核心
+        // V18 新增：手机端体验初始化
         // ============================================
-
-        // 1. 标准模版下载
-        function downloadSampleExcel() {
-            try {
-                const ws_data = [
-                    ["日期 (必填)", "标签 (可选)", "任务标题 (必填)", "任务描述 (可选)", "时间 (可选)", "时长 (可选)"],
-                    [new Date().toISOString().split('T')[0], "核心", "高等数学第一章", "完成课后习题 1-5 题", "09:00", 90],
-                    [new Date().toISOString().split('T')[0], "运动", "晨跑 5KM", "配速 6:00", "07:00", 40],
-                    [new Date().toISOString().split('T')[0], "英语", "背诵雅思词汇 List 1", "重点记忆动词", "14:30", 60]
-                ];
-                const wb = XLSX.utils.book_new();
-                const ws = XLSX.utils.aoa_to_sheet(ws_data);
-                ws['!cols'] = [{wch:15}, {wch:10}, {wch:25}, {wch:30}, {wch:10}, {wch:10}];
-                XLSX.utils.book_append_sheet(wb, ws, "DeepFlow Plan");
-                XLSX.writeFile(wb, "DeepFlow_Standard_Template.xlsx");
-            } catch (e) {
-                console.error("模版生成失败", e);
-                customAlert("无法生成模版，请确保已加载 xlsx 库。", "错误", "alert-triangle");
-            }
-        }
-
-        // 2. 强壮的数据清洗 (Sample版逻辑移植)
-        function processTasksData(rawArray) {
-            console.log('开始处理Excel数据，行数:', rawArray.length);
-            if (!rawArray || rawArray.length < 2) { console.warn('数据行数不足'); return []; }
-
-            // 模糊匹配表头
-            let headerRowIndex = -1;
-            let colMap = { date: -1, title: -1, desc: -1, tag: -1, time: -1, duration: -1 };
+        function initMobileExperience() {
+            const isMobile = window.innerWidth <= 768;
             
-            for (let r = 0; r < Math.min(rawArray.length, 5); r++) {
-                const rowStr = rawArray[r].map(c => String(c).trim().toLowerCase());
-                const clean = (s) => s.replace(/[\(\（].*?[\)\）]/g, "").trim(); // 去除括号内容
+            if (isMobile) {
+                // 1. 强制切换到 AI 模式
+                switchMode('ai');
+                
+                // 2. 优化输入框体验 (聚焦时滚动)
+                const aiInput = document.getElementById('ai-input');
+                aiInput.placeholder = "点这里输入，或者点右下角话筒说话...\n例如：明天八点起床，九点背单词。";
+                aiInput.addEventListener('focus', () => {
+                    setTimeout(() => {
+                        aiInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 300);
+                });
 
-                const dateIdx = rowStr.findIndex(c => clean(c).includes('date') || clean(c).includes('日期'));
-                const titleIdx = rowStr.findIndex(c => clean(c).includes('task') || clean(c).includes('标题') || clean(c).includes('任务'));
-
-                if (dateIdx !== -1 && titleIdx !== -1) {
-                    headerRowIndex = r;
-                    colMap.date = dateIdx; colMap.title = titleIdx;
-                    colMap.desc = rowStr.findIndex(c => clean(c).includes('desc') || clean(c).includes('描述'));
-                    colMap.tag = rowStr.findIndex(c => clean(c).includes('tag') || clean(c).includes('标签'));
-                    colMap.duration = rowStr.findIndex(c => clean(c).includes('duration') || clean(c).includes('时长'));
-                    colMap.time = rowStr.findIndex(c => (clean(c).includes('time') || clean(c).includes('时间')) && !clean(c).includes('时长'));
-                    break;
+                // 3. 初始化语音
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    initVoiceRecognition();
                 }
             }
-
-            if (headerRowIndex === -1) { console.warn('未找到有效的表头行'); return []; }
-
-            const taskDataByDate = {};
-            const dataRows = rawArray.slice(headerRowIndex + 1);
-
-            dataRows.forEach((row, rowIndex) => {
-                const dateRaw = row[colMap.date];
-                const titleRaw = row[colMap.title];
-                if (!dateRaw || !titleRaw) return;
-
-                let dateStr = '';
-                try {
-                    if (typeof dateRaw === 'number') {
-                        const dateObj = XLSX.SSF.parse_date_code(dateRaw);
-                        dateStr = dateObj.y + '-' + String(dateObj.m).padStart(2, '0') + '-' + String(dateObj.d).padStart(2, '0');
-                    } else {
-                        // 兼容性极强的日期解析
-                        const dateString = String(dateRaw).trim();
-                        const d = new Date(dateString.replace(/-/g, '/').replace(/\./g, '/')); // 处理 2025.01.01 或 2025-01-01
-                        if (!isNaN(d.getTime())) {
-                            dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-                        } else {
-                            dateStr = dateString.split(' ')[0]; // 兜底
-                        }
-                    }
-                } catch (e) { return; }
-
-                if (!taskDataByDate[dateStr]) taskDataByDate[dateStr] = { date: dateStr, dayNum: Object.keys(taskDataByDate).length + 1, tasks: [] };
-
-                const title = String(titleRaw).trim();
-                const desc = colMap.desc > -1 ? String(row[colMap.desc] || '').trim() : '';
-                const tag = colMap.tag > -1 ? String(row[colMap.tag] || '').trim() : '';
-                
-                // 时间处理
-                let time = '';
-                const timeRaw = colMap.time > -1 ? row[colMap.time] : '';
-                if (typeof timeRaw === 'number') {
-                    const totalSeconds = Math.round(timeRaw * 86400);
-                    const hours = Math.floor(totalSeconds / 3600);
-                    const minutes = Math.floor((totalSeconds % 3600) / 60);
-                    time = (hours<10?'0'+hours:hours) + ':' + (minutes<10?'0'+minutes:minutes);
-                } else { time = String(timeRaw).trim(); }
-
-                const duration = colMap.duration > -1 ? (parseInt(row[colMap.duration]) || null) : null;
-
-                taskDataByDate[dateStr].tasks.push({ title, desc, tag, time, duration });
-            });
-
-            return Object.keys(taskDataByDate).sort().map((date, index) => {
-                const dayData = taskDataByDate[date];
-                dayData.dayNum = index + 1;
-                return dayData;
-            });
         }
 
-        // 3. 文件读取
-        function handleFileChange(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const status = document.getElementById('file-status');
-            status.innerHTML = '<span class="text-blue-400 animate-pulse">⚡ 正在解析...</span>';
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
-                    uploadedData = json;
-                    const dataCount = json.length > 1 ? json.length - 1 : 0;
-                    status.innerHTML = `✅ 已加载: <span class="text-white font-bold">${file.name}</span> (共 ${dataCount} 行数据)`;
-                    updateSummary();
-                    customAlert(`成功读取 ${dataCount} 条任务数据！`, "解析成功", "check");
-                } catch (err) {
-                    console.error(err);
-                    status.innerHTML = '❌ 解析失败: ' + err.message;
-                    uploadedData = null;
-                    updateSummary();
-                }
+        // V18 新增：语音输入逻辑
+        function initVoiceRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'zh-CN';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onstart = () => {
+                const btn = document.getElementById('voice-btn');
+                btn.classList.add('voice-recording');
+                btn.innerHTML = '<i data-lucide="mic-off" class="w-5 h-5"></i>';
+                lucide.createIcons();
+                document.getElementById('ai-input').placeholder = "正在听...";
             };
-            reader.readAsArrayBuffer(file);
+
+            recognition.onend = () => {
+                const btn = document.getElementById('voice-btn');
+                btn.classList.remove('voice-recording');
+                btn.innerHTML = '<i data-lucide="mic" class="w-5 h-5"></i>';
+                lucide.createIcons();
+                document.getElementById('ai-input').placeholder = "请直接输入...";
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                const input = document.getElementById('ai-input');
+                // 追加文本而不是覆盖，方便连续说话
+                input.value = input.value ? input.value + '\n' + transcript : transcript;
+                ai_handleInput(); // 触发解析
+            };
+        }
+
+        function toggleVoiceInput() {
+            if (!recognition) return;
+            try { recognition.start(); } catch (e) { recognition.stop(); }
         }
 
         // ============================================
-        // 界面逻辑
+        // 模块1：AI 智能解析内核 (V27 核心升级：完整日期算术)
         // ============================================
         
-        function switchMode(mode) {
-            currentMode = mode;
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('tab-' + mode).classList.add('active');
-            if(mode === 'upload') {
-                document.getElementById('mode-upload').classList.remove('hidden');
-                document.getElementById('mode-builder').classList.add('hidden');
+        const CHINESE_NUMBER_MAP = {
+            '零': 0, '〇': 0, '０': 0, '一': 1, '壹': 1, '１': 1, '二': 2, '两': 2, '贰': 2, '２': 2, 
+            '三': 3, '叁': 3, '３': 3, '四': 4, '肆': 4, '４': 4, '五': 5, '伍': 5, '５': 5, 
+            '六': 6, '陆': 6, '６': 6, '七': 7, '柒': 7, '７': 7, '八': 8, '捌': 8, '８': 8, 
+            '九': 9, '玖': 9, '９': 9, '十': 10, '拾': 10, '十一': 11, '十二': 12, '十三': 13, 
+            '十四': 14, '十五': 15, '十六': 16, '十七': 17, '十八': 18, '十九': 19, '二十': 20, 
+            '二十一': 21, '二十二': 22, '二十三': 23, '二十四': 24, '三十': 30, '三十一': 31
+        };
+        const SPECIAL_TIME_EXPRESSIONS = { '半': 30, '一刻': 15, '三刻': 45, '整': 0, '正': 0 };
+        const TIME_PERIOD_MAP = { 
+            '凌晨': '00:00-05:00', '早晨': '05:00-08:00', '早上': '05:00-08:00', '上午': '08:00-12:00', 
+            '中午': '11:00-13:00', '晌午': '11:00-13:00', '下午': '13:00-18:00', '傍晚': '17:00-19:00', 
+            '晚上': '18:00-24:00', '夜里': '20:00-24:00', '午夜': '23:00-01:00' 
+        };
+
+        // --- V27 新增：日期算术辅助函数 ---
+        function calculateDaysToNextWeekday(targetDayIndex) {
+            const today = new Date();
+            const todayIndex = today.getDay(); // 0 (Sun) - 6 (Sat)
+            let diff = targetDayIndex - todayIndex;
+            // 如果目标是今天或过去，找下周的这一天
+            // 用户逻辑：周五(今天周四) -> 明天(1)。周五(今天周五) -> 下周五(7)。
+            if (diff <= 0) diff += 7;
+            return diff;
+        }
+
+        // --- V27 新增：智能周解析器 (核心) ---
+        function parseSmartWeekDate(text) {
+            // 正则说明：
+            // Group 1: 捕获所有 "下" (可能包含 "个"、"大")，用于计数
+            // Group 2: 星期几关键词
+            // Group 3: 一二三四五六日天
+            const regex = /((?:大|下|个)+)\s*(周|星期|礼拜)([一二三四五六日天])/;
+            // 简单周几匹配 (无修饰)
+            const simpleRegex = /^(周|星期|礼拜)([一二三四五六日天])/;
+
+            let match = text.match(regex);
+            let xiaCount = 0;
+            let dayChar = '';
+            let fullMatch = '';
+
+            if (match) {
+                fullMatch = match[0];
+                const prefix = match[1];
+                dayChar = match[3];
+                // 计算 "下" 的数量
+                xiaCount = (prefix.match(/下/g) || []).length;
             } else {
-                document.getElementById('mode-upload').classList.add('hidden');
-                document.getElementById('mode-builder').classList.remove('hidden');
-                if(builderData.length === 0) addBuilderDay();
+                match = text.match(simpleRegex);
+                if (match) {
+                    fullMatch = match[0];
+                    dayChar = match[2];
+                    xiaCount = 0; // 无修饰 = 最近的一个
+                }
             }
+
+            if (match) {
+                const dayMap = {'日':0, '天':0, '一':1, '二':2, '三':3, '四':4, '五':5, '六':6};
+                const targetIndex = dayMap[dayChar];
+                
+                if (targetIndex === undefined) return null;
+                
+                // 1. 计算到下一个该星期的基础天数
+                const daysUntilNext = calculateDaysToNextWeekday(targetIndex);
+                
+                // 2. 加上 "下" 的周数 (每个 "下" 加 7 天)
+                // 注意：如果 xiaCount=0 (如"周五")，就是 daysUntilNext
+                // 如果 xiaCount=1 (如"下周五")，通常指 "下个周五"，如果是今天周四，周五是明天。
+                // 这里的语义定义：
+                // "周五" = 最近的周五
+                // "下周五" = 最近周五 + 7天
+                // "下下周五" = 最近周五 + 14天
+                const totalDaysToAdd = daysUntilNext + (xiaCount * 7);
+                
+                const targetDate = new Date();
+                targetDate.setDate(targetDate.getDate() + totalDaysToAdd);
+                targetDate.setHours(0,0,0,0);
+                
+                return {
+                    date: targetDate,
+                    matchStr: fullMatch
+                };
+            }
+            return null;
+        }
+
+        // --- 辅助函数 ---
+        function parseChineseOrArabic(str) {
+            str = str.trim();
+            if (/^\d+$/.test(str)) return parseInt(str);
+            if (CHINESE_NUMBER_MAP[str] !== undefined) return CHINESE_NUMBER_MAP[str];
+            if (str.startsWith('十')) return 10 + (CHINESE_NUMBER_MAP[str.substring(1)] || 0);
+            if (str.startsWith('二十')) return 20 + (CHINESE_NUMBER_MAP[str.substring(2)] || 0);
+            if (str.startsWith('三十')) return 30 + (CHINESE_NUMBER_MAP[str.substring(2)] || 0);
+            return 0; 
+        }
+
+        function parseChineseTimeString(input) {
+            let text = input.trim();
+            const arabicMatch = text.match(/(\d{1,2})[:点](半|刻|\d{1,2})?/);
+            if (arabicMatch) {
+                let hour = parseInt(arabicMatch[1]);
+                let minuteStr = arabicMatch[2];
+                let minute = 0;
+                if (minuteStr === '半') minute = 30; else if (minuteStr === '刻') minute = 15; else if (minuteStr) minute = parseInt(minuteStr);
+                if (hour < 12 && /下午|晚上|傍晚|夜里/.test(text)) hour += 12; else if (hour === 12 && /凌晨/.test(text)) hour = 0;
+                return { formatted: `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`, type: 'specific' };
+            }
+            const chinesePattern = /([零一二三四五六七八九十两]+)点(半|刻|([零一二三四五六七八九十两]+))?/;
+            const chineseMatch = text.match(chinesePattern);
+            if (chineseMatch) {
+                const hourVal = parseChineseOrArabic(chineseMatch[1]);
+                let minuteVal = 0;
+                if (chineseMatch[2]) {
+                    const minuteExpr = chineseMatch[2];
+                    if (SPECIAL_TIME_EXPRESSIONS[minuteExpr] !== undefined) minuteVal = SPECIAL_TIME_EXPRESSIONS[minuteExpr];
+                    else if (chineseMatch[3]) minuteVal = parseChineseOrArabic(chineseMatch[3]);
+                }
+                let finalHour = hourVal;
+                if (finalHour < 12) {
+                    for (const [period, _] of Object.entries(TIME_PERIOD_MAP)) {
+                        if (text.includes(period) && ['下午', '晚上', '傍晚', '夜里'].includes(period)) { finalHour += 12; break; }
+                    }
+                }
+                return { formatted: `${String(finalHour).padStart(2, '0')}:${String(minuteVal).padStart(2, '0')}`, type: 'specific' };
+            }
+            for (const [period, range] of Object.entries(TIME_PERIOD_MAP)) { if (text.includes(period)) return { formatted: period, type: 'fuzzy' }; }
+            return null;
+        }
+
+        function parseDaysExpression(text) {
+            const afterMatch = text.match(/([0-9零一二三四五六七八九十]+)\s*天[以之]?[后後]/);
+            if (afterMatch) return { type: 'after', days: parseChineseOrArabic(afterMatch[1]) };
+            const dayMatch = text.match(/(?:第|Day|D)\s*([0-9零一二三四五六七八九十]+)\s*(?:天|日)?/i);
+            if (dayMatch) return { type: 'sequence', days: parseChineseOrArabic(dayMatch[1]) };
+            return null;
+        }
+
+        // --- V27 更新：保留基础日期词提取以兼容旧逻辑 ---
+        function extractLineDateWord(line) {
+            line = line.trim();
+            if (!line) return "";
+            const daysExpr = line.match(/([0-9零一二三四五六七八九十]+)\s*天[以之]?[后後]/);
+            if(daysExpr) return daysExpr[0];
+            const seqExpr = line.match(/(?:第|Day|D)\s*([0-9零一二三四五六七八九十]+)\s*(?:天|日)?/i);
+            if(seqExpr) return seqExpr[0];
+            const keywordMatch = line.match(/^(大后天|后天|明天|明儿|今天)/);
+            if(keywordMatch) return keywordMatch[0];
+            // V27: 这里不再处理周几，因为 parseSmartWeekDate 会处理
+            return "";
+        }
+
+        // --- 主处理函数 ---
+        function ai_handleInput() {
+            const text = document.getElementById('ai-input').value;
+            const status = document.getElementById('ai-status');
+            const confirmBtn = document.getElementById('ai-confirm-btn');
+            const mobileConfirmBtn = document.getElementById('mobile-confirm-btn');
+            
+            [confirmBtn, mobileConfirmBtn].forEach(btn => {
+                if(btn && btn.innerText.includes('已锁定')) {
+                    btn.innerHTML = btn.id.includes('mobile') ? '<i data-lucide="check-circle" class="w-4 h-4"></i> 确认计划' : '<i data-lucide="check" class="w-3 h-3"></i> 确认计划';
+                    btn.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
+                    btn.classList.remove('bg-slate-600', 'cursor-default');
+                }
+            });
+            lucide.createIcons();
+
+            if (!text.trim()) {
+                document.getElementById('ai-timeline-container').innerHTML = `<div class="flex flex-col items-center justify-center h-full text-slate-600 opacity-60"><i data-lucide="message-square-dashed" class="w-12 h-12 mb-3"></i><p class="text-xs">在左侧输入文字<br>右侧将实时显示解析结果</p></div>`;
+                status.innerText = "等待输入"; status.className = "text-[10px] bg-blue-500/20 text-blue-400 px-2 py-1 rounded border border-blue-500/30";
+                
+                [confirmBtn, mobileConfirmBtn].forEach(btn => {
+                    if(btn) { btn.disabled = true; btn.classList.add('opacity-50', 'cursor-not-allowed'); }
+                });
+                
+                aiData = []; updateSummary(); lucide.createIcons(); return;
+            }
+
+            status.innerText = "分析中..."; status.className = "text-[10px] bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded border border-yellow-500/30 animate-pulse";
+            
+            if (aiParseTimeout) clearTimeout(aiParseTimeout);
+            aiParseTimeout = setTimeout(() => {
+                aiData = ai_parseText(text);
+                ai_renderPreview(aiData);
+                status.innerText = "分析完成"; status.className = "text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded border border-emerald-500/30";
+                if(aiData.length > 0) { 
+                    [confirmBtn, mobileConfirmBtn].forEach(btn => {
+                        if(btn) { btn.disabled = false; btn.classList.remove('opacity-50', 'cursor-not-allowed'); }
+                    });
+                }
+                updateSummary();
+            }, 500);
+        }
+
+        // --- V27 解析器：集成所有逻辑 ---
+        function ai_parseText(text) {
+            const lines = text.split('\n');
+            let parsedData = [];
+            let baseDate = new Date(); baseDate.setHours(0,0,0,0);
+            let currentDate = new Date(baseDate);
+
+            const getDateKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            const getDayObj = (d) => {
+                const k = getDateKey(d);
+                let obj = parsedData.find(p => p.date === k);
+                if (!obj) { obj = { date: k, tasks: [] }; parsedData.push(obj); }
+                return obj;
+            };
+
+            lines.forEach((line, lineIndex) => { 
+                let lineTrimmed = line.trim();
+                if (!lineTrimmed) return;
+
+                let targetDate = new Date(currentDate); let dateFound = false;
+                let matchedDateString = ""; // 用于后续清理
+
+                // 1. 优先尝试 V27 智能周算术 (Smart Week Logic)
+                const smartWeek = parseSmartWeekDate(lineTrimmed);
+                if (smartWeek) {
+                    targetDate = smartWeek.date;
+                    dateFound = true;
+                    matchedDateString = smartWeek.matchStr;
+                } else {
+                    // 2. 尝试常规逻辑 (天数、明天等)
+                    const daysExpr = parseDaysExpression(lineTrimmed);
+                    if (daysExpr) {
+                        targetDate = new Date(baseDate); 
+                        if (daysExpr.type === 'after') targetDate.setDate(baseDate.getDate() + daysExpr.days);
+                        else if (daysExpr.type === 'sequence') targetDate.setDate(baseDate.getDate() + Math.max(0, daysExpr.days - 1));
+                        dateFound = true;
+                    } 
+                    else if (/大后天/.test(lineTrimmed)) { targetDate = new Date(baseDate); targetDate.setDate(baseDate.getDate() + 3); dateFound = true; }
+                    else if (/后天/.test(lineTrimmed)) { targetDate = new Date(baseDate); targetDate.setDate(baseDate.getDate() + 2); dateFound = true; }
+                    else if (/明天|明儿/.test(lineTrimmed)) { targetDate = new Date(baseDate); targetDate.setDate(baseDate.getDate() + 1); dateFound = true; }
+                    else if (/今天/.test(lineTrimmed)) { targetDate = new Date(baseDate); dateFound = true; }
+                }
+
+                if(dateFound) currentDate = targetDate;
+                
+                const dayObj = getDayObj(currentDate);
+
+                const taskRegex = /[^，。,；;]+(?=[，。,；;\n]|$)/g;
+                let match;
+                
+                while ((match = taskRegex.exec(line)) !== null) {
+                    let segment = match[0]; 
+                    
+                    let cleanContent = segment
+                         .replace(/(?:Day|D)\s*[0-9]+\s*/gi, '')
+                         .replace(/第\s*[0-9零一二三四五六七八九十]+\s*[天日]/g, '')
+                         .replace(/[0-9零一二三四五六七八九十]+\s*天[以之]?[后後]/g, '')
+                         .replace(/明天|后天|今天/g, ''); // 移除普通时间词
+                    
+                    // V27 核心：移除匹配到的“下下周五”等复杂词
+                    if (matchedDateString) {
+                        cleanContent = cleanContent.replace(matchedDateString, '');
+                    } else {
+                        // 兜底移除简单的周几 (如果 parseSmartWeekDate 没命中但这里有残留)
+                        cleanContent = cleanContent.replace(/周[一二三四五六日]/g, '');
+                    }
+                    
+                    cleanContent = cleanContent.trim();
+                    if (!cleanContent) continue;
+
+                    const timeRes = parseChineseTimeString(segment);
+                    let displayTime = "";
+                    if (timeRes) displayTime = timeRes.formatted;
+                    
+                    cleanContent = cleanContent.replace(/((?:凌晨|早晨|早上|上午|中午|晌午|下午|傍晚|晚上|夜里|午夜)?\s*(?:[0-9]{1,2}[:点](?:[0-9]{1,2}|半|刻)?|[零一二三四五六七八九十两]+点(?:半|刻|[零一二三四五六七八九十两]+)?))/g, '').trim();
+                    cleanContent = cleanContent.replace(/^(准备|开始)\s*/, '').trim();
+
+                    if(cleanContent) {
+                        dayObj.tasks.push({
+                            title: cleanContent,
+                            time: displayTime,
+                            duration: null,
+                            tag: "",
+                            rawSegment: segment, 
+                            lineIndex: lineIndex,
+                            lineDateWord: matchedDateString || extractLineDateWord(lineTrimmed) // 优先使用智能匹配的词
+                        });
+                    }
+                }
+            });
+            return parsedData.sort((a,b) => a.date.localeCompare(b.date));
+        }
+
+        function ai_renderPreview(data) {
+            const container = document.getElementById('ai-timeline-container');
+            if (!data.length) { container.innerHTML = '<div class="text-center text-slate-500 mt-10 text-xs">未识别到有效任务</div>'; return; }
+            let html = '';
+            data.forEach((day, dIdx) => {
+                const dateObj = new Date(day.date);
+                const weekStr = ['周日','周一','周二','周三','周四','周五','周六'][dateObj.getDay()];
+                html += `<div class="timeline-day"><div class="timeline-date">${day.date} · ${weekStr}</div>`;
+                day.tasks.forEach((task, tIdx) => {
+                    html += `
+                    <div class="ai-task-card group">
+                        <input type="text" class="ai-time-edit" value="${task.time || ''}" placeholder="时间" onchange="ai_updateTask(${dIdx}, ${tIdx}, 'time', this.value)">
+                        <input type="text" class="ai-title-edit" value="${task.title}" placeholder="任务内容" onchange="ai_updateTask(${dIdx}, ${tIdx}, 'title', this.value)">
+                        <span class="ai-tag-badge">自动</span>
+                        <button onclick="ai_deleteTask('${day.date}', ${tIdx})" class="mobile-delete-btn md:text-slate-600 md:hover:text-red-400 transition p-2 md:px-2" title="删除"><i data-lucide="trash-2" class="w-4 h-4 md:w-3.5 md:h-3.5"></i></button>
+                    </div>`;
+                });
+                html += `</div>`;
+            });
+            container.innerHTML = html; lucide.createIcons();
+        }
+
+        // --- V22 智能删除核心 (Smart Delete Core) ---
+        function ai_deleteTask(dateStr, tIdx) {
+            const dayObj = aiData.find(d => d.date === dateStr);
+            if (!dayObj) return;
+            const task = dayObj.tasks[tIdx];
+
+            const inputEl = document.getElementById('ai-input');
+            let lines = inputEl.value.split('\n');
+            
+            if (typeof task.lineIndex !== 'number' || task.lineIndex >= lines.length) {
+                dayObj.tasks.splice(tIdx, 1); ai_renderPreview(aiData); return;
+            }
+            
+            let targetLine = lines[task.lineIndex];
+            
+            let textToRemove = task.rawSegment;
+            if (!targetLine.includes(textToRemove)) { textToRemove = task.title; }
+            
+            if (targetLine.includes(textToRemove)) {
+                const idx = targetLine.indexOf(textToRemove);
+                const before = targetLine.substring(0, idx);
+                const after = targetLine.substring(idx + textToRemove.length);
+                let combined = before + after;
+                
+                // 语法清理
+                combined = combined.replace(/([，、,])\s*([。；;])/g, '$2');
+                combined = combined.replace(/([，、,])\s*([，、,])/g, '$1');
+                combined = combined.replace(/([。])\s*([。])/g, '$1');
+                
+                // 移除行首多余标点，但保留日期词
+                const dateWord = task.lineDateWord || "";
+                if (!combined.trim().startsWith(dateWord)) {
+                     combined = combined.replace(/^\s*[，、,；;：:]+/, '');
+                }
+
+                lines[task.lineIndex] = combined.trim();
+                
+                // 空行检测
+                const checkContent = combined.replace(dateWord, '').replace(/[，。、；;：:\s]/g, '');
+                if (checkContent.length === 0) {
+                    lines.splice(task.lineIndex, 1);
+                }
+            }
+
+            inputEl.value = lines.join('\n');
+            ai_handleInput();
+        }
+        
+        function ai_updateTask(dIdx, tIdx, field, val) { 
+            aiData[dIdx].tasks[tIdx][field] = val; 
+            const btn = document.getElementById('ai-confirm-btn');
+            const mBtn = document.getElementById('mobile-confirm-btn');
+            [btn, mBtn].forEach(b => {
+                if(b && b.innerText.includes('已锁定')) {
+                    b.innerHTML = b.id.includes('mobile') ? '<i data-lucide="check-circle" class="w-4 h-4"></i> 确认构建' : '<i data-lucide="check" class="w-3 h-3"></i> 确认构建';
+                    b.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
+                    b.classList.remove('bg-slate-600', 'cursor-default');
+                }
+            });
+            lucide.createIcons();
+        }
+
+        // ============================================
+        // 核心修改 1: Confirm AI
+        // ============================================
+        function confirmAI() {
+            // 1. 校验为空
+            if(aiData.length === 0) { customAlert("请先输入内容", "提示", "info"); return; }
+            
+            // 2. 锁定按钮样式
+            const btn = document.getElementById('ai-confirm-btn');
+            const mBtn = document.getElementById('mobile-confirm-btn');
+            [btn, mBtn].forEach(b => {
+                if(b) {
+                    b.innerHTML = b.id.includes('mobile') ? '<i data-lucide="lock" class="w-4 h-4"></i> 已锁定' : '<i data-lucide="check-circle" class="w-3 h-3"></i> 已锁定';
+                    b.classList.remove('bg-emerald-600', 'hover:bg-emerald-500');
+                    b.classList.add('bg-slate-600', 'cursor-default');
+                }
+            });
+            lucide.createIcons();
+            
+            // 3. 核心修改：移除 Alert，直接平滑滚动到主题选择区
+            const themeSection = document.getElementById('theme-section');
+            if (themeSection) {
+                // 稍微延迟一点点，让键盘收起（手机端）后再滚动，体验更好
+                setTimeout(() => {
+                    themeSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+            }
+
+            updateSummary();
+        }
+
+        function ai_loadSample(type) {
+            const textarea = document.getElementById('ai-input');
+            let text = "";
+            if (type === 'exam') text = "周三早上8点背单词，下午2点做数学卷子。\n下周一全天复习专业课，晚上看电影。\n下下周五早起晨跑5公里。";
+            if (type === 'life') text = "周六早上买菜，中午11点半接孩子放学。\n下周日送孩子去画画，顺便去超市买牛奶。\n下下周三晚上6点做饭，8点洗衣服。";
+            if (type === 'mixed') text = "早上8点半开会，中午12点吃饭，晚上7点健身。";
+            if (type === 'date') text = "今天复习第一章。\n3天后进行单元测试。\n第10天开始全真模拟。";
+            textarea.value = text;
+            ai_handleInput();
+        }
+
+        // ============================================
+        // 模块2：Builder 手动构建
+        // ============================================
+        function addBuilderDay() {
+            const today = new Date();
+            today.setDate(today.getDate() + builderData.length);
+            const dateStr = today.toISOString().split('T')[0];
+            builderData.push({ date: dateStr, tasks: [{ title: '', tag: '', desc: '', time: '', duration: null }] });
+            renderBuilder(); updateSummary();
+        }
+
+        // ============================================
+        // 核心修改 2: Confirm Builder
+        // ============================================
+        function confirmBuilder() {
+            // 1. 校验为空
+            if(builderData.length === 0) { customAlert("请先添加至少一天任务", "提示", "info"); return; }
+            
+            // 2. 锁定按钮样式
+            const btn = document.getElementById('builder-confirm-btn');
+            btn.innerHTML = `<i data-lucide="check-circle" class="w-3 h-3"></i> 已确认`;
+            btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-500');
+            btn.classList.add('bg-slate-600', 'cursor-default');
+            lucide.createIcons();
+            
+            // 3. 核心修改：移除 Alert，直接平滑滚动到主题选择区
+            const themeSection = document.getElementById('theme-section');
+            if (themeSection) {
+                themeSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            
             updateSummary();
         }
 
         function renderBuilder() {
             const container = document.getElementById('builder-container');
             container.innerHTML = '';
-            if(builderData.length === 0) {
-                 container.innerHTML = '<div class="text-center text-slate-500 py-10 border border-dashed border-slate-700 rounded-xl">暂无数据，请使用上方智能解析或点击下方按钮添加</div>'; return;
-            }
+            if(builderData.length === 0) { container.innerHTML = '<div class="text-center text-slate-500 py-10 border border-dashed border-slate-700 rounded-xl">暂无数据，请点击上方按钮添加</div>'; return; }
+
             builderData.forEach((day, dIdx) => {
-                const dayEl = document.createElement('div'); dayEl.className = 'builder-day group';
+                const dayEl = document.createElement('div');
+                dayEl.className = 'builder-day group';
                 dayEl.innerHTML = `
                     <div class="flex justify-between items-center mb-3 bg-slate-800/40 p-2.5 rounded-lg border border-white/5 hover:border-blue-500/30 transition-colors">
-                        <div class="flex items-center gap-3"><span class="text-[10px] font-bold text-slate-300 bg-slate-700/50 px-2 py-1 rounded shadow-sm">DAY ${dIdx + 1}</span><div class="h-4 w-px bg-white/10"></div><input type="text" value="${day.date || ''}" onchange="updateBuilderDate(${dIdx}, this.value)" class="bg-transparent border-none text-sm font-bold text-white focus:outline-none w-32 placeholder-slate-600" placeholder="YYYY-MM-DD"></div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-[10px] font-bold text-slate-300 bg-slate-700/50 px-2 py-1 rounded shadow-sm">DAY ${dIdx + 1}</span>
+                            <div class="h-4 w-px bg-white/10"></div>
+                            <input type="text" value="${day.date || ''}" onchange="updateBuilderDate(${dIdx}, this.value)" class="bg-transparent border-none text-sm font-bold text-white focus:outline-none w-32 placeholder-slate-600" placeholder="YYYY-MM-DD">
+                        </div>
                         <button onclick="removeBuilderDay(${dIdx})" class="text-slate-500 hover:text-red-400 transition opacity-0 group-hover:opacity-100 p-1.5 hover:bg-white/5 rounded"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>
-                    <div class="space-y-3 pl-2 border-l border-white/5 ml-4" id="tasks-container-${dIdx}">
-                        ${day.tasks.map((task, tIdx) => `<div class="bg-slate-900/30 p-2 rounded-lg border border-white/5"><div class="flex gap-2 items-center mb-2"><input type="text" value="${task.tag || ''}" onchange="updateBuilderTask(${dIdx}, ${tIdx}, 'tag', this.value)" class="builder-input w-20 text-center text-xs text-blue-300 font-bold" placeholder="标签"><input type="text" value="${task.title}" onchange="updateBuilderTask(${dIdx}, ${tIdx}, 'title', this.value)" class="builder-input flex-1 font-bold" placeholder="任务核心内容"><button onclick="removeBuilderTask(${dIdx}, ${tIdx})" class="text-slate-600 hover:text-red-400 px-1"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div><div class="flex gap-2 items-center"><input type="text" value="${task.time || ''}" onchange="updateBuilderTask(${dIdx}, ${tIdx}, 'time', this.value)" class="builder-input w-24 text-xs font-mono" placeholder="时间(09:00)"><input type="text" value="${task.duration || ''}" onchange="updateBuilderTask(${dIdx}, ${tIdx}, 'duration', this.value)" class="builder-input w-20 text-xs font-mono" placeholder="时长(分)"><input type="text" value="${task.desc || ''}" onchange="updateBuilderTask(${dIdx}, ${tIdx}, 'desc', this.value)" class="builder-input flex-1 text-xs text-slate-400" placeholder="备注/描述..."></div></div>`).join('')}
+                    <div class="space-y-3 pl-2 border-l border-white/5 ml-4">
+                        ${day.tasks.map((task, tIdx) => `
+                            <div class="bg-slate-900/30 p-2 rounded-lg border border-white/5 hover:border-white/10 transition">
+                                <div class="flex flex-wrap gap-2 items-center mb-2"> 
+                                    <input type="text" value="${task.tag || ''}" onchange="updateBuilderTask(${dIdx}, ${tIdx}, 'tag', this.value)" class="builder-input w-24 text-center text-xs text-blue-300 font-bold" placeholder="标签">
+                                    <input type="text" value="${task.title}" onchange="updateBuilderTask(${dIdx}, ${tIdx}, 'title', this.value)" class="builder-input flex-1 font-bold min-w-[140px]" placeholder="任务核心内容">
+                                    <button onclick="removeBuilderTask(${dIdx}, ${tIdx})" class="text-slate-600 hover:text-red-400 px-1"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                                </div>
+                                <div class="flex flex-wrap gap-2 items-center"> 
+                                    <input type="text" value="${task.time || ''}" onchange="updateBuilderTask(${dIdx}, ${tIdx}, 'time', this.value)" class="builder-input w-24 text-xs font-mono" placeholder="09:00">
+                                    <input type="text" value="${task.desc || ''}" onchange="updateBuilderTask(${dIdx}, ${tIdx}, 'desc', this.value)" class="builder-input flex-1 text-xs text-slate-400 min-w-[140px]" placeholder="备注/描述...">
+                                </div>
+                            </div>
+                        `).join('')}
                         <button onclick="addBuilderTask(${dIdx})" class="mt-2 text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-1 opacity-60 hover:opacity-100 transition px-1 py-1"><i data-lucide="plus" class="w-3 h-3"></i> 添加任务</button>
-                    </div>`;
+                    </div>
+                `;
                 container.appendChild(dayEl);
             });
-            lucide.createIcons(); updateSummary();
+            lucide.createIcons();
         }
 
-        function addBuilderDay() { const today = new Date(); today.setDate(today.getDate() + builderData.length); const dateStr = today.toISOString().split('T')[0]; builderData.push({ date: dateStr, tasks: [{ title: '', tag: '', desc: '', time: '', duration: null }] }); renderBuilder(); }
-        function removeBuilderDay(idx) { builderData.splice(idx, 1); renderBuilder(); }
-        function addBuilderTask(dayIdx) { builderData[dayIdx].tasks.push({ title: '', tag: '', desc: '', time: '', duration: null }); renderBuilder(); }
-        function removeBuilderTask(dayIdx, taskIdx) { builderData[dayIdx].tasks.splice(taskIdx, 1); renderBuilder(); }
-        function updateBuilderDate(dIdx, val) { builderData[dIdx].date = val; }
-        function updateBuilderTask(dIdx, tIdx, field, val) { builderData[dIdx].tasks[tIdx][field] = val; }
+        function removeBuilderDay(idx) { builderData.splice(idx, 1); renderBuilder(); updateSummary(); }
+        function addBuilderTask(dayIdx) { builderData[dayIdx].tasks.push({ title: '', tag: '', desc: '', time: '', duration: null }); renderBuilder(); updateSummary(); }
+        function removeBuilderTask(dayIdx, taskIdx) { builderData[dayIdx].tasks.splice(taskIdx, 1); renderBuilder(); updateSummary(); }
+        function updateBuilderDate(dIdx, val) { builderData[dIdx].date = val; resetBuilderConfirm(); }
+        function updateBuilderTask(dIdx, tIdx, field, val) { builderData[dIdx].tasks[tIdx][field] = val; resetBuilderConfirm(); }
+        function resetBuilderConfirm() {
+            const btn = document.getElementById('builder-confirm-btn');
+            if(btn && btn.innerText.includes('已确认')) {
+                btn.innerHTML = `<i data-lucide="check" class="w-3 h-3"></i> 确认构建`;
+                btn.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
+                btn.classList.remove('bg-slate-600', 'cursor-default');
+                lucide.createIcons();
+            }
+        }
 
-        function parseSmartText() {
-            const text = document.getElementById('smart-text-input').value;
-            if(!text.trim()) return;
-            const lines = text.split('\n'); const newPlan = []; let currentDay = null; let dayCount = 0;
-            const datePatterns = [/day\s*(\d+)/i, /第\s*(\d+)\s*天/, /(\d{4}-\d{2}-\d{2})/, /今天/, /明天/];
-            lines.forEach(line => {
-                line = line.trim(); if(!line) return;
-                let isDateLine = false;
-                for(let p of datePatterns) {
-                    if(p.test(line)) {
-                        isDateLine = true; if(currentDay) newPlan.push(currentDay); dayCount++;
-                        const today = new Date(); today.setDate(today.getDate() + (dayCount-1)); const dateStr = today.toISOString().split('T')[0];
-                        currentDay = { date: dateStr, tasks: [] }; break; 
-                    }
+        // ============================================
+        // 模块3：Excel & 核心生成逻辑
+        // ============================================
+        function processTasksData(rawArray) {
+            if (!rawArray || rawArray.length < 2) return [];
+            let headerRowIndex = -1;
+            let colMap = { date: -1, title: -1, desc: -1, tag: -1, time: -1, duration: -1 };
+
+            for (let r = 0; r < Math.min(rawArray.length, 5); r++) {
+                const rowStr = rawArray[r].map(c => String(c).trim().toLowerCase());
+                if (rowStr.findIndex(c => c.includes('date')||c.includes('日期')) !== -1 && rowStr.findIndex(c => c.includes('task')||c.includes('标题')) !== -1) {
+                    headerRowIndex = r;
+                    colMap.date = rowStr.findIndex(c => c.includes('date')||c.includes('日期'));
+                    colMap.title = rowStr.findIndex(c => c.includes('task')||c.includes('标题'));
+                    colMap.desc = rowStr.findIndex(c => c.includes('desc')||c.includes('描述'));
+                    colMap.tag = rowStr.findIndex(c => c.includes('tag')||c.includes('标签'));
+                    colMap.time = rowStr.findIndex(c => c.includes('time')||c.includes('时间'));
+                    break;
                 }
-                if(!isDateLine) {
-                    if(!currentDay) { currentDay = { date: new Date().toISOString().split('T')[0], tasks: [] }; dayCount++; }
-                    const parts = line.split(/\s+/);
-                    if(parts.length > 0) {
-                        let tag = '自动', title = '', time = '', duration = null, desc = '';
-                        let last = parts[parts.length-1]; if(/^\d+$/.test(last) && parts.length > 1) { duration = parseInt(last); parts.pop(); }
-                        if(parts.length > 1) { last = parts[parts.length-1]; if(/^(\d{4}|\d{1,2}:\d{2})$/.test(last)) { if(last.length === 4 && !last.includes(':')) { time = last.substring(0,2) + ":" + last.substring(2); } else { time = last; } parts.pop(); } }
-                        if(parts.length > 1 && parts[0].length < 6 && !/^\d+$/.test(parts[0])) { tag = parts[0]; parts.shift(); }
-                        title = parts.join(' '); currentDay.tasks.push({ title, tag, time, duration, desc });
+            }
+
+            if (headerRowIndex === -1) return [];
+            const taskDataByDate = {};
+            rawArray.slice(headerRowIndex + 1).forEach((row) => {
+                const dateRaw = row[colMap.date]; if (!dateRaw) return;
+                let dateStr = '';
+                try {
+                    if (typeof dateRaw === 'number') {
+                        const dateObj = XLSX.SSF.parse_date_code(dateRaw);
+                        dateStr = `${dateObj.y}-${String(dateObj.m).padStart(2,'0')}-${String(dateObj.d).padStart(2,'0')}`;
+                    } else {
+                        const dateString = String(dateRaw).trim();
+                        const d = new Date(dateString.replace(/-/g, '/').replace(/\./g, '/'));
+                        if (!isNaN(d.getTime())) dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                        else dateStr = dateString.split(' ')[0];
                     }
-                }
+                } catch (e) { return; }
+
+                if (!taskDataByDate[dateStr]) taskDataByDate[dateStr] = { date: dateStr, tasks: [] };
+                taskDataByDate[dateStr].tasks.push({
+                    title: String(row[colMap.title] || ''),
+                    desc: colMap.desc > -1 ? String(row[colMap.desc] || '') : '',
+                    tag: colMap.tag > -1 ? String(row[colMap.tag] || '') : '',
+                    time: colMap.time > -1 ? String(row[colMap.time] || '') : ''
+                });
             });
-            if(currentDay) newPlan.push(currentDay);
-            if(newPlan.length > 0) { builderData = newPlan; renderBuilder(); customAlert(`解析成功！生成 ${newPlan.length} 天计划`, '解析成功', 'sparkles'); }
-        }
-        
-        function loadPreset(type) {
-            const today = new Date(); const getDate = (offset) => { const d = new Date(today); d.setDate(today.getDate() + offset); return d.toISOString().split('T')[0]; };
-            if(type === 'ielts') builderData = [{ date: getDate(0), tasks: [{title:'背诵雅思核心词汇 List 1', tag:'词汇', desc:'', time:'08:00', duration:45}, {title:'剑桥雅思 14 Test 1 听力', tag:'听力', desc:'错题整理', time:'09:00', duration:40}] }, { date: getDate(1), tasks: [{title:'复习错题本', tag:'复习', desc:'', time:'08:00', duration:30}, {title:'阅读长难句分析 5 句', tag:'阅读', desc:'', time:'', duration:null}] }];
-            else if (type === 'code') builderData = [{ date: getDate(0), tasks: [{title:'LeetCode: Two Sum', tag:'Array', desc:'', time:'', duration:null}, {title:'LeetCode: Valid Parentheses', tag:'Stack', desc:'', time:'', duration:null}] }, { date: getDate(1), tasks: [{title:'学习二叉树遍历算法', tag:'Tree', desc:'', time:'', duration:null}, {title:'实现快速排序', tag:'Sort', desc:'', time:'', duration:null}] }];
-            else if (type === 'habit') { builderData = []; for(let i=0; i<3; i++) builderData.push({ date: getDate(i), tasks: [{title:'冥想 10 分钟', tag:'Mind', desc:'', time:'', duration:null}, {title:'阅读 30 分钟', tag:'Read', desc:'', time:'', duration:null}] }); }
-            renderBuilder();
+
+            return Object.keys(taskDataByDate).sort().map((date, index) => {
+                const dayData = taskDataByDate[date]; dayData.dayNum = index + 1; return dayData;
+            });
         }
 
-        async function getTemplateContent(theme) {
-            const templatePath = 'templates/template_' + theme + '.html';
-            try {
-                const response = await fetch(templatePath);
-                if (!response.ok) { const rootResponse = await fetch('template_' + theme + '.html'); if(rootResponse.ok) return await rootResponse.text(); throw new Error('HTTP错误: ' + response.status); }
-                return await response.text();
-            } catch (error) { throw new Error('无法加载模板文件，请确保 template_' + theme + '.html 存在。'); }
-        }
-
-        async function getRulesDbContent() {
-            try { const response = await fetch('templates/rules_db.js'); if (!response.ok) { const fallbackResponse = await fetch('rules_db.js'); if (!fallbackResponse.ok) return ''; return await fallbackResponse.text(); } return await response.text(); } catch (e) { return ''; }
-        }
-
-        // ============================================
-        // 生成逻辑 (国内优化 & 离线内嵌)
-        // ============================================
-
-        async function fetchResourceContent(url) {
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 4000); // 4秒超时
-                const response = await fetch(url, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                if(response.ok) return await response.text();
-            } catch (e) { console.warn("Resource fetch failed for inline:", url); }
-            return null;
+        function convertAIDataToOriginalFormat(aiData) {
+            return aiData.map((day, index) => ({
+                date: day.date, dayNum: index + 1,
+                tasks: day.tasks.map(task => ({
+                    title: task.title, tag: "", desc: "", time: task.time || "", duration: task.duration || null
+                }))
+            }));
         }
 
         async function generateApp() {
             if (!selectedTheme) { customAlert('请选择主题！', '提示', 'info'); return; }
-            if (currentMode === 'upload' && !uploadedData) { customAlert('请先上传 Excel 文件！', '提示', 'info'); return; }
-            if (currentMode === 'builder' && builderData.length === 0) { customAlert('请添加至少一天任务！', '提示', 'info'); return; }
-
+            
             const btn = document.getElementById('generate-button');
+            const mBtn = document.getElementById('mobile-generate-btn');
             const originalText = btn.innerText;
-            btn.disabled = true;
-            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin inline mr-2"></i> 正在处理...';
+            const mOriginalText = mBtn.innerHTML;
+            
+            [btn, mBtn].forEach(b => {
+                if(b) {
+                    b.disabled = true;
+                    b.innerHTML = '<i data-lucide="loader-2" class="animate-spin w-4 h-4 inline mr-2"></i> 处理中...';
+                }
+            });
             lucide.createIcons();
 
             try {
                 let structuredData = [];
-                if (currentMode === 'upload') {
-                    console.log('处理Excel数据...');
+                if (currentMode === 'ai') {
+                    if (aiData.length === 0) throw new Error('AI 数据为空，请先输入计划');
+                    structuredData = convertAIDataToOriginalFormat(aiData);
+                } else if (currentMode === 'upload') {
+                    if (!uploadedData) throw new Error('请先上传 Excel 文件');
                     structuredData = processTasksData(uploadedData);
-                } else {
-                    console.log('处理构建器数据...');
+                } else if (currentMode === 'builder') {
+                    if (builderData.length === 0) throw new Error('请至少添加一天任务');
                     structuredData = builderData.map((d, i) => ({
-                        date: d.date, dayNum: i + 1,
-                        tasks: d.tasks.filter(t => t.title.trim() !== '').map(t => ({ title: t.title, tag: t.tag || '', desc: t.desc || '', time: t.time || '', duration: t.duration || null }))
+                        date: d.date, dayNum: i+1,
+                        tasks: d.tasks.filter(t => t.title.trim() !== '').map(t => ({
+                            ...t,
+                            tag: (t.tag && t.tag.trim()) ? t.tag : null 
+                        }))
                     })).filter(d => d.tasks.length > 0);
                 }
-                
-                if (structuredData.length === 0) throw new Error('有效数据为空。请检查 Excel 表头是否包含“日期”和“任务”。');
+
+                if (structuredData.length === 0) throw new Error('有效数据为空');
 
                 const planTitle = await getPlanTitle();
-                if (!planTitle) { btn.disabled = false; btn.innerText = originalText; return; }
+                if (!planTitle) { 
+                    [btn, mBtn].forEach(b => {
+                        if(b) { b.disabled = false; b.innerHTML = b.id.includes('mobile') ? mOriginalText : originalText; }
+                    });
+                    lucide.createIcons();
+                    return; 
+                }
 
                 let templateContent = await getTemplateContent(selectedTheme);
                 const rulesDbContent = await getRulesDbContent();
                 const planId = selectedTheme + '_' + Date.now();
                 const safeTitle = planTitle.replace(/[<>"]/g, '');
-
-                // === 离线化资源处理 (Core Fix: 强制使用 OSS) ===
-                btn.innerHTML = '<i data-lucide="download-cloud" class="w-4 h-4 animate-bounce inline mr-2"></i> 尝试内嵌资源...';
-                lucide.createIcons();
-
-                // 🔴 修正：严格使用 OSS 地址下载资源，不使用任何国外 CDN
-                const [twContent, lucideContent] = await Promise.all([
-                    fetchResourceContent(OSS_RESOURCES.tailwind),
-                    fetchResourceContent(OSS_RESOURCES.lucide)
-                ]);
-
-                // 替换 Tailwind 引用
-                if (twContent) {
-                    // 如果下载成功，直接内嵌代码（离线可用）
-                    templateContent = templateContent.replace(/<script[^>]*src=".*tailwindcss.*"[^>]*><\/script>/i, `<script>${twContent}<\/script>`);
-                } else {
-                    // 如果下载失败，回退使用 OSS 链接（国内可用）
-                    templateContent = templateContent.replace(/<script[^>]*src=".*tailwindcss.*"[^>]*><\/script>/i, `<script src="${OSS_RESOURCES.tailwind}"><\/script>`);
-                }
-
-                // 替换 Lucide 引用
-                if (lucideContent) {
-                    templateContent = templateContent.replace(/<script[^>]*src=".*lucide.*"[^>]*><\/script>/i, `<script>${lucideContent}<\/script>`);
-                } else {
-                    templateContent = templateContent.replace(/<script[^>]*src=".*lucide.*"[^>]*><\/script>/i, `<script src="${OSS_RESOURCES.lucide}"><\/script>`);
-                }
-
                 const escapedData = JSON.stringify(structuredData).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026').replace(/'/g, '\\u0027');
 
                 let finalHtml = templateContent
@@ -642,62 +1284,201 @@
                     .replace(/{{PLAN_TITLE}}/g, safeTitle)
                     .replace(/{{PLAN_ID}}/g, planId)
                     .replace(/{{BODY_CLASS}}/g, '');
-                
-                if (rulesDbContent) finalHtml = finalHtml.replace('<script src="rules_db.js"><\/script>', '<script>' + rulesDbContent + '<\/script>');
+
+                if (rulesDbContent) {
+                    if (finalHtml.includes('src="rules_db.js"')) {
+                        finalHtml = finalHtml.replace(/<script[^>]*src="[^"]*rules_db\.js"[^>]*><\/script>/, '<script>' + rulesDbContent + '<\/script>');
+                    } else {
+                        finalHtml = finalHtml.replace('</head>', '<script>' + rulesDbContent + '<\/script></head>');
+                    }
+                }
 
                 const safeFileName = safeTitle.replace(/[<>:"/\\|?*]/g, '_') + '_' + selectedTheme + '.html';
                 const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-8' });
                 const blobUrl = URL.createObjectURL(blob);
                 
                 displayResultOptions(blobUrl, safeFileName);
-                customAlert(`✅ 生成成功！\n包含 ${structuredData.length} 天，共 ${structuredData.reduce((acc, d)=>acc+d.tasks.length, 0)} 个任务。`, '构建完成', 'check-circle');
+                customAlert(`成功生成 ${structuredData.length} 天计划！`, '构建完成', 'check-circle');
 
             } catch (error) {
-                console.error('生成失败:', error);
-                customAlert('生成失败：' + error.message, '错误', 'x-circle');
+                console.error(error); customAlert('错误: ' + error.message, '生成失败', 'x-circle');
             } finally {
-                btn.disabled = false;
-                btn.innerText = originalText;
+                [btn, mBtn].forEach(b => {
+                    if(b) { b.disabled = false; b.innerHTML = b.id.includes('mobile') ? mOriginalText : originalText; }
+                });
+                lucide.createIcons();
             }
         }
 
-        // 基础交互
-        function getPlanTitle() { return new Promise((resolve) => { titlePromiseResolve = resolve; const m = document.getElementById('title-input-modal'); const p = document.getElementById('title-modal-panel'); const i = document.getElementById('plan-title-input'); m.classList.remove('modal-bg-enter'); p.classList.remove('modal-content-enter'); m.classList.add('modal-bg-enter-active'); p.classList.add('modal-content-enter-active'); i.value = 'DeepFlow 个人学习计划'; setTimeout(() => i.select(), 100); }); }
-        function confirmTitleModal() { const val = document.getElementById('plan-title-input').value; closeTitleModal(); if (titlePromiseResolve) titlePromiseResolve(val || 'DeepFlow 计划'); }
-        function cancelTitleModal() { closeTitleModal(); if (titlePromiseResolve) titlePromiseResolve(null); }
-        function closeTitleModal() { const m = document.getElementById('title-input-modal'); const p = document.getElementById('title-modal-panel'); m.classList.remove('modal-bg-enter-active'); p.classList.remove('modal-content-enter-active'); m.classList.add('modal-bg-enter'); p.classList.add('modal-content-enter'); document.getElementById('plan-title-input').blur(); }
-        function customAlert(msg, title, iconName) { const m = document.getElementById('custom-alert-modal'); document.getElementById('alert-message').textContent = msg; document.getElementById('alert-title').innerHTML = '<i data-lucide="' + iconName + '" class="w-5 h-5"></i> ' + title; lucide.createIcons(); m.classList.remove('hidden'); setTimeout(() => { m.style.opacity = '1'; document.getElementById('modal-content').classList.remove('scale-95'); document.getElementById('modal-content').classList.add('scale-100'); }, 10); }
-        function closeCustomAlert() { const m = document.getElementById('custom-alert-modal'); m.style.opacity = '0'; document.getElementById('modal-content').classList.remove('scale-100'); document.getElementById('modal-content').classList.add('scale-95'); setTimeout(() => m.classList.add('hidden'), 300); }
-        function selectTheme(theme) { selectedTheme = theme; document.querySelectorAll('.selection-card').forEach(el => el.classList.remove('selected')); const current = document.getElementById('theme-' + theme); if(current) current.classList.add('selected'); updateSummary(); }
-        function updateSummary() { const s = document.getElementById('generation-summary'); const btn = document.getElementById('generate-button'); const m = { 'pro': 'DeepFlow Pro', 'zen': 'Zen Mode', 'cyberpunk': 'Cyberpunk' }; let ready = false; let info = ""; if (currentMode === 'upload' && uploadedData) { info = `Excel (${uploadedData.length > 1 ? uploadedData.length - 1 : 0} 行)`; ready = true; } else if (currentMode === 'builder' && builderData.length > 0) { info = `在线构建 (${builderData.length} 天)`; ready = true; } if (ready && selectedTheme) { s.innerHTML = `🎉 就绪！数据：${info}，主题：${m[selectedTheme]}`; btn.disabled = false; } else { s.innerHTML = ready ? `数据 OK (${info})，请选择主题` : (selectedTheme ? `主题 ${m[selectedTheme]}，请准备数据` : "等待配置..."); btn.disabled = true; } }
+        // ============================================
+        // 4. UI 辅助
+        // ============================================
+        function switchMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            const tabBtn = document.getElementById('tab-' + mode);
+            if(tabBtn) tabBtn.classList.add('active');
+            
+            ['ai', 'upload', 'builder'].forEach(m => {
+                const el = document.getElementById('mode-' + m);
+                if(el) el.classList.add('hidden');
+            });
+            
+            const targetEl = document.getElementById('mode-' + mode);
+            if(targetEl) targetEl.classList.remove('hidden');
+            
+            if (mode === 'builder') {
+                if (builderData.length === 0) addBuilderDay();
+                resetBuilderConfirm();
+            } else if (mode === 'ai') {
+                const btn = document.getElementById('ai-confirm-btn');
+                const mBtn = document.getElementById('mobile-confirm-btn');
+                [btn, mBtn].forEach(b => {
+                    if(b && b.innerText.includes('已锁定')) {
+                        b.innerHTML = b.id.includes('mobile') ? '<i data-lucide="check-circle" class="w-4 h-4"></i> 确认构建' : '<i data-lucide="check" class="w-3 h-3"></i> 确认构建';
+                        b.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
+                        b.classList.remove('bg-slate-600', 'cursor-default');
+                    }
+                });
+                lucide.createIcons();
+            }
+            updateSummary();
+        }
 
-        window.addEventListener('DOMContentLoaded', function() {
+        function handleFileChange(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            customAlert("正在解析 Excel...", "处理中", "loader-2");
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    uploadedData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+                    
+                    if(uploadedData && uploadedData.length > 1) {
+                        switchMode('upload'); 
+                        updateSummary();
+                        customAlert(`成功读取 ${uploadedData.length-1} 行数据`, "解析成功", "check");
+                        
+                        const dropArea = document.getElementById('excel-drop-area');
+                        dropArea.innerHTML = `
+                            <div class="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4 border border-emerald-500/30">
+                                <i data-lucide="check" class="w-8 h-8 text-emerald-400"></i>
+                            </div>
+                            <p class="text-lg font-bold text-white">已就绪: ${file.name}</p>
+                            <p class="text-sm text-emerald-400 mt-2 font-mono">包含 ${uploadedData.length-1} 个任务</p>
+                            <button onclick="document.getElementById('excel-file').click()" class="mt-4 text-xs text-slate-500 hover:text-white underline">更换文件</button>
+                            <input type="file" id="excel-file" accept=".xlsx,.csv" class="hidden" onchange="handleFileChange(event)">
+                        `;
+                        lucide.createIcons();
+                        
+                    } else {
+                        throw new Error("数据为空或格式不正确");
+                    }
+                } catch(err) {
+                    customAlert("Excel 解析失败: " + err.message, "错误", "x-circle");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        async function getTemplateContent(theme) {
+            try {
+                const res = await fetch(`templates/template_${theme}.html`);
+                if (!res.ok) { const fb = await fetch(`template_${theme}.html`); if (fb.ok) return await fb.text(); throw new Error('Template not found'); }
+                return await res.text();
+            } catch (e) { throw new Error('无法加载模板文件'); }
+        }
+        async function getRulesDbContent() { try { const res = await fetch('templates/rules_db.js'); return res.ok ? await res.text() : ''; } catch { return ''; } }
+
+        function selectTheme(theme) {
+            selectedTheme = theme;
+            document.querySelectorAll('.selection-card').forEach(el => el.classList.remove('selected'));
+            const card = document.getElementById('theme-' + theme);
+            if(card) card.classList.add('selected');
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const s = document.getElementById('generation-summary');
+            const btn = document.getElementById('generate-button');
+            const mBtn = document.getElementById('mobile-generate-btn');
+            const themeMap = { 'pro': 'DeepFlow Pro', 'zen': 'Zen Mode', 'cyberpunk': 'Cyberpunk' };
+            const themeName = themeMap[selectedTheme] || '未选择';
+            let count = 0, sourceText = "";
+            if (currentMode === 'ai') { count = aiData.length; sourceText = "AI 解析"; }
+            else if (currentMode === 'upload' && uploadedData) { count = uploadedData.length - 1; sourceText = "Excel"; }
+            else if (currentMode === 'builder') { count = builderData.length; sourceText = "在线构建"; }
+
+            if (count > 0 && selectedTheme) { 
+                if(s) s.innerHTML = `🎉 就绪！数据源：${sourceText} (${count} 天)，主题：${themeName}`; 
+                [btn, mBtn].forEach(b => { if(b) { b.disabled = false; b.classList.remove('opacity-50'); }});
+            } else { 
+                if(s) s.innerHTML = count > 0 ? `数据 OK (${sourceText})，请选择主题` : "等待数据配置..."; 
+                [btn, mBtn].forEach(b => { if(b) { b.disabled = true; b.classList.add('opacity-50'); }});
+            }
+        }
+
+        function displayResultOptions(blobUrl, fileName) {
+            const modal = document.getElementById('resultModalOverlay');
+            const prevBtn = document.getElementById('previewButton');
+            const downBtn = document.getElementById('downloadButton');
+            prevBtn.href = blobUrl;
+            downBtn.href = blobUrl;
+            downBtn.download = fileName;
+            modal.style.display = 'flex'; 
+            setTimeout(() => modal.classList.add('active'), 10);
+        }
+        
+        function closeResultModal() {
+            const modal = document.getElementById('resultModalOverlay');
+            modal.classList.remove('active'); 
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        function getPlanTitle() {
+            return new Promise((resolve) => {
+                titlePromiseResolve = resolve;
+                const m = document.getElementById('title-input-modal'); const p = document.getElementById('title-modal-panel');
+                m.classList.remove('opacity-0', 'pointer-events-none'); p.classList.remove('opacity-0', 'scale-95'); p.classList.add('scale-100');
+            });
+        }
+        function confirmTitleModal() { closeTitleModal(); if(titlePromiseResolve) titlePromiseResolve(document.getElementById('plan-title-input').value || 'DeepFlow 计划'); }
+        function cancelTitleModal() { closeTitleModal(); if(titlePromiseResolve) titlePromiseResolve(null); }
+        function closeTitleModal() {
+            const m = document.getElementById('title-input-modal'); const p = document.getElementById('title-modal-panel');
+            m.classList.add('opacity-0', 'pointer-events-none'); p.classList.add('opacity-0', 'scale-95'); p.classList.remove('scale-100');
+        }
+
+        function customAlert(msg, title, icon) {
+            const m = document.getElementById('custom-alert-modal');
+            document.getElementById('alert-message').textContent = msg;
+            document.getElementById('alert-title').innerHTML = `<i data-lucide="${icon}" class="w-5 h-5"></i> ${title}`;
+            lucide.createIcons();
+            m.classList.remove('hidden'); setTimeout(() => m.classList.remove('opacity-0'), 10);
+        }
+        function closeCustomAlert() { const m = document.getElementById('custom-alert-modal'); m.classList.add('opacity-0'); setTimeout(() => m.classList.add('hidden'), 300); }
+        function downloadSampleExcel() {
+            const ws = XLSX.utils.aoa_to_sheet([["日期","任务标题","时间","标签"],["2025-01-01","示例任务","09:00","核心"]]);
+            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+            XLSX.writeFile(wb, "DeepFlow_Template.xlsx");
+        }
+
+        window.onload = () => {
+            lucide.createIcons();
+            initMobileExperience();
             const urlParams = new URLSearchParams(window.location.search);
-            const theme = urlParams.get('theme');
-            if (theme) selectTheme(theme);
+            if(urlParams.get('theme')) selectTheme(urlParams.get('theme'));
             const dropArea = document.querySelector('label[for="excel-file"]');
             if (dropArea) {
                 dropArea.addEventListener('dragover', (e) => { e.preventDefault(); dropArea.classList.add('border-blue-500', 'bg-white/10'); });
                 dropArea.addEventListener('dragleave', () => { dropArea.classList.remove('border-blue-500', 'bg-white/10'); });
-                dropArea.addEventListener('drop', (e) => { e.preventDefault(); dropArea.classList.remove('border-blue-500', 'bg-white/10'); const file = e.dataTransfer.files[0]; if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.csv'))) { const input = document.getElementById('excel-file'); const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files; handleFileChange({ target: input }); } else { customAlert('请上传 .xlsx 或 .csv 文件', '错误', 'file-x'); } });
+                dropArea.addEventListener('drop', (e) => { e.preventDefault(); dropArea.classList.remove('border-blue-500', 'bg-white/10'); const file = e.dataTransfer.files[0]; if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.csv'))) { const input = document.getElementById('excel-file'); const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files; handleFileChange({ target: input }); switchMode('upload'); } else { customAlert('请上传 .xlsx 或 .csv 文件', '错误', 'file-x'); } });
             }
-        });
-        
-        function displayResultOptions(blobUrl, fileName) { const p = document.getElementById('previewButton'); const d = document.getElementById('downloadButton'); const m = document.getElementById('resultModalOverlay'); p.href = blobUrl; d.href = blobUrl; d.download = fileName; d.onclick = () => { setTimeout(closeResultModal, 50); }; m.style.display = 'flex'; setTimeout(() => { m.classList.add('active'); }, 10); }
-        function closeResultModal() { const m = document.getElementById('resultModalOverlay'); m.classList.remove('active'); setTimeout(() => { m.style.display = 'none'; }, 300); }
+        };
     </script>
-    
-    <div id="resultModalOverlay" class="df-modal-overlay">
-        <div class="df-modal-card">
-            <div class="df-icon-circle"><i data-lucide="check" style="color: white; width: 32px; height: 32px; stroke-width: 3px;"></i></div>
-            <h3 class="df-modal-title">计划已生成 (Ready)</h3>
-            <p class="df-modal-desc">您的 DeepFlow 计划已准备就绪。<br>请根据您的设备选择打开方式。</p>
-            <div class="df-actions">
-                <a id="previewButton" target="_blank" class="df-btn df-btn-primary"><i data-lucide="eye" style="width: 18px; height: 18px;"></i> <span>实时预览 (iOS & Safari推荐)</span></a>
-                <a id="downloadButton" class="df-btn df-btn-secondary"><i data-lucide="download" style="width: 18px; height: 18px;"></i> <span>下载文件 (电脑 / 手机推荐)</span></a>
-            </div>
-            <button onclick="closeResultModal()" class="df-close">关闭窗口</button>
-        </div>
-    </div>
 </body>
 </html>
