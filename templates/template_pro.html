@@ -157,10 +157,31 @@
         .mix-icon, .picker-icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
         
         /* 任务列表 */
-        .task-item { border-left: 4px solid transparent; }
-        .task-checked { background-color: var(--primary-light) !important; border-left-color: var(--primary) !important; }
+        /* --- Bento Grid 新样式 --- */
+.task-item { 
+    border-left: 1px solid rgba(255,255,255,0.6); /* 基础边框 */
+}
+.task-checked { 
+    background-color: var(--primary-light) !important; 
+    border-color: var(--primary) !important;
+    box-shadow: none !important;
+}
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-clamp: 2;
+}
+.checkbox-ios {
+    width: 24px; 
+    height: 24px; 
+    border-radius: 8px; 
+    border: 2px solid #e2e8f0; 
+    background: white; 
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
         .task-checked h4 { text-decoration: line-through; color: #86868b; opacity: 0.8; }
-        .checkbox-ios { width: 22px; height: 22px; border-radius: 6px; border: 2px solid #d1d1d6; background: white; transition: all 0.3s; display: flex; align-items: center; justify-content: center; }
         .task-checked .checkbox-ios { background: var(--primary); border-color: var(--primary); transform: scale(1.05); box-shadow: 0 4px 10px var(--primary-light); }
         .fade-in-up { animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; opacity: 0; transform: translateY(15px); }
         @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
@@ -491,9 +512,28 @@
 .rank-1 .rank-num { color: #eab308; font-size: 18px; text-shadow: 0 2px 4px rgba(234, 179, 8, 0.2); }
 .rank-2 .rank-num { color: #94a3b8; font-size: 16px; }
 .rank-3 .rank-num { color: #b45309; font-size: 16px; }
+/* 在线状态呼吸灯效果 */
+@keyframes onlinePulse {
+    0%, 100% { 
+        opacity: 1; 
+        box-shadow: 0 0 5px #10b981, 0 0 10px #10b981;
+    }
+    50% { 
+        opacity: 0.7; 
+        box-shadow: 0 0 2px #10b981, 0 0 5px #10b981;
+    }
+}
 
+.animate-pulse {
+    animation: onlinePulse 2s ease-in-out infinite;
+}
+
+/* 添加用户标签样式 */
+.text-\[8px\] {
+    font-size: 8px;
+}
 .rank-avatar {
-    width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-size: 14px;
+    width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-size: 14px; position: relative;
 }
 .rank-name {
     flex: 1; font-size: 13px; font-weight: 600; color: #334155;
@@ -1383,43 +1423,132 @@ function switchToSingleColor(hex) {
 
         function getTaskWeight(task) { const time = task.time || ""; if(!time) return 9999; const hour = parseInt(time.split(':')[0]); return hour * 60; }
 
-        function renderDay(idx) { 
-            if (idx < 0 || idx >= tasksData.length) idx = 0; 
-            currentDayIdx = idx; 
-            const day = tasksData[idx]; 
-            const todayColor = getDayColor(idx); 
-            applyThemeColor(todayColor); 
-            window.location.hash = `day=${idx}`;
-            const mobSelect = document.getElementById('mobileDateSelect'); if(mobSelect) mobSelect.value = idx;
-            const dateList = document.getElementById('dateList'); dateList.innerHTML = ''; 
-            tasksData.forEach((d, i) => { const isSelected = i === idx; const itemColor = getDayColor(i); const el = document.createElement('div'); el.className = `p-3 rounded-lg flex justify-between items-center text-sm cursor-pointer transition-all mb-1 hover:bg-white/60`; if(isSelected) { el.className += ' bg-white shadow-sm font-bold border-l-4 text-slate-800'; el.style.borderLeftColor = itemColor; } else { el.className += ' text-slate-500 border-l-4 border-transparent'; } const done = d.tasks.filter((_, ti) => userProgress[d.date+'_'+ti]).length; const isAll = done === d.tasks.length && d.tasks.length > 0; let iconHtml = isAll ? `<div class="w-2 h-2 rounded-full shadow-sm" style="background:${itemColor}; box-shadow: 0 0 4px ${itemColor}80;"></div>` : (!isSelected ? `<div class="w-1.5 h-1.5 rounded-full bg-slate-200"></div>` : ''); el.innerHTML = `<span>${d.date.substring(5)}</span> ${iconHtml}`; el.onclick = () => { window.location.hash = `day=${i}`; }; dateList.appendChild(el); });
-            document.getElementById('currentDateDisplay').innerText = day.date; document.getElementById('dayCountDisplay').innerText = day.dayNum; updateStats(day); 
-            const container = document.getElementById('dynamicTasksContainer'); container.innerHTML = ''; 
-            if (day.tasks.length === 0) { container.innerHTML = '<div class="text-center p-10 text-slate-400 italic">今日无任务，尽情享受时光。</div>'; } else { 
-                const sortedTasksWithIndex = day.tasks.map((t, i) => ({...t, originalIndex: i})).sort((a, b) => { return getTaskWeight(a) - getTaskWeight(b); });
-                let lastTimePeriod = '';
-                sortedTasksWithIndex.forEach((t, i) => { 
-                    const tid = day.date + '_' + t.originalIndex; const checked = !!userProgress[tid]; 
-                    const autoInfo = autoDetectTag(t.title); const displayTag = t.tag || (autoInfo.label !== 'Task' ? autoInfo.label : ''); 
-                    let displayColor = 'var(--primary)';
-                    if(t.tag && autoDetectTag(t.tag).category !== '日常') displayColor = autoDetectTag(t.tag).color; else if(autoInfo.category !== '日常') displayColor = autoInfo.color;
-                    const weight = getTaskWeight(t);
-                    let currentTimePeriod = '';
-                    if (weight < 12 * 60) currentTimePeriod = 'MORNING'; else if (weight < 18 * 60) currentTimePeriod = 'AFTERNOON'; else if (weight < 24 * 60) currentTimePeriod = 'EVENING';
-                    if (i === 0 || (currentTimePeriod !== lastTimePeriod && currentTimePeriod !== '')) { if (currentTimePeriod) { container.insertAdjacentHTML('beforeend', `<div class="flex items-center gap-4 py-2 opacity-40 fade-in-up" style="animation-delay: ${(i)*0.05}s"><div class="h-px bg-slate-300 flex-1"></div><span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">${currentTimePeriod}</span><div class="h-px bg-slate-300 flex-1"></div></div>`); } } lastTimePeriod = currentTimePeriod;
-                    const badge = displayTag ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded border opacity-80" style="color:${displayColor}; border-color:${displayColor}">${displayTag}</span>` : ''; 
-                    let timeInfoHtml = (t.time || t.duration) ? `<div class="flex gap-3 text-xs font-mono font-bold text-slate-400 mb-1">${t.time ? `<span>⏰ ${t.time}</span>` : ''}${t.duration ? `<span>⏳ ${t.duration}m</span>` : ''}</div>` : ''; 
-                    const div = document.createElement('div'); 
-                    // [修复点] 添加唯一ID，方便 toggleTask 查找
-                    div.id = 'task-card-' + tid; 
-                    div.className = `task-item ios-card p-4 rounded-xl flex gap-4 cursor-pointer hover:bg-white transition-all ${checked ? 'task-checked' : ''} fade-in-up`; 
-                    div.style.animationDelay = `${i * 0.05}s`;
-                    div.onclick = () => toggleTask(tid); 
-                    div.innerHTML = `<div class="checkbox-ios flex-shrink-0"><svg class="w-3.5 h-3.5 text-white ${checked ? 'opacity-100' : 'opacity-0'}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div><div class="flex-1">${timeInfoHtml}<div class="flex justify-between items-start mb-1"><h4 class="font-bold text-slate-800 text-base leading-tight transition-colors"><span class="mr-1">${autoInfo.emoji}</span> ${t.title}</h4>${badge}</div><p class="text-sm text-slate-500 font-medium leading-relaxed">${t.desc}</p></div>`; container.appendChild(div); 
-                }); 
-            } 
-            checkLock(day.date); if(window.lucide) initLucideSafe(); 
-        }
+        // --- 核心渲染逻辑：Bento Grid 风格 ---
+function renderDay(idx) {
+    if (idx < 0 || idx >= tasksData.length) idx = 0;
+    currentDayIdx = idx;
+    const day = tasksData[idx];
+    const todayColor = getDayColor(idx);
+    applyThemeColor(todayColor);
+    window.location.hash = `day=${idx}`;
+    
+    // 更新顶部日期选择器
+    const mobSelect = document.getElementById('mobileDateSelect'); 
+    if(mobSelect) mobSelect.value = idx;
+    
+    // 更新侧边栏高亮
+    const dateList = document.getElementById('dateList'); 
+    dateList.innerHTML = '';
+    tasksData.forEach((d, i) => { 
+        const isSelected = i === idx; 
+        const itemColor = getDayColor(i); 
+        const el = document.createElement('div'); 
+        el.className = `p-3 rounded-lg flex justify-between items-center text-sm cursor-pointer transition-all mb-1 hover:bg-white/60`; 
+        if(isSelected) { 
+            el.className += ' bg-white shadow-sm font-bold border-l-4 text-slate-800'; 
+            el.style.borderLeftColor = itemColor; 
+        } else { 
+            el.className += ' text-slate-500 border-l-4 border-transparent'; 
+        } 
+        const done = d.tasks.filter((_, ti) => userProgress[d.date+'_'+ti]).length; 
+        const isAll = done === d.tasks.length && d.tasks.length > 0; 
+        let iconHtml = isAll ? `<div class="w-2 h-2 rounded-full shadow-sm" style="background:${itemColor}; box-shadow: 0 0 4px ${itemColor}80;"></div>` : (!isSelected ? `<div class="w-1.5 h-1.5 rounded-full bg-slate-200"></div>` : ''); 
+        el.innerHTML = `<span>${d.date.substring(5)}</span> ${iconHtml}`; 
+        el.onclick = () => { window.location.hash = `day=${i}`; }; 
+        dateList.appendChild(el); 
+    });
+
+    // 更新标题数据
+    document.getElementById('currentDateDisplay').innerText = day.date; 
+    document.getElementById('dayCountDisplay').innerText = day.dayNum; 
+    updateStats(day);
+
+    // --- 🎯 任务列表渲染核心修改开始 ---
+    const container = document.getElementById('dynamicTasksContainer'); 
+    container.innerHTML = '';
+    
+    // 1. 设置 Grid 布局容器 (手机1列，平板/电脑2列)
+    container.className = "grid grid-cols-1 md:grid-cols-2 gap-4 pb-24"; // 增加底部padding防止被Dock遮挡
+    
+    // 移除外部容器的 space-y-3，防止干扰 Grid
+    document.getElementById('contentLocker').classList.remove('space-y-3');
+
+    if (day.tasks.length === 0) { 
+        container.innerHTML = '<div class="col-span-full text-center p-12 text-slate-400 italic bg-white/50 rounded-3xl border border-dashed border-slate-200">🍵 今日无任务，尽情享受时光。</div>'; 
+    } else {
+        const sortedTasksWithIndex = day.tasks.map((t, i) => ({...t, originalIndex: i})).sort((a, b) => getTaskWeight(a) - getTaskWeight(b));
+        
+        sortedTasksWithIndex.forEach((t, i) => {
+            const tid = day.date + '_' + t.originalIndex; 
+            const checked = !!userProgress[tid];
+            const autoInfo = autoDetectTag(t.title); 
+            const displayTag = t.tag || (autoInfo.label !== 'Task' ? autoInfo.label : '');
+            
+            let displayColor = 'var(--primary)';
+            if(t.tag && autoDetectTag(t.tag).category !== '日常') displayColor = autoDetectTag(t.tag).color; 
+            else if(autoInfo.category !== '日常') displayColor = autoInfo.color;
+
+            // 徽章 HTML
+            const badge = displayTag ? 
+                `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border" style="color:${displayColor}; background:${displayColor}10; border-color:${displayColor}30">${displayTag}</span>` : 
+                '';
+
+            // ⏰ 时间显示修复 (Null 检查)
+            // 如果 t.time 是 "null" 字符串或者 null/undefined，就不显示
+            const showTime = t.time && t.time !== 'null' ? t.time : null;
+            const showDur = t.duration && t.duration !== 'null' ? t.duration : null;
+            
+            let timeInfoHtml = '';
+            if (showTime || showDur) {
+                timeInfoHtml = `
+                    <div class="flex items-center gap-3 text-xs font-mono font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">
+                        ${showTime ? `<span class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> ${showTime}</span>` : ''}
+                        ${showDur ? `<span class="flex items-center gap-1"><i data-lucide="hourglass" class="w-3 h-3"></i> ${showDur}m</span>` : ''}
+                    </div>`;
+            }
+
+            const div = document.createElement('div');
+            div.id = 'task-card-' + tid;
+            
+            // 卡片样式：Bento 风格
+            // flex-col 确保内容垂直分布，min-h 确保卡片高度统一，justify-between 确保底部对齐
+            div.className = `task-item group relative p-5 rounded-2xl bg-white/80 backdrop-blur-xl border border-white/60 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between min-h-[120px] fade-in-up ${checked ? 'task-checked opacity-60 grayscale-[0.5]' : ''}`;
+            
+            // 选中时的边框色
+            if(checked) div.style.borderColor = 'var(--primary)';
+            
+            div.style.animationDelay = `${i * 0.05}s`;
+            div.onclick = () => toggleTask(tid);
+
+            div.innerHTML = `
+                <div class="flex justify-between items-start gap-3 mb-2">
+                    <h4 class="font-bold text-slate-800 text-[15px] leading-snug line-clamp-2 group-hover:text-[var(--primary)] transition-colors">
+                        <span class="mr-1 inline-block transform group-hover:scale-110 transition-transform">${autoInfo.emoji}</span> ${t.title}
+                    </h4>
+                    <div class="checkbox-ios flex-shrink-0 ${checked ? 'bg-[var(--primary)] border-[var(--primary)]' : ''}">
+                        <svg class="w-3.5 h-3.5 text-white ${checked ? 'opacity-100' : 'opacity-0'} transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                </div>
+
+                <p class="text-xs text-slate-500 font-medium leading-relaxed line-clamp-2 mb-4 h-8">
+                    ${t.desc || ''}
+                </p>
+
+                <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-100/50">
+                    <div class="flex gap-2">
+                        ${badge}
+                    </div>
+                    ${timeInfoHtml}
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+    // --- 🎯 任务列表渲染核心修改结束 ---
+
+    checkLock(day.date); 
+    if(window.lucide) initLucideSafe();
+}
         
         async function toggleTask(tid) { 
     if(document.getElementById('contentLocker').style.filter.includes('blur')) return; 
@@ -1772,106 +1901,295 @@ const RANK_CACHE_KEY = 'pro_rank_cache_' + planId;
 const RANK_UPDATE_INTERVAL = 3 * 60 * 60 * 1000; // 3小时更新一次 (毫秒)
 let currentRankType = 'xp';
 
-// 1. 中国特色网名库 (真实感来源)
+// 1. 中国特色网名库 (真实感来源) - 增强版
 const REALISTIC_NAMES = [
     // 奋斗类
     "考研必上岸", "凌晨四点的洛杉矶", "自律即自由", "这种感觉太棒了", "闭关修炼中", "每天进步一点点",
+    "努力上岸", "奋斗的小蚂蚁", "我要变优秀", "自律成就未来", "坚持就是胜利", "追梦人",
+    
     // 文艺/自然类
     "清风徐来", "山川湖海", "听雨", "云深不知处", "浅笑安然", "这里的黎明静悄悄",
-    // 抽象/默认类
+    "岁月静好", "春暖花开", "沧海一声笑", "枫叶红了", "静待花开", "北国风光",
+    
+    // 抽象/网络热词类
     "momo", "用户89757", "芝士雪豹", "AAA建材王总", "纯爱战神", "只是个传说",
-    // 英文ID类 (符合国人习惯的)
-    "Focus_Man", "Echo", "Serendipity", "Joker", "Vicky", "Winner"
+    "脆脆鲨", "熬夜冠军", "摸鱼达人", "佛系青年", "躺平选手", "社恐患者",
+    
+    // 英文ID类
+    "Focus_Man", "Echo", "Serendipity", "Joker", "Vicky", "Winner",
+    "Dreamer", "Phoenix", "Shadow", "Luna", "Leo", "Alpha",
+    
+    // 中文+数字组合（像真实账号）
+    "小明同学_2024", "小王的日常", "小李爱学习", "张老师的笔记", "王教练",
+    "小芳要加油", "阿杰的成长日记", "小美向前冲", "老陈的读书笔记",
+    
+    // 职业/兴趣类
+    "程序员小王", "设计师Lily", "英语老师Linda", "健身教练Mike", "考研党小张",
+    "读书人老赵", "旅行摄影家", "美食探索者", "电影爱好者",
+    
+    // 可爱/萌系
+    "喵星人", "汪星人", "小兔几", "小熊软糖", "草莓奶昔", "奶茶不加糖",
+    
+    // 个性化签名式
+    "今天也要加油鸭", "向更好的自己出发", "自律给我自由", "慢慢来比较快",
+    "一切都会好的", "保持热爱奔赴山海"
 ];
+// 增强版名称生成函数，避免重复
+// 增强版名称生成函数，避免重复
+let usedGlobalNames = new Set();
 
-const AVATAR_POOLS = ["👨‍🎓", "👩‍💻", "🦁", "🐱", "🐶", "🚀", "🌟", "🔥", "⛄", "🎓", "🍀", "🐳"];
-
+function generateRealisticName(forceUnique = true) {
+    let name;
+    let attempts = 0;
+    
+    do {
+        const baseName = REALISTIC_NAMES[Math.floor(Math.random() * REALISTIC_NAMES.length)];
+        name = baseName;
+        
+        // 随机添加后缀（40%概率）
+        if (Math.random() < 0.4) {
+            const suffixes = [
+                `_${Math.floor(Math.random() * 99) + 1}`, // _23
+                `${Math.floor(Math.random() * 999)}`,     // 456
+                "✨", "🌟", "🔥", "💪", "🎯", "📚", "📖", "🏆"
+            ];
+            name = baseName + suffixes[Math.floor(Math.random() * suffixes.length)];
+        }
+        
+        // 随机添加前缀（15%概率）
+        else if (Math.random() < 0.15) {
+            const prefixes = ["我是", "超爱", "努力", "加油", "坚持", "热爱"];
+            name = prefixes[Math.floor(Math.random() * prefixes.length)] + baseName;
+        }
+        
+        // 添加表情后缀（15%概率）
+        else if (Math.random() < 0.15) {
+            const emojis = [" 😊", " 😎", " 🥳", " 🤓", " 🥰", " 😴", " 🍀", " 🍃"];
+            name = baseName + emojis[Math.floor(Math.random() * emojis.length)];
+        }
+        
+        attempts++;
+        
+        // 如果尝试太多次，强制添加唯一ID
+        if (attempts > 5) {
+            name = baseName + "_" + Date.now().toString().slice(-4) + Math.floor(Math.random() * 100);
+            break;
+        }
+        
+    } while (forceUnique && usedGlobalNames.has(name));
+    
+    if (forceUnique) usedGlobalNames.add(name);
+    return name;
+}
 // 2. 生成/读取榜单数据 (核心逻辑)
 function getVirtualRankings(type) {
+    // ⭐ 强制更新缓存版本（修复在线状态问题）
+    const CACHE_VERSION = "3.0"; // 每次修改就递增
+    const VERSION_KEY = 'rank_cache_version_' + planId;
+    
+    if (localStorage.getItem(VERSION_KEY) !== CACHE_VERSION) {
+        // 清除所有类型的缓存
+        localStorage.removeItem(RANK_CACHE_KEY);
+        localStorage.setItem(VERSION_KEY, CACHE_VERSION);
+        console.log('🎯 排行榜缓存已更新到版本', CACHE_VERSION);
+    }
+    
     let userVal = 0;
-    // 获取用户真实数据
     if(type === 'xp') userVal = Math.floor(userProfile.xp);
     else if(type === 'focus') userVal = userProfile.focusMinutes || 0;
     else if(type === 'streak') userVal = userProfile.streak;
 
     const now = Date.now();
     let cache = JSON.parse(localStorage.getItem(RANK_CACHE_KEY) || '{}');
-
-    // 检查缓存是否存在且未过期
-    // 注意：我们分别为三种榜单存储缓存，互不干扰
+    
+    // ⭐ 关键修复：每次重新生成前清空全局记录
+    usedGlobalNames.clear();
+    
     if (!cache[type] || (now - cache[type].timestamp > RANK_UPDATE_INTERVAL)) {
-        // --- 缓存失效，生成新一批“陪跑学霸” ---
         console.log(`[Leaderboard] Generating new ${type} opponents...`);
         
         const bots = [];
-        const botCount = 10; // 生成10个竞争对手
+        const botCount = 15;
+        
+        // 为每个类型创建独立的usedNames
+        const usedNamesForThisType = new Set();
         
         for (let i = 0; i < botCount; i++) {
-            // 随机取名
-            const name = REALISTIC_NAMES[Math.floor(Math.random() * REALISTIC_NAMES.length)];
-            const avatar = AVATAR_POOLS[Math.floor(Math.random() * AVATAR_POOLS.length)];
+            // 生成绝对不重复的名字
+            let name;
+            let attempts = 0;
             
-            // 🧠 智能分数算法 (Big Data Simulation)
-            // 既要显得真实，又要激发欲望。
-            // 策略：大部分人在你附近 (0.8x - 1.2x)，设置 1-2 个“卷王” (1.5x - 2.0x) 让你仰望
-            
-            let score = 0;
-            const seed = Math.random();
-            
-            if (userVal < 50) {
-                // 如果用户是新手，机器人也是新手，但稍微高一点，引诱用户
-                score = Math.floor(Math.random() * 100) + 20; 
-            } else {
-                if (seed > 0.9) {
-                    // 10% 的概率出现“卷王” (你是1000分，他是 1800分)
-                    score = Math.floor(userVal * (1.5 + Math.random() * 0.5));
-                } else if (seed > 0.4) {
-                    // 50% 的概率是你前面的竞争对手 (你是1000分，他是 1050-1300分)
-                    score = Math.floor(userVal * (1.05 + Math.random() * 0.3));
-                } else {
-                    // 40% 的概率是被你甩在身后的 (你是1000分，他是 600-900分)
-                    score = Math.floor(userVal * (0.6 + Math.random() * 0.3));
+            do {
+                name = generateRealisticName(false); // 先不检查全局重复
+                
+                // 如果在本类型内重复，加后缀
+                if (usedNamesForThisType.has(name)) {
+                    name = name + "_" + (Math.floor(Math.random() * 90) + 10);
                 }
+                
+                attempts++;
+                if (attempts > 8) {
+                    // 终极防重复：时间戳+随机数
+                    name = name.split('_')[0] + "_" + 
+                           Date.now().toString().slice(-6) + 
+                           Math.floor(Math.random() * 1000);
+                    break;
+                }
+            } while (usedNamesForThisType.has(name));
+            
+            usedNamesForThisType.add(name);
+            usedGlobalNames.add(name); // 也加入全局记录
+            
+            // 智能头像选择（修复版）
+            const genderRand = Math.random();
+            let avatar;
+            if (genderRand < 0.2) {
+                // 20%男性头像
+                const maleAvatars = ["👨‍💻", "👨‍🎓", "🦁", "🐯", "🚀", "🔥", "⚽", "🎮"];
+                avatar = maleAvatars[Math.floor(Math.random() * maleAvatars.length)];
+            } else if (genderRand < 0.4) {
+                // 20%女性头像
+                const femaleAvatars = ["👩‍💻", "👩‍🎓", "🐱", "🐰", "🌸", "🌟", "💄", "👗"];
+                avatar = femaleAvatars[Math.floor(Math.random() * femaleAvatars.length)];
+            } else {
+                // 60%中性头像
+                const neutralAvatars = ["🐶", "🐼", "🐳", "🍀", "🎯", "📚", "🎨", "🎵", "🍎", "⚡"];
+                avatar = neutralAvatars[Math.floor(Math.random() * neutralAvatars.length)];
             }
             
-            // 特殊修正：连胜榜单不能太离谱，要在 1~365 之间
-            if (type === 'streak') score = Math.min(score, 365);
+            // ⭐ 修复：生成固定的在线状态和活跃时间
+            const userType = Math.random();
+            let isOnline, lastActive;
             
-            bots.push({ name, avatar, val: score, isMe: false });
+            // 根据用户类型生成不同的在线模式
+            if (userType < 0.2) {
+                // 20%：高活跃用户（学生、自由职业者）
+                // 在线时间：8:00-23:00 概率高，其他时间概率低
+                const hour = new Date().getHours();
+                isOnline = (hour >= 8 && hour <= 23) ? Math.random() > 0.4 : Math.random() > 0.8;
+                lastActive = isOnline ? "刚刚" : "1小时前";
+            } else if (userType < 0.5) {
+                // 30%：上班族用户
+                // 在线时间：午休12-14点，晚上19-23点概率高
+                const hour = new Date().getHours();
+                const isWorkTime = (hour >= 12 && hour <= 14) || (hour >= 19 && hour <= 23);
+                isOnline = isWorkTime ? Math.random() > 0.6 : Math.random() > 0.85;
+                lastActive = isOnline ? "在线" : ["今天", "昨天", "工作日活跃"][Math.floor(Math.random() * 3)];
+            } else {
+                // 50%：偶尔活跃用户
+                isOnline = Math.random() > 0.9; // 只有10%在线
+                lastActive = ["昨天", "本周", "偶尔活跃"][Math.floor(Math.random() * 3)];
+            }
+            
+            // 如果当前时间很晚（凌晨0-6点），降低在线概率
+            const currentHour = new Date().getHours();
+            if (currentHour >= 0 && currentHour <= 6) {
+                if (Math.random() > 0.1) isOnline = false; // 凌晨只有10%用户可能在线
+            }
+            
+            // ⭐ 改进的智能分数算法
+            let score = 0;
+            
+            if (userVal < 30) {
+                // 新手阶段：机器人分数在 20-150 之间
+                score = Math.floor(Math.random() * 130) + 20;
+            } else {
+                // 根据排名位置生成不同水平的分数
+                const positionFactor = i / botCount; // 0-1之间
+                
+                if (positionFactor < 0.2) {
+                    // 前20%：卷王，比用户高 30-80%
+                    score = Math.floor(userVal * (1.3 + Math.random() * 0.5));
+                } else if (positionFactor < 0.6) {
+                    // 中间40%：竞争者，比用户高 5-30%
+                    score = Math.floor(userVal * (1.05 + Math.random() * 0.25));
+                } else {
+                    // 后40%：被超越者，比用户低 20-50%
+                    score = Math.floor(userVal * (0.5 + Math.random() * 0.3));
+                }
+                
+                // 添加随机波动
+                score = Math.floor(score * (0.9 + Math.random() * 0.2));
+            }
+            
+            // 限制范围
+            if (type === 'streak') {
+                score = Math.min(Math.max(score, 1), 365);
+                if (score < 1) score = 1;
+            }
+            if (type === 'focus') {
+                score = Math.max(score, 5);
+                if (score > 10000) score = Math.floor(score / 10);
+            }
+            if (type === 'xp') {
+                score = Math.max(score, 10);
+                if (score > 50000) score = Math.floor(score / 5);
+            }
+            
+            bots.push({ 
+                name, 
+                avatar, 
+                val: score, 
+                isMe: false,
+                isOnline: isOnline, // ⭐ 固定存储在线状态
+                lastActive: lastActive, // ⭐ 固定存储活跃时间
+                userType: userType < 0.2 ? "高活跃" : userType < 0.5 ? "上班族" : "偶尔活跃" // 用户类型标签
+            });
         }
         
-        // 更新缓存结构
+        // 按分数排序
+        bots.sort((a, b) => b.val - a.val);
+        
+        // 确保排序后分数也是递减的（看起来更真实）
+        for (let i = 1; i < bots.length; i++) {
+            if (bots[i].val >= bots[i-1].val) {
+                bots[i].val = Math.floor(bots[i-1].val * (0.8 + Math.random() * 0.15));
+            }
+        }
+        
         cache[type] = {
             timestamp: now,
             data: bots
         };
         localStorage.setItem(RANK_CACHE_KEY, JSON.stringify(cache));
     }
-
-    // --- 3. 融合数据 (关键步骤) ---
-    // 取出缓存的死数据（机器人），加上用户的活数据（你）
-    // 这样切换榜单时，机器人分数不变，但如果你的分数涨了，排名会实时变动！
     
-    let finalRunningList = [...cache[type].data];
-    
-    // 把“我”加进去
-    finalRunningList.push({ 
+    // 合并用户数据
+    let finalList = [...cache[type].data];
+    finalList.push({ 
         name: "我", 
         avatar: "😎", 
         val: userVal, 
-        isMe: true 
+        isMe: true,
+        isOnline: true, // 用户自己默认在线
+        lastActive: "刚刚"
     });
-
-    // 重新排序
-    finalRunningList.sort((a, b) => b.val - a.val);
     
-    // 截取前 10 名 (如果我在10名开外，需要特殊处理，这里简化为只显示前12名)
-    return finalRunningList.slice(0, 15);
+    // 重新排序
+    finalList.sort((a, b) => b.val - a.val);
+    
+    // 调试：检查是否有重复名字
+    const debugNames = finalList.map(item => item.name);
+    const uniqueNames = new Set(debugNames);
+    if (debugNames.length !== uniqueNames.size) {
+        console.warn('⚠️ 检测到重复名字:', {
+            总数量: debugNames.length,
+            唯一数量: uniqueNames.size,
+            重复列表: debugNames.filter((name, index) => debugNames.indexOf(name) !== index)
+        });
+    } else {
+        console.log('✅ 名字唯一性检查通过');
+    }
+    
+    // 返回前15名
+    return finalList.slice(0, 15);
 }
 
 // 2. 渲染排行榜 (汉化单位 + 动态锁定提示)
 function renderLeaderboard(type) {
     currentRankType = type;
+    
+    console.log(`🎮 渲染排行榜: ${type}`);
     
     // 更新按钮状态
     document.querySelectorAll('.rank-filter-btn').forEach(btn => {
@@ -1880,7 +2198,20 @@ function renderLeaderboard(type) {
     });
 
     const list = getVirtualRankings(type);
+    console.log('用户列表:', list.map(u => ({
+        名字: u.name, 
+        在线: u.isOnline, 
+        活跃: u.lastActive,
+        分数: u.val,
+        类型: u.userType || '普通用户'
+    })));
+    
     const container = document.getElementById('leaderboardList');
+    if (!container) {
+        console.error('排行榜容器未找到');
+        return;
+    }
+    
     container.innerHTML = '';
 
     list.forEach((item, idx) => {
@@ -1888,17 +2219,61 @@ function renderLeaderboard(type) {
         const row = document.createElement('div');
         row.className = `rank-row rank-${rank} ${item.isMe ? 'is-me' : ''}`;
         
-        // 只有前三名加粗高亮
+        // 数值显示
         let valDisplay = item.val;
         if(type === 'focus') valDisplay += ' 分钟';
         if(type === 'streak') valDisplay += ' 天';
         if(type === 'xp') valDisplay += ' 阅历';
 
+        // ⭐ 关键修复：使用缓存中的在线状态，而不是每次随机
+        const isOnline = item.isOnline || false;
+        const lastActive = item.lastActive || "最近活跃";
+        
+        // 名字太长时截断
+        const displayName = item.name.length > 10 ? 
+            item.name.substring(0, 8) + '...' : item.name;
+        
+        // 用户标签（根据分数显示不同标签）
+        let userTag = '';
+        if (!item.isMe) {
+            if (type === 'xp') {
+                if (item.val > 10000) userTag = '大神';
+                else if (item.val > 5000) userTag = '高手';
+                else if (item.val > 2000) userTag = '进阶';
+            } else if (type === 'streak') {
+                if (item.val > 100) userTag = '毅力帝';
+                else if (item.val > 30) userTag = '坚持者';
+            } else if (type === 'focus') {
+                if (item.val > 5000) userTag = '专注王';
+                else if (item.val > 1000) userTag = '心流者';
+            }
+        }
+        
+        // 用户类型颜色
+        let nameColor = 'text-slate-800';
+        if (item.userType === '高活跃') nameColor = 'text-blue-700';
+        else if (item.userType === '上班族') nameColor = 'text-purple-700';
+        
         row.innerHTML = `
             <div class="rank-num">${rank}</div>
-            <div class="rank-avatar">${item.avatar}</div>
-            <div class="rank-name">${item.name} ${item.isMe ? '<span class="text-[10px] bg-slate-200 text-slate-500 px-1 rounded ml-1">YOU</span>' : ''}</div>
-            <div class="rank-val">${valDisplay}</div>
+            <div class="rank-avatar relative flex items-center justify-center">
+                <span class="text-lg">${item.avatar}</span>
+                ${isOnline ? '<div class="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full border border-white animate-pulse"></div>' : ''}
+            </div>
+            <div class="rank-name flex flex-col flex-1 min-w-0">
+                <div class="flex items-center gap-1">
+                    <span class="font-semibold ${nameColor} truncate">${displayName}</span>
+                    ${item.isMe ? 
+                        '<span class="text-[8px] bg-blue-100 text-blue-600 px-1 rounded flex-shrink-0">我</span>' : 
+                        (userTag ? `<span class="text-[8px] bg-amber-100 text-amber-700 px-1 rounded flex-shrink-0">${userTag}</span>` : '')
+                    }
+                </div>
+                <span class="text-[10px] ${isOnline ? 'text-green-600 font-bold' : 'text-slate-400'} mt-0.5 flex-shrink-0">
+                    ${isOnline ? '● 在线' : lastActive + '活跃'}
+                    ${item.userType && !item.isMe ? ` · ${item.userType}` : ''}
+                </span>
+            </div>
+            <div class="rank-val font-mono font-bold" style="color: var(--primary)">${valDisplay}</div>
         `;
         container.appendChild(row);
     });
@@ -1909,13 +2284,22 @@ function renderLeaderboard(type) {
     if (cache[type]) {
         const nextTime = cache[type].timestamp + RANK_UPDATE_INTERVAL;
         const minLeft = Math.ceil((nextTime - Date.now()) / 60000);
-        if (minLeft > 60) nextTimeStr = `约 ${Math.floor(minLeft/60)} 小时后`;
-        else nextTimeStr = `约 ${minLeft} 分钟后`;
+        if (minLeft > 60) {
+            const hours = Math.floor(minLeft / 60);
+            const minutes = minLeft % 60;
+            nextTimeStr = `约 ${hours}小时${minutes > 0 ? `${minutes}分钟` : ''}后`;
+        } else {
+            nextTimeStr = `约 ${minLeft} 分钟后`;
+        }
     }
     
     // 更新底部提示文案
     const footer = document.querySelector('#view-rank .text-center');
-    if(footer) footer.innerHTML = `榜单数据 ${nextTimeStr} 更新 · 与全网学友共勉`;
+    if(footer) {
+        const totalUsers = list.length;
+        const onlineUsers = list.filter(u => u.isOnline).length;
+        footer.innerHTML = `榜单 ${nextTimeStr} 更新 · ${onlineUsers}/${totalUsers} 人在线 · 与全网学友共勉`;
+    }
 }
 
 // 3. Tab 切换逻辑 (保持不变，但为了完整性贴在这里)
@@ -1924,18 +2308,33 @@ function switchProfileTab(tab) {
     const viewRank = document.getElementById('view-rank');
     const btnMe = document.getElementById('tab-me');
     const btnRank = document.getElementById('tab-rank');
+    
+    if (!viewMe || !viewRank || !btnMe || !btnRank) {
+        console.error('Tab切换元素未找到');
+        return;
+    }
 
     if (tab === 'me') {
         viewMe.style.display = 'block';
         viewRank.style.display = 'none';
         btnMe.className = "px-4 py-1.5 rounded-lg text-sm font-bold transition-all bg-white shadow-sm text-slate-800";
-        btnRank.className = "px-4 py-1.5 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-slate-600";
+        btnRank.className = "px-4 py-1.5 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-slate-600 hover:bg-slate-50";
+        
+        // 切换到我的修业时，刷新个人数据
+        renderProfileModal();
     } else {
         viewMe.style.display = 'none';
         viewRank.style.display = 'block';
         btnRank.className = "px-4 py-1.5 rounded-lg text-sm font-bold transition-all bg-white shadow-sm text-slate-800";
-        btnMe.className = "px-4 py-1.5 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-slate-600";
+        btnMe.className = "px-4 py-1.5 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-slate-600 hover:bg-slate-50";
+        
+        // 切换到排行榜时，渲染当前榜单
         renderLeaderboard(currentRankType);
+        
+        // 确保图标重新渲染
+        setTimeout(() => {
+            if(window.lucide) window.lucide.createIcons();
+        }, 50);
     }
 }
 // --- ⭐ 新增：XP 提示控制逻辑 ⭐ ---

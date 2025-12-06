@@ -8,7 +8,16 @@
     <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/lucide.min.js"></script>
     <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/tailwind.js"></script>
     <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/xlsx.full.min.js"></script>
-    
+    <script src="templates/rules_db.js"></script> 
+    <script>
+        // 兜底逻辑：防止加载失败报错
+        if (typeof autoDetectTag === 'undefined') {
+            console.warn('rules_db.js not loaded from templates, using fallback.');
+            window.autoDetectTag = function(text) { 
+                return { category: "日常", label: "Task", emoji: "📝", color: "#8E8E93" }; 
+            };
+        }
+    </script>
     <script>
         tailwind.config = {
             theme: {
@@ -77,17 +86,65 @@
            2. 手机端专属优化 (Mobile First)
            ========================================================================== */
         @media (max-width: 768px) {
+            /* 1. 更加紧凑的页面间距 */
+            section { padding-top: 85px !important; padding-bottom: 100px !important; } 
+            
+            /* 2. 智能折叠输入框：默认只显示一行，聚焦时变高 */
+            /* === 1. 修复输入框和语音按钮 === */
+            /* === 替换代码：修复语音按钮无法点击 (Z-Index + 移除禁止点击) === */
+            
+            /* 智能折叠输入框 */
             .ai-textarea {
-                height: 180px !important;
-                font-size: 16px !important; 
-                padding: 16px !important;
-                background: rgba(255,255,255,0.05) !important;
+                height: 52px !important; 
+                min-height: 52px !important;
+                font-size: 14px !important; 
+                padding: 14px 45px 14px 16px !important; /* 右侧给语音按钮留位置 */
+                background: rgba(30, 41, 59, 0.9) !important;
                 border-color: rgba(255,255,255,0.15) !important;
+                transition: all 0.25s ease !important;
+                overflow: hidden;
+                line-height: 1.5 !important;
+                border-radius: 20px !important;
             }
+            .ai-textarea:focus {
+                height: 180px !important; 
+                border-radius: 16px !important;
+                background: rgba(15, 23, 42, 0.98) !important;
+                padding-right: 16px !important;
+                z-index: 50 !important; /* 保持层级 */
+                position: relative; 
+            }
+
+            /* 语音按钮：强制缩小，精致化，并提升层级 */
+            #voice-btn {
+                width: 32px !important;   
+                height: 32px !important;
+                padding: 0 !important;    
+                bottom: 11px !important;  
+                right: 10px !important;
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                background-color: #3b82f6 !important; 
+                border: 1px solid rgba(255,255,255,0.2) !important;
+                box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3) !important;
+                
+                /* 关键修复 1：层级必须比展开后的输入框(50)更高 */
+                z-index: 60 !important; 
+                pointer-events: auto !important; /* 确保任何时候都能接受点击 */
+                cursor: pointer !important;
+            }
+
+            /* 当输入框展开时：保持按钮可见且可点击 */
+            .ai-textarea:focus + #voice-btn {
+                opacity: 1 !important; /* 保持完全可见，不变淡 */
+                pointer-events: auto !important; /* 允许点击 */
+                transform: scale(1.05); /* 稍微放大一点点 */
+            }
+
             .desktop-nav-text { display: none !important; }
             .desktop-btn { display: none !important; }
             
-            /* 优化：增加底部Padding，防止阴影被截断 */
             .mobile-scroll-container {
                 display: flex; gap: 10px; overflow-x: auto; padding: 4px 4px 12px 4px;
                 -webkit-overflow-scrolling: touch;
@@ -104,13 +161,21 @@
                 box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
                 animation: slideUp 0.3s ease-out;
             }
-            
-            section { padding-top: 80px !important; padding-bottom: 120px !important; } 
+
             .glass-panel { padding: 1.25rem !important; border-radius: 20px !important; }
             h1 { font-size: 2rem !important; line-height: 1.2 !important; }
             .voice-btn-mobile { display: flex !important; }
+            
+            /* 4. 预览面板高度自适应 */
+            .ai-preview-panel {
+                height: auto !important;
+                min-height: 300px !important;
+                max-height: none !important;
+                border: none !important;
+                background: transparent !important;
+            }
+            .ai-timeline { padding: 0 !important; overflow: visible !important; }
         }
-
         .mobile-action-bar { display: none; }
         .voice-btn-mobile { display: none; }
 
@@ -273,49 +338,175 @@
         .check-circle { position: absolute; top: 1rem; right: 1rem; z-index: 20; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transform: scale(0.5); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
         .selected .check-circle { opacity: 1; transform: scale(1); }
 
-        .ai-input-container { display: flex; flex-direction: column; gap: 16px; width: 100%; height: 100%; }
-        .ai-textarea {
-            width: 100%; height: 450px; background: rgba(15, 23, 42, 0.6);
-            border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 20px;
-            color: #e2e8f0; font-size: 16px; line-height: 1.8; resize: none; outline: none;
-            transition: 0.3s; font-family: inherit;
+        /* 1. 统一的面板容器 (左右对称核心) */
+        .ai-panel-container {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 520px; /* 电脑端固定高度，强制对称 */
+            transition: all 0.3s ease;
         }
-        .ai-textarea:focus { border-color: #3b82f6; background: rgba(15, 23, 42, 0.8); box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); }
-        
-        .ai-preview-panel { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; height: 450px; display: flex; flex-direction: column; overflow: hidden; }
-        .ai-timeline { flex: 1; overflow-y: auto; padding: 20px; }
+
+        /* 2. 左侧输入框重构 - 去掉边框，融入面板 */
+        .ai-textarea {
+            width: 100%;
+            height: 100%;
+            background: transparent !important;
+            border: none !important;
+            padding: 20px;
+            color: #e2e8f0;
+            font-size: 16px;
+            line-height: 1.8;
+            resize: none;
+            outline: none;
+            font-family: inherit;
+        }
+        .ai-textarea:focus { box-shadow: none !important; }
+
+        /* 3. 预览面板内部样式 */
+        .ai-timeline { flex: 1; overflow-y: auto; padding: 0; }
         .timeline-day { margin-bottom: 24px; animation: slideIn 0.3s ease-out forwards; }
         .timeline-date { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(90deg, #2563eb, #3b82f6); color: white; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 800; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
+
+        /* 4. 引擎开关与头部样式 */
+        .engine-switch-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 56px; /* 固定头部高度 */
+        }
+
+        /* 5. 手机端特化适配 (解决拥挤) */
+        @media (max-width: 768px) {
+            .ai-panel-container {
+                height: auto !important;
+                min-height: auto !important;
+                background: rgba(15, 23, 42, 0.8);
+                border-radius: 16px;
+            }
+            /* 左侧面板：手机端默认折叠 */
+            .left-panel-mobile {
+                min-height: 140px; 
+                transition: min-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            /* 输入框聚焦时展开 */
+            .left-panel-mobile:focus-within {
+                min-height: 300px;
+                border-color: #3b82f6;
+                box-shadow: 0 10px 40px -10px rgba(59, 130, 246, 0.3);
+            }
+            .ai-textarea {
+                padding: 12px 16px !important;
+                font-size: 15px !important;
+                height: 120px !important;
+            }
+            .left-panel-mobile:focus-within .ai-textarea {
+                height: 240px !important;
+            }
+            .ai-timeline { padding: 0 !important; }
+        }
+        /* === 2. 双层卡片样式 (你喜欢的那个清晰版) === */
         
-        .ai-task-card { display: flex; align-items: center; gap: 10px; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 10px; margin-bottom: 8px; transition: all 0.2s; position: relative; overflow: hidden; }
-        .ai-task-card:hover { background: rgba(30, 41, 59, 0.8); border-color: rgba(96, 165, 250, 0.3); transform: translateX(2px); }
+        /* 卡片容器：有背景，有圆角，看着像个实体 */
+        .ai-task-card { 
+            display: flex; 
+            flex-direction: column; /* 上下分两层 */
+            gap: 8px; 
+            background: rgba(30, 41, 59, 0.6); /* 深蓝半透明背景 */
+            border: 1px solid rgba(255,255,255,0.08); /* 细微边框 */
+            padding: 10px 12px; 
+            border-radius: 10px; 
+            margin-bottom: 8px; 
+            transition: all 0.2s; 
+            position: relative; 
+        }
+        /* 选中/点击时稍微亮一点 */
+        .ai-task-card:focus-within {
+            background: rgba(30, 41, 59, 0.9);
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        /* 第一行：元数据 (时间、标签) */
+        .ai-task-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            height: 24px;
+        }
+
+        /* 时间胶囊：蓝色背景，小巧清晰 */
+        .ai-time-edit { 
+            background: rgba(59, 130, 246, 0.15); 
+            border: 1px solid transparent; 
+            color: #60a5fa; 
+            font-family: monospace; 
+            font-weight: bold; 
+            width: 52px; 
+            text-align: center; 
+            font-size: 13px; 
+            padding: 2px 0; 
+            border-radius: 6px; 
+        }
+        .ai-time-edit:focus { border-color: #3b82f6; background: rgba(59, 130, 246, 0.25); outline: none; }
         
-        .ai-time-edit { background: transparent; border: 1px solid transparent; color: #60a5fa; font-family: monospace; font-weight: bold; width: 80px; text-align: center; font-size: 12px; padding: 2px; border-radius: 4px; transition: 0.2s; }
-        .ai-time-edit:focus { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); outline: none; }
-        
+        /* 时长胶囊：黄色背景 */
         .ai-duration-edit { 
-    background: transparent; 
-    border: 1px solid transparent; 
-    color: #fbbf24; /* 琥珀色，区分于时间的蓝色 */
-    font-family: monospace; 
-    font-weight: bold; 
-    width: 60px; /* 稍微窄一点 */
-    text-align: center; 
-    font-size: 12px; 
-    padding: 2px; 
-    border-radius: 4px; 
-    transition: 0.2s; 
-}
-.ai-duration-edit:focus { 
-    border-color: #f59e0b; 
-    background: rgba(245, 158, 11, 0.1); 
-    outline: none; 
-}
+            background: rgba(245, 158, 11, 0.15); 
+            border: 1px solid transparent; 
+            color: #fbbf24; 
+            font-family: monospace; 
+            font-weight: bold; 
+            width: 36px; 
+            text-align: center; 
+            font-size: 13px; 
+            padding: 2px 0; 
+            border-radius: 6px; 
+        }
+        .ai-duration-edit:focus { border-color: #f59e0b; background: rgba(245, 158, 11, 0.25); outline: none; }
 
-        .ai-title-edit { flex: 1; background: transparent; border: 1px solid transparent; color: #e2e8f0; font-size: 14px; padding: 2px 6px; border-radius: 4px; transition: 0.2s; width: 100%; min-width: 0; /* 防止溢出 */ }
-        .ai-title-edit:focus { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); outline: none; }
-        .ai-tag-badge { font-size: 10px; padding: 2px 8px; border-radius: 99px; background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); white-space: nowrap; }
+        /* 标签：胶囊样式 */
+        .ai-tag-badge { 
+            display: flex; align-items: center; gap: 4px;
+            font-size: 11px; 
+            padding: 2px 8px; 
+            border-radius: 99px; 
+            background: rgba(255,255,255,0.08); 
+            color: #cbd5e1; 
+            border: 1px solid rgba(255,255,255,0.05); 
+            white-space: nowrap; 
+            max-width: 100px;
+        }
 
+        /* 第二行：任务标题 (独占一行，大且清晰) */
+        .ai-title-edit { 
+            background: transparent; 
+            border: none; 
+            border-bottom: 1px solid transparent; /* 只有底部有一条隐形线 */
+            color: #f1f5f9; 
+            font-size: 15px; 
+            font-weight: 500;
+            padding: 4px 0; 
+            width: 100%; 
+            line-height: 1.4;
+            border-radius: 0;
+        }
+        .ai-title-edit:focus { border-bottom-color: #3b82f6; outline: none; }
+        
+        /* 删除按钮：放在右上角 */
+        .mobile-card-del {
+            color: #64748b;
+            padding: 4px;
+            border-radius: 6px;
+        }
+        .mobile-card-del:hover { background: rgba(239, 68, 68, 0.1); color: #f87171; }
         /* Sample 样式移植 */
         .df-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
         .df-modal-overlay.active { display: flex; opacity: 1; }
@@ -349,9 +540,12 @@
                 <div class="bg-gradient-to-tr from-blue-600 to-purple-600 p-1.5 rounded-lg shadow-lg"><i data-lucide="zap" class="text-white w-5 h-5"></i></div>
                 <span class="font-black text-xl tracking-tight">DeepFlow</span>
             </div>
-            <a href="index.html" class="bg-white/10 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-white/20 transition border border-white/10">
-                <i data-lucide="arrow-left" class="w-4 h-4 inline mr-1"></i> <span class="desktop-nav-text">返回主页</span>
-            </a>
+            <div class="flex items-center gap-3">
+                <button onclick="openSettings()" class="text-slate-400 hover:text-white transition p-2"><i data-lucide="settings" class="w-5 h-5"></i></button>
+                <a href="index.html" class="bg-white/10 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-white/20 transition border border-white/10">
+                    <i data-lucide="arrow-left" class="w-4 h-4 inline mr-1"></i> <span class="desktop-nav-text">返回主页</span>
+                </a>
+            </div>
         </div>
     </nav>
 
@@ -367,12 +561,9 @@
             <div class="space-y-12">
                 
                 <!-- 1. Data Input Panel -->
-                <div class="glass-panel p-8 rounded-3xl text-left transition-all duration-300 shadow-2xl shadow-blue-900/10">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-white/5 pb-4">
-                        <div class="flex items-center gap-4">
-                            <span class="text-4xl font-black text-blue-500">1</span>
-                            <h2 class="text-2xl font-bold">准备计划数据</h2>
-                        </div>
+                <div class="bg-transparent md:bg-slate-900/40 md:border md:border-white/5 md:backdrop-blur-xl p-0 md:p-6 rounded-3xl text-left transition-all duration-300">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+                        <div class="hidden md:block text-slate-400 text-sm font-bold tracking-wide uppercase">AI Planning Engine</div>
                         
                         <!-- 核心修复区域：模式选择器 -->
                         <div class="mode-selector">
@@ -397,61 +588,72 @@
 
                     <!-- MODE 1: AI Intelligent Input -->
                     <div id="mode-ai" class="block animate-fadeIn">
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                            <div class="lg:col-span-6 ai-input-container">
-                                <div class="relative group w-full h-full">
-                                    <textarea id="ai-input" class="ai-textarea relative custom-scrollbar" 
-                                        placeholder="请在此用自然语言描述您的计划...&#10;&#10;例如：&#10;周三早上8点背单词，下午2点做数学卷子。&#10;明天全天复习专业课，晚上看电影。&#10;十天后参加考试，第5天开始复习。"
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
+                            
+                            <div class="ai-panel-container left-panel-mobile relative group">
+                                <div class="engine-switch-header">
+                                    <div class="text-xs font-bold text-slate-400 flex items-center gap-1.5">
+                                        <i data-lucide="cpu" class="w-3.5 h-3.5"></i> 
+                                        <span>输入引擎</span>
+                                    </div>
+                                    <div class="bg-slate-900 p-0.5 rounded-lg border border-white/10 flex relative cursor-pointer select-none h-8" onclick="toggleEngineMode()">
+                                        <div id="engine-slider" class="absolute top-0.5 bottom-0.5 w-[calc(50%-2px)] bg-blue-600 rounded-md shadow-sm transition-all duration-300 translate-x-[100%] left-0.5"></div>
+                                        
+                                        <div id="btn-local" class="relative z-10 px-3 flex items-center justify-center text-[10px] font-bold text-slate-400 transition-colors w-16 md:w-20 gap-1">
+                                            <i data-lucide="zap" class="w-3 h-3"></i> 本地
+                                        </div>
+                                        <div id="btn-cloud" class="relative z-10 px-3 flex items-center justify-center text-[10px] font-bold text-white transition-colors w-16 md:w-20 gap-1">
+                                            <i data-lucide="sparkles" class="w-3 h-3"></i> AI
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex-1 relative">
+                                    <textarea id="ai-input" class="ai-textarea custom-scrollbar" 
+                                        placeholder="请描述您的计划...&#10;&#10;例如：&#10;周三早上8点背单词，下午2点做数学。&#10;下下周五晚上7点去看电影。"
                                         oninput="ai_handleInput()"></textarea>
                                     
-                                    <!-- 手机端语音按钮 (默认隐藏) -->
-                                    <button id="voice-btn" onclick="toggleVoiceInput()" class="voice-btn-mobile hidden absolute right-3 bottom-3 bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-full shadow-lg transition-all active:scale-95 items-center justify-center border border-white/20">
+                                    <button id="voice-btn" onclick="toggleVoiceInput()" class="absolute right-4 bottom-4 bg-blue-600 hover:bg-blue-500 text-white w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95 z-20 border border-white/10">
                                         <i data-lucide="mic" class="w-5 h-5"></i>
                                     </button>
                                 </div>
-                                
-                                <!-- 示例库：手机端滑动，PC端普通 -->
-                                <div class="text-xs text-slate-500 px-2">
-                                    <!-- 增加引导文案 -->
-                                    <div class="mb-2 flex items-center gap-2 opacity-60">
-                                        <i data-lucide="mouse-pointer-2" class="w-3 h-3"></i>
-                                        <span>点击下方试用示例：</span>
-                                    </div>
-                                    
-                                    <div class="mobile-scroll-container md:flex-wrap md:gap-2 md:flex md:items-center">
-                                        <!-- 优化后的标签按钮 -->
-                                        <button onclick="ai_loadSample('exam')" class="mobile-example-chip text-blue-400 hover:text-blue-300">📚 考研复习</button>
-                                        <button onclick="ai_loadSample('life')" class="mobile-example-chip text-green-400 hover:text-green-300">🥦 生活日常</button>
-                                        <button onclick="ai_loadSample('mixed')" class="mobile-example-chip text-purple-400 hover:text-purple-300">🔀 混合安排</button>
-                                        <button onclick="ai_loadSample('date')" class="mobile-example-chip text-orange-400 hover:text-orange-300">📅 倒数日</button>
+
+                                <div class="p-3 border-t border-white/5 bg-white/0">
+                                    <div class="mobile-scroll-container flex items-center gap-2">
+                                        <span class="text-[10px] text-slate-500 mr-1 flex-shrink-0">试一试:</span>
+                                        <button onclick="ai_loadSample('exam')" class="mobile-example-chip text-blue-400 border-blue-500/20 bg-blue-500/5">📚 考研</button>
+                                        <button onclick="ai_loadSample('life')" class="mobile-example-chip text-green-400 border-green-500/20 bg-green-500/5">🥦 生活</button>
+                                        <button onclick="ai_loadSample('date')" class="mobile-example-chip text-orange-400 border-orange-500/20 bg-orange-500/5">📅 倒数</button>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="lg:col-span-6 w-full h-full">
-                                <div class="ai-preview-panel">
-                                    <div class="p-4 border-b border-white/10 bg-slate-900/50 flex justify-between items-center">
-                                        <span class="text-sm font-bold text-slate-300 flex items-center gap-2"><i data-lucide="eye" class="w-4 h-4"></i> 识别预览 (可点击编辑/删除)</span>
-                                        <div class="flex items-center gap-3">
-                                            <span id="ai-status" class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-1 rounded border border-blue-500/30">等待输入</span>
-                                            <!-- PC端确认按钮，手机端隐藏 -->
-                                            <button id="ai-confirm-btn" onclick="confirmAI()" class="desktop-btn text-xs bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded text-white transition font-bold shadow-lg flex items-center gap-1 opacity-50 cursor-not-allowed" disabled>
-                                                <i data-lucide="check" class="w-3 h-3"></i> 确认构建
-                                            </button>
-                                        </div>
+                            <div class="ai-panel-container">
+                                <div class="engine-switch-header">
+                                    <span class="text-xs font-bold text-slate-300 flex items-center gap-2">
+                                        <i data-lucide="eye" class="w-3.5 h-3.5"></i> 实时预览
+                                    </span>
+                                    <div class="flex items-center gap-2">
+                                        <span id="ai-status" class="text-[10px] bg-slate-700/50 text-slate-400 px-2 py-1 rounded border border-white/5">等待输入</span>
+                                        <button id="ai-confirm-btn" onclick="confirmAI()" class="hidden md:flex text-[10px] bg-emerald-600 hover:bg-emerald-500 px-3 py-1 rounded text-white transition font-bold items-center gap-1 opacity-50 cursor-not-allowed" disabled>
+                                            <i data-lucide="check" class="w-3 h-3"></i> 确认
+                                        </button>
                                     </div>
-                                    <div id="ai-timeline-container" class="ai-timeline custom-scrollbar">
-                                        <!-- 占位符 -->
-                                        <div class="flex flex-col items-center justify-center h-full text-slate-600 opacity-60">
-                                            <i data-lucide="message-square-dashed" class="w-12 h-12 mb-3"></i>
-                                            <p class="text-xs">在左侧输入文字<br>右侧将实时显示解析结果</p>
+                                </div>
+
+                                <div id="ai-timeline-container" class="ai-timeline custom-scrollbar p-4 flex-1 overflow-y-auto">
+                                    <div class="flex flex-col items-center justify-center h-full text-slate-600 opacity-60">
+                                        <div class="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-4 border border-white/5">
+                                            <i data-lucide="arrow-left" class="w-6 h-6 md:block hidden"></i>
+                                            <i data-lucide="arrow-up" class="w-6 h-6 md:hidden"></i>
                                         </div>
+                                        <p class="text-xs">请在左侧(或上方)输入内容</p>
                                     </div>
                                 </div>
                             </div>
+
                         </div>
                     </div>
-
                     <!-- MODE 2: Excel Upload -->
                     <div id="mode-upload" class="hidden animate-fadeIn">
                         <div class="flex justify-end mb-2">
@@ -565,11 +767,35 @@
     </div>
 
     <!-- Modals -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 hidden transition-opacity duration-300">
+        <div class="bg-slate-900 p-6 rounded-2xl shadow-2xl border border-white/10 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2"><i data-lucide="cpu" class="w-5 h-5 text-purple-400"></i> AI 模型设置</h3>
+            <p class="text-slate-400 text-sm mb-4">接入 SiliconFlow (硅基流动) API，使用 DeepSeek/Qwen 等模型获得更精准的时间识别和 Emoji 匹配。</p>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs text-slate-500 mb-1">API Key (sk-...)</label>
+                    <input type="password" id="sf-api-key" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-500 outline-none" placeholder="sk-...">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-500 mb-1">Model Name</label>
+                    <input type="text" id="sf-model-name" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-500 outline-none" value="Qwen/Qwen2.5-7B-Instruct" placeholder="例如: Qwen/Qwen2.5-7B-Instruct">
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button onclick="closeSettings()" class="px-4 py-2 text-slate-400 hover:text-white text-sm">取消</button>
+                <button onclick="saveSettings()" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-sm font-bold">保存配置</button>
+            </div>
+        </div>
+    </div>
+
     <div id="custom-alert-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 hidden transition-opacity duration-300">
         <div id="modal-content" class="bg-slate-900 p-8 rounded-2xl shadow-2xl border border-white/10 max-w-md w-full transform scale-95 transition-transform duration-300">
             <h3 id="alert-title" class="text-xl font-black mb-4 flex items-center gap-2 text-white"></h3>
             <p id="alert-message" class="text-slate-300 mb-6 leading-relaxed"></p>
-            <button onclick="closeCustomAlert()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition-colors">我明白了</button>
+            <div id="alert-actions" class="flex gap-3 mt-4">
+                <button id="alert-secondary-btn" onclick="closeCustomAlert()" class="flex-1 bg-slate-700/50 hover:bg-slate-700 text-white font-semibold py-3 rounded-xl transition-colors">取消 / 关闭</button>
+                <button id="alert-primary-btn" onclick="closeCustomAlert()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition-colors">我明白了</button>
+            </div>
         </div>
     </div>
 
@@ -614,9 +840,46 @@
         let titlePromiseResolve = null;
         let aiParseTimeout = null;
         let recognition = null; // 语音识别
+        let isKeyBanned = false; 
+        let useCloudEngine = true;
 
         // ============================================
-        // V18 新增：手机端体验初始化
+        // Settings Logic (设置逻辑)
+        // ============================================
+        function openSettings() {
+            document.getElementById('sf-api-key').value = localStorage.getItem('deepflow_sk') || '';
+            document.getElementById('sf-model-name').value = localStorage.getItem('deepflow_model') || 'Qwen/Qwen2.5-7B-Instruct';
+            const m = document.getElementById('settings-modal');
+            m.classList.remove('hidden'); setTimeout(()=>m.classList.remove('opacity-0'),10);
+        }
+        function closeSettings() {
+            const m = document.getElementById('settings-modal');
+            m.classList.add('opacity-0'); setTimeout(()=>m.classList.add('hidden'),300);
+        }
+        function saveSettings() {
+            localStorage.setItem('deepflow_sk', document.getElementById('sf-api-key').value.trim());
+            localStorage.setItem('deepflow_model', document.getElementById('sf-model-name').value.trim());
+            closeSettings();
+            customAlert("配置已保存，下次输入将使用 AI 模型！", "设置成功", "cpu");
+        }
+        // === 核心修复：切换引擎 (增加状态保存) ===
+function toggleEngineMode() {
+    useCloudEngine = !useCloudEngine;
+    
+    // 1. 保存状态
+    localStorage.setItem('deepflow_engine_pref', useCloudEngine ? 'cloud' : 'local');
+
+    // 2. 更新 UI
+    updateEngineUISync();
+    
+    // 3. 【重要】切换引擎时，强制清空记忆，确保立即重新解析
+    lastAnalyzedText = null; 
+    
+    // 4. 触发解析
+    ai_handleInput();
+}
+        // ============================================
+        // V18 新增：手机端体验初始化 (含麦克风点击修复)
         // ============================================
         function initMobileExperience() {
             const isMobile = window.innerWidth <= 768;
@@ -625,8 +888,10 @@
                 // 1. 强制切换到 AI 模式
                 switchMode('ai');
                 
-                // 2. 优化输入框体验 (聚焦时滚动)
                 const aiInput = document.getElementById('ai-input');
+                const voiceBtn = document.getElementById('voice-btn');
+
+                // 2. 优化输入框体验 (聚焦时滚动)
                 aiInput.placeholder = "点这里输入，或者点右下角话筒说话...\n例如：明天八点起床，九点背单词。";
                 aiInput.addEventListener('focus', () => {
                     setTimeout(() => {
@@ -634,7 +899,30 @@
                     }, 300);
                 });
 
-                // 3. 初始化语音
+                // === 3. 核心修复：点击麦克风不折叠 ===
+                if (voiceBtn) {
+                    // 定义一个阻止失焦的函数
+                    const handleVoiceClick = (e) => {
+                        // 阻止默认行为（即阻止输入框失去焦点）
+                        e.preventDefault(); 
+                        e.stopPropagation();
+                        
+                        // 触发录音逻辑
+                        toggleVoiceInput();
+                        
+                        // 强制把焦点还给输入框（双重保险）
+                        aiInput.focus();
+                    };
+
+                    // 先移除 HTML 里的 onclick，防止冲突
+                    voiceBtn.removeAttribute('onclick');
+                    
+                    // 绑定触摸和点击事件
+                    voiceBtn.addEventListener('touchstart', handleVoiceClick, { passive: false });
+                    voiceBtn.addEventListener('mousedown', handleVoiceClick);
+                }
+
+                // 4. 初始化语音能力
                 if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
                     initVoiceRecognition();
                 }
@@ -649,28 +937,45 @@
             recognition.continuous = false;
             recognition.interimResults = false;
 
+            // 1. 开始录音时：图标变声波，提示“正在听”
             recognition.onstart = () => {
                 const btn = document.getElementById('voice-btn');
-                btn.classList.add('voice-recording');
-                btn.innerHTML = '<i data-lucide="mic-off" class="w-5 h-5"></i>';
+                btn.classList.add('voice-recording'); // 保持原有的红色呼吸灯效果
+                
+                // === 修改点在这里：把 'mic-off' 改成了 'audio-lines' (声波) ===
+                btn.innerHTML = '<i data-lucide="audio-lines" class="w-5 h-5 animate-pulse"></i>';
+                
                 lucide.createIcons();
                 document.getElementById('ai-input').placeholder = "正在听...";
             };
 
+            // 2. 结束录音时：图标变回话筒
             recognition.onend = () => {
                 const btn = document.getElementById('voice-btn');
                 btn.classList.remove('voice-recording');
+                
+                // 变回普通话筒
                 btn.innerHTML = '<i data-lucide="mic" class="w-5 h-5"></i>';
+                
                 lucide.createIcons();
-                document.getElementById('ai-input').placeholder = "请直接输入...";
+                document.getElementById('ai-input').placeholder = "点这里输入，或者点右下角话筒说话...";
+                
+                // 强制让输入框保持展开 (防止录完音突然折叠)
+                document.getElementById('ai-input').focus();
             };
 
             recognition.onresult = (event) => {
                 const transcript = event.results[0][0].transcript;
                 const input = document.getElementById('ai-input');
-                // 追加文本而不是覆盖，方便连续说话
+                // 追加文本而不是覆盖
                 input.value = input.value ? input.value + '\n' + transcript : transcript;
                 ai_handleInput(); // 触发解析
+            };
+            
+            // 增加容错：如果发生错误也重置图标
+            recognition.onerror = (event) => {
+                console.error("语音识别错误:", event.error);
+                recognition.stop(); // 手动触发 onend 重置图标
             };
         }
 
@@ -683,136 +988,93 @@
         // 模块1：AI 智能解析内核 (V27 核心升级：完整日期算术)
         // ============================================
         
+        // ============================================
+        // 模块1：AI 智能解析内核 (V36 - Ultimate: 深度语义理解修复版)
+        // ============================================
+
+        // --- 1. 基础映射表 ---
         const CHINESE_NUMBER_MAP = {
             '零': 0, '〇': 0, '０': 0, '一': 1, '壹': 1, '１': 1, '二': 2, '两': 2, '贰': 2, '２': 2, 
             '三': 3, '叁': 3, '３': 3, '四': 4, '肆': 4, '４': 4, '五': 5, '伍': 5, '５': 5, 
             '六': 6, '陆': 6, '６': 6, '七': 7, '柒': 7, '７': 7, '八': 8, '捌': 8, '８': 8, 
             '九': 9, '玖': 9, '９': 9, '十': 10, '拾': 10, '十一': 11, '十二': 12, '十三': 13, 
             '十四': 14, '十五': 15, '十六': 16, '十七': 17, '十八': 18, '十九': 19, '二十': 20, 
-            '二十一': 21, '二十二': 22, '二十三': 23, '二十四': 24, '三十': 30, '三十一': 31
+            '二十一': 21, '二十二': 22, '二十三': 23, '二十四': 24, '三十': 30, '三十一': 31,
+            '半': 0.5, '几': 5 
         };
         const SPECIAL_TIME_EXPRESSIONS = { '半': 30, '一刻': 15, '三刻': 45, '整': 0, '正': 0 };
         const TIME_PERIOD_MAP = { 
-            '凌晨': '00:00-05:00', '早晨': '05:00-08:00', '早上': '05:00-08:00', '上午': '08:00-12:00', 
-            '中午': '11:00-13:00', '晌午': '11:00-13:00', '下午': '13:00-18:00', '傍晚': '17:00-19:00', 
-            '晚上': '18:00-24:00', '夜里': '20:00-24:00', '午夜': '23:00-01:00' 
+            '凌晨': 0, '早晨': 5, '早上': 6, '明早': 8, '上午': 8, 
+            '中午': 12, '晌午': 12, '下午': 13, '傍晚': 17, 
+            '晚上': 18, '夜里': 20, '午夜': 23 
         };
 
-        // --- V27 新增：日期算术辅助函数 ---
-        function calculateDaysToNextWeekday(targetDayIndex) {
-            const today = new Date();
-            const todayIndex = today.getDay(); // 0 (Sun) - 6 (Sat)
-            let diff = targetDayIndex - todayIndex;
-            // 如果目标是今天或过去，找下周的这一天
-            // 用户逻辑：周五(今天周四) -> 明天(1)。周五(今天周五) -> 下周五(7)。
-            if (diff <= 0) diff += 7;
-            return diff;
+        // --- 2. 日期计算辅助函数 (这里是之前缺失的关键部分！) ---
+        
+        // 获取汉字对应的星期数字 (1-7, 日=7)
+        function getCnDayIndex(char) {
+            const map = {'一':1, '二':2, '三':3, '四':4, '五':5, '六':6, '日':7, '天':7};
+            return map[char] || 0;
         }
 
-        // --- V27 新增：智能周解析器 (核心) ---
+        // 计算目标周几在 baseDate 所在的同一周是哪一天 (周一为始)
+        function getDateInSameWeek(baseDate, targetDayIndex) {
+            const d = new Date(baseDate);
+            const currentDayIndex = d.getDay() || 7; // 0是周日, 转为7
+            d.setDate(d.getDate() - (currentDayIndex - 1)); // 回到周一
+            d.setDate(d.getDate() + (targetDayIndex - 1)); // 加偏移
+            d.setHours(0,0,0,0);
+            return d;
+        }
+
+        // 计算基于今天的“下下周X” (weekOffset: 0=本周, 1=下周, 2=下下周)
+        function calculateFutureWeekDate(targetDayIndex, weekOffset) {
+            const now = new Date();
+            const todayIndex = now.getDay() || 7;
+            let targetDate = new Date();
+            targetDate.setDate(now.getDate() - (todayIndex - 1) + (targetDayIndex - 1)); // 本周该日
+            targetDate.setDate(targetDate.getDate() + (weekOffset * 7)); // 加上周偏移
+            targetDate.setHours(0,0,0,0);
+            return targetDate;
+        }
+
+        // 智能周解析器 (返回元数据)
         function parseSmartWeekDate(text) {
-            // 正则说明：
-            // Group 1: 捕获所有 "下" (可能包含 "个"、"大")，用于计数
-            // Group 2: 星期几关键词
-            // Group 3: 一二三四五六日天
-            const regex = /((?:大|下|个)+)\s*(周|星期|礼拜)([一二三四五六日天])/;
-            // 简单周几匹配 (无修饰)
-            const simpleRegex = /^(周|星期|礼拜)([一二三四五六日天])/;
+            // 强匹配：明确带有“下”、“本”、“这”等修饰词
+            const strongRegex = /((?:大|下|个|本|这)+)\s*(?:周|星期|礼拜)([一二三四五六日天])/;
+            // 弱匹配：只有“周几”
+            const weakRegex = /^(?:周|星期|礼拜)([一二三四五六日天])/;
 
-            let match = text.match(regex);
-            let xiaCount = 0;
-            let dayChar = '';
-            let fullMatch = '';
-
+            let match = text.match(strongRegex);
             if (match) {
-                fullMatch = match[0];
-                const prefix = match[1];
-                dayChar = match[3];
-                // 计算 "下" 的数量
-                xiaCount = (prefix.match(/下/g) || []).length;
-            } else {
-                match = text.match(simpleRegex);
-                if (match) {
-                    fullMatch = match[0];
-                    dayChar = match[2];
-                    xiaCount = 0; // 无修饰 = 最近的一个
-                }
-            }
-
-            if (match) {
-                const dayMap = {'日':0, '天':0, '一':1, '二':2, '三':3, '四':4, '五':5, '六':6};
-                const targetIndex = dayMap[dayChar];
+                const modifier = match[1]; 
+                const dayChar = match[2];
+                const dayIndex = getCnDayIndex(dayChar);
                 
-                if (targetIndex === undefined) return null;
-                
-                // 1. 计算到下一个该星期的基础天数
-                const daysUntilNext = calculateDaysToNextWeekday(targetIndex);
-                
-                // 2. 加上 "下" 的周数 (每个 "下" 加 7 天)
-                // 注意：如果 xiaCount=0 (如"周五")，就是 daysUntilNext
-                // 如果 xiaCount=1 (如"下周五")，通常指 "下个周五"，如果是今天周四，周五是明天。
-                // 这里的语义定义：
-                // "周五" = 最近的周五
-                // "下周五" = 最近周五 + 7天
-                // "下下周五" = 最近周五 + 14天
-                const totalDaysToAdd = daysUntilNext + (xiaCount * 7);
-                
-                const targetDate = new Date();
-                targetDate.setDate(targetDate.getDate() + totalDaysToAdd);
-                targetDate.setHours(0,0,0,0);
+                // 计算“下”的数量
+                let xiaCount = (modifier.match(/下/g) || []).length;
+                if (modifier.includes('大')) xiaCount += 2; 
                 
                 return {
-                    date: targetDate,
-                    matchStr: fullMatch
+                    type: 'strong', // 强上下文信号
+                    date: calculateFutureWeekDate(dayIndex, xiaCount),
+                    matchStr: match[0],
+                    dayIndex: dayIndex
+                };
+            }
+
+            match = text.match(weakRegex);
+            if (match) {
+                return {
+                    type: 'weak', // 弱信号，需要依赖上下文
+                    dayIndex: getCnDayIndex(match[1]),
+                    matchStr: match[0]
                 };
             }
             return null;
         }
 
-        // --- 辅助函数 ---
-        function parseChineseOrArabic(str) {
-            str = str.trim();
-            if (/^\d+$/.test(str)) return parseInt(str);
-            if (CHINESE_NUMBER_MAP[str] !== undefined) return CHINESE_NUMBER_MAP[str];
-            if (str.startsWith('十')) return 10 + (CHINESE_NUMBER_MAP[str.substring(1)] || 0);
-            if (str.startsWith('二十')) return 20 + (CHINESE_NUMBER_MAP[str.substring(2)] || 0);
-            if (str.startsWith('三十')) return 30 + (CHINESE_NUMBER_MAP[str.substring(2)] || 0);
-            return 0; 
-        }
-
-        function parseChineseTimeString(input) {
-            let text = input.trim();
-            const arabicMatch = text.match(/(\d{1,2})[:点](半|刻|\d{1,2})?/);
-            if (arabicMatch) {
-                let hour = parseInt(arabicMatch[1]);
-                let minuteStr = arabicMatch[2];
-                let minute = 0;
-                if (minuteStr === '半') minute = 30; else if (minuteStr === '刻') minute = 15; else if (minuteStr) minute = parseInt(minuteStr);
-                if (hour < 12 && /下午|晚上|傍晚|夜里/.test(text)) hour += 12; else if (hour === 12 && /凌晨/.test(text)) hour = 0;
-                return { formatted: `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`, type: 'specific' };
-            }
-            const chinesePattern = /([零一二三四五六七八九十两]+)点(半|刻|([零一二三四五六七八九十两]+))?/;
-            const chineseMatch = text.match(chinesePattern);
-            if (chineseMatch) {
-                const hourVal = parseChineseOrArabic(chineseMatch[1]);
-                let minuteVal = 0;
-                if (chineseMatch[2]) {
-                    const minuteExpr = chineseMatch[2];
-                    if (SPECIAL_TIME_EXPRESSIONS[minuteExpr] !== undefined) minuteVal = SPECIAL_TIME_EXPRESSIONS[minuteExpr];
-                    else if (chineseMatch[3]) minuteVal = parseChineseOrArabic(chineseMatch[3]);
-                }
-                let finalHour = hourVal;
-                if (finalHour < 12) {
-                    for (const [period, _] of Object.entries(TIME_PERIOD_MAP)) {
-                        if (text.includes(period) && ['下午', '晚上', '傍晚', '夜里'].includes(period)) { finalHour += 12; break; }
-                    }
-                }
-                return { formatted: `${String(finalHour).padStart(2, '0')}:${String(minuteVal).padStart(2, '0')}`, type: 'specific' };
-            }
-            for (const [period, range] of Object.entries(TIME_PERIOD_MAP)) { if (text.includes(period)) return { formatted: period, type: 'fuzzy' }; }
-            return null;
-        }
-
+        // 相对天数解析 (3天后, 第5天)
         function parseDaysExpression(text) {
             const afterMatch = text.match(/([0-9零一二三四五六七八九十]+)\s*天[以之]?[后後]/);
             if (afterMatch) return { type: 'after', days: parseChineseOrArabic(afterMatch[1]) };
@@ -821,7 +1083,7 @@
             return null;
         }
 
-        // --- V27 更新：保留基础日期词提取以兼容旧逻辑 ---
+        // 兼容旧逻辑的日期词提取 (用于 ai_deleteTask)
         function extractLineDateWord(line) {
             line = line.trim();
             if (!line) return "";
@@ -831,173 +1093,576 @@
             if(seqExpr) return seqExpr[0];
             const keywordMatch = line.match(/^(大后天|后天|明天|明儿|今天)/);
             if(keywordMatch) return keywordMatch[0];
-            // V27: 这里不再处理周几，因为 parseSmartWeekDate 会处理
             return "";
         }
 
-        // --- 主处理函数 ---
-        function ai_handleInput() {
-            const text = document.getElementById('ai-input').value;
-            const status = document.getElementById('ai-status');
-            const confirmBtn = document.getElementById('ai-confirm-btn');
-            const mobileConfirmBtn = document.getElementById('mobile-confirm-btn');
-            
-            [confirmBtn, mobileConfirmBtn].forEach(btn => {
-                if(btn && btn.innerText.includes('已锁定')) {
+        // --- 3. 核心解析逻辑 ---
+
+        // 通用数字解析
+        function parseChineseOrArabic(str) {
+            if (!str) return 0;
+            str = str.toString().trim();
+            if (/^\d+(\.\d+)?$/.test(str)) return parseFloat(str);
+            if (CHINESE_NUMBER_MAP[str] !== undefined) return CHINESE_NUMBER_MAP[str];
+            if (str.startsWith('十')) return 10 + (CHINESE_NUMBER_MAP[str.substring(1)] || 0);
+            if (str.startsWith('二十')) return 20 + (CHINESE_NUMBER_MAP[str.substring(2)] || 0);
+            if (str.startsWith('三十')) return 30 + (CHINESE_NUMBER_MAP[str.substring(2)] || 0);
+            return 0; 
+        }
+
+        // 时长解析
+        function parseDuration(text) {
+            const bracketRegex = /[\(\[（]\s*([0-9\.\d零一二三四五六七八九十两半几]+)\s*(小时|个钟|钟头|h|hr|分钟|分|min|m)\s*[\)\]）]/i;
+            let match = text.match(bracketRegex);
+            let isBracket = true;
+
+            if (!match) {
+                isBracket = false;
+                const normalRegex = /([0-9\.\d零一二三四五六七八九十两半几]+)\s*(小时|个钟|钟头|h|hr|分钟|分|min|m)(?:\s*[之以]?[后後])?/i;
+                match = text.match(normalRegex);
+            }
+
+            if (!match) return null;
+
+            const numStr = match[1];
+            const unit = match[2].toLowerCase();
+            const fullMatchStr = match[0];
+            const isRelative = !isBracket && (fullMatchStr.includes('后') || fullMatchStr.includes('後'));
+
+            let val = parseChineseOrArabic(numStr);
+            let totalMinutes = 0;
+
+            if (['小时', '个钟', '钟头', 'h', 'hr'].includes(unit)) totalMinutes = val * 60;
+            else totalMinutes = val;
+
+            return { minutes: Math.round(totalMinutes), matchStr: fullMatchStr, isRelative: isRelative };
+        }
+
+        // 时间点解析
+        function parseChineseTimeString(input) {
+            let text = input.trim();
+            let shiftDay = 0; 
+
+            if (text.includes('明早')) { shiftDay = 1; text = text.replace('明早', '早上'); } 
+            else if (text.includes('明天')) { shiftDay = 1; }
+
+            text = text.replace(/(\d+)\.(\d+)/, '$1:$2');
+
+            let hour = -1, minute = 0;
+            let type = 'fuzzy';
+
+            const arabicMatch = text.match(/(\d{1,2})[:点：\s]*(\d{1,2}|半|刻|整)?/);
+            if (arabicMatch) {
+                hour = parseInt(arabicMatch[1]);
+                const minStr = arabicMatch[2];
+                if (minStr === '半') minute = 30;
+                else if (minStr === '刻') minute = 15;
+                else if (minStr) minute = parseInt(minStr);
+                type = 'specific';
+            } else {
+                const cnMatch = text.match(/([零一二三四五六七八九十两]+)点(半|刻|([零一二三四五六七八九十两]+))?/);
+                if (cnMatch) {
+                    hour = parseChineseOrArabic(cnMatch[1]);
+                    const minPart = cnMatch[2];
+                    if (minPart === '半') minute = 30;
+                    else if (minPart === '刻') minute = 15;
+                    else if (cnMatch[3]) minute = parseChineseOrArabic(cnMatch[3]);
+                    type = 'specific';
+                }
+            }
+
+            if (hour !== -1) {
+                if (hour < 12 && /下午|晚上|傍晚|夜里/.test(text)) hour += 12;
+                else if (hour < 12 && (/中午|晌午/.test(text)) && hour === 1) hour += 12; 
+                else if (hour === 12 && /凌晨|早晨|早上/.test(text)) hour = 0;
+            } else {
+                for (const [key, val] of Object.entries(TIME_PERIOD_MAP)) {
+                    if (text.includes(key)) return { formatted: key, type: 'fuzzy', shiftDay: shiftDay }; 
+                }
+                return null;
+            }
+
+            return { formatted: `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`, type: 'specific' };
+        }
+let lastAnalyzedText = ""; 
+
+function ai_handleInput() {
+    const text = document.getElementById('ai-input').value;
+    const status = document.getElementById('ai-status');
+    const confirmBtn = document.getElementById('ai-confirm-btn');
+    const mobileConfirmBtn = document.getElementById('mobile-confirm-btn');
+
+    // 1. 按钮解锁逻辑 (仅控制按钮可用性，不影响数据)
+    const toggleBtns = (enable) => {
+        [confirmBtn, mobileConfirmBtn].forEach(btn => {
+            if(!btn) return;
+            if (enable) {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                // 恢复为确认状态
+                if(btn.innerText.includes('锁定')) {
                     btn.innerHTML = btn.id.includes('mobile') ? '<i data-lucide="check-circle" class="w-4 h-4"></i> 确认计划' : '<i data-lucide="check" class="w-3 h-3"></i> 确认计划';
                     btn.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
                     btn.classList.remove('bg-slate-600', 'cursor-default');
                 }
-            });
-            lucide.createIcons();
+            } else {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        });
+        lucide.createIcons();
+    };
 
-            if (!text.trim()) {
-                document.getElementById('ai-timeline-container').innerHTML = `<div class="flex flex-col items-center justify-center h-full text-slate-600 opacity-60"><i data-lucide="message-square-dashed" class="w-12 h-12 mb-3"></i><p class="text-xs">在左侧输入文字<br>右侧将实时显示解析结果</p></div>`;
-                status.innerText = "等待输入"; status.className = "text-[10px] bg-blue-500/20 text-blue-400 px-2 py-1 rounded border border-blue-500/30";
-                
-                [confirmBtn, mobileConfirmBtn].forEach(btn => {
-                    if(btn) { btn.disabled = true; btn.classList.add('opacity-50', 'cursor-not-allowed'); }
-                });
-                
-                aiData = []; updateSummary(); lucide.createIcons(); return;
+    // 2. 空输入处理：只有清空文本框时，才清空右侧预览
+    if (!text.trim()) {
+        document.getElementById('ai-timeline-container').innerHTML = `<div class="flex flex-col items-center justify-center h-full text-slate-600 opacity-60"><i data-lucide="message-square-dashed" class="w-12 h-12 mb-3"></i><p class="text-xs">在左侧输入文字<br>右侧将实时显示解析结果</p></div>`;
+        status.innerText = "等待输入";
+        status.className = "text-[10px] bg-blue-500/20 text-blue-400 px-2 py-1 rounded border border-blue-500/30";
+        aiData = [];
+        lastAnalyzedText = ""; // 重置记忆
+        toggleBtns(false);
+        updateSummary();
+        return;
+    }
+
+    // --- 智能防重复：如果文字没变，且已经有数据，绝对不重新请求 ---
+    if (text === lastAnalyzedText && aiData.length > 0) {
+        return; // 直接退出，什么都不做，防止切屏闪烁
+    }
+
+    // 3. 状态指示 (只改状态字，不清空 aiData，防止消失)
+    status.innerText = "分析中...";
+    status.className = "text-[10px] bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded border border-yellow-500/30 animate-pulse";
+
+    // 4. 防抖计时器
+    if (aiParseTimeout) clearTimeout(aiParseTimeout);
+
+    // 智能延迟：AI 模式等待 1.2秒 (用户停笔后再请求，省Token)，本地模式 0.3秒
+    const delay = useCloudEngine ? 1200 : 300;
+
+    aiParseTimeout = setTimeout(async () => {
+        try {
+            const apiKey = localStorage.getItem('deepflow_sk');
+            let isLocalFallback = false;
+            let newData = []; // 临时存放新数据
+
+            // === 逻辑分支 ===
+            if (!useCloudEngine || !apiKey || window.isKeyBanned) {
+                // 本地模式
+                newData = ai_parseText(text);
+                isLocalFallback = true;
+            } else {
+                // AI 模式
+                try {
+                    status.innerText = "AI 思考中...";
+                    newData = await callSiliconFlow(text, apiKey);
+                } catch (err) {
+                    console.error("AI Error:", err);
+                    if (err.message === "AUTH_FAILED") {
+                        handleApiKeyFailure("API Key 无效或过期");
+                        return;
+                    } 
+                    // 网络错误处理
+                    status.innerText = "连接失败";
+                    status.className = "text-[10px] bg-red-500/20 text-red-400 px-2 py-1 rounded border border-red-500/30";
+                    // 注意：这里不 throw 也不清空旧数据，让用户保留当前视图
+                    return; 
+                }
             }
 
-            status.innerText = "分析中..."; status.className = "text-[10px] bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded border border-yellow-500/30 animate-pulse";
-            
-            if (aiParseTimeout) clearTimeout(aiParseTimeout);
-            aiParseTimeout = setTimeout(() => {
-                aiData = ai_parseText(text);
-                ai_renderPreview(aiData);
-                status.innerText = "分析完成"; status.className = "text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded border border-emerald-500/30";
-                if(aiData.length > 0) { 
-                    [confirmBtn, mobileConfirmBtn].forEach(btn => {
-                        if(btn) { btn.disabled = false; btn.classList.remove('opacity-50', 'cursor-not-allowed'); }
-                    });
-                }
-                updateSummary();
-            }, 500);
-        }
+            // 5. 只有成功获取到新数据后，才更新界面！
+            // 过滤空数据
+            const validData = newData.filter(d => d.tasks && d.tasks.length > 0);
 
-        // --- V27 解析器：集成所有逻辑 ---
-        function ai_parseText(text) {
-            const lines = text.split('\n');
-            let parsedData = [];
-            let baseDate = new Date(); baseDate.setHours(0,0,0,0);
-            let currentDate = new Date(baseDate);
-
-            const getDateKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-            const getDayObj = (d) => {
-                const k = getDateKey(d);
-                let obj = parsedData.find(p => p.date === k);
-                if (!obj) { obj = { date: k, tasks: [] }; parsedData.push(obj); }
-                return obj;
-            };
-
-            lines.forEach((line, lineIndex) => { 
-                let lineTrimmed = line.trim();
-                if (!lineTrimmed) return;
-
-                let targetDate = new Date(currentDate); let dateFound = false;
-                let matchedDateString = ""; // 用于后续清理
-
-                // 1. 优先尝试 V27 智能周算术 (Smart Week Logic)
-                const smartWeek = parseSmartWeekDate(lineTrimmed);
-                if (smartWeek) {
-                    targetDate = smartWeek.date;
-                    dateFound = true;
-                    matchedDateString = smartWeek.matchStr;
+            if (validData.length === 0) {
+                // 如果 AI 返回空，提示未识别，但不清空旧数据（防止误操作导致数据丢失）
+                status.innerText = "未识别到任务";
+                status.className = "text-[10px] bg-slate-500/20 text-slate-400 px-2 py-1 rounded border border-slate-500/30";
+            } else {
+                // === 成功更新 ===
+                aiData = validData; // 替换全局数据
+                lastAnalyzedText = text; // 记住这段文字，防止重复请求
+                
+                // 更新状态栏颜色
+                if (isLocalFallback) {
+                    status.innerText = "本地极速解析";
+                    status.className = "text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded border border-emerald-500/30";
                 } else {
-                    // 2. 尝试常规逻辑 (天数、明天等)
-                    const daysExpr = parseDaysExpression(lineTrimmed);
-                    if (daysExpr) {
-                        targetDate = new Date(baseDate); 
-                        if (daysExpr.type === 'after') targetDate.setDate(baseDate.getDate() + daysExpr.days);
-                        else if (daysExpr.type === 'sequence') targetDate.setDate(baseDate.getDate() + Math.max(0, daysExpr.days - 1));
-                        dateFound = true;
-                    } 
-                    else if (/大后天/.test(lineTrimmed)) { targetDate = new Date(baseDate); targetDate.setDate(baseDate.getDate() + 3); dateFound = true; }
-                    else if (/后天/.test(lineTrimmed)) { targetDate = new Date(baseDate); targetDate.setDate(baseDate.getDate() + 2); dateFound = true; }
-                    else if (/明天|明儿/.test(lineTrimmed)) { targetDate = new Date(baseDate); targetDate.setDate(baseDate.getDate() + 1); dateFound = true; }
-                    else if (/今天/.test(lineTrimmed)) { targetDate = new Date(baseDate); dateFound = true; }
+                    status.innerText = "AI 深度解析";
+                    status.className = "text-[10px] bg-blue-500/20 text-blue-400 px-2 py-1 rounded border border-blue-500/30";
                 }
-
-                if(dateFound) currentDate = targetDate;
                 
-                const dayObj = getDayObj(currentDate);
+                // 重新渲染预览区
+                ai_renderPreview(aiData);
+                toggleBtns(true); // 解锁按钮
+            }
 
-                const taskRegex = /[^，。,；;]+(?=[，。,；;\n]|$)/g;
-                let match;
-                
-                while ((match = taskRegex.exec(line)) !== null) {
-                    let segment = match[0]; 
-                    
-                    let cleanContent = segment
-                         .replace(/(?:Day|D)\s*[0-9]+\s*/gi, '')
-                         .replace(/第\s*[0-9零一二三四五六七八九十]+\s*[天日]/g, '')
-                         .replace(/[0-9零一二三四五六七八九十]+\s*天[以之]?[后後]/g, '')
-                         .replace(/明天|后天|今天/g, ''); // 移除普通时间词
-                    
-                    // V27 核心：移除匹配到的“下下周五”等复杂词
-                    if (matchedDateString) {
-                        cleanContent = cleanContent.replace(matchedDateString, '');
-                    } else {
-                        // 兜底移除简单的周几 (如果 parseSmartWeekDate 没命中但这里有残留)
-                        cleanContent = cleanContent.replace(/周[一二三四五六日]/g, '');
-                    }
-                    
-                    cleanContent = cleanContent.trim();
-                    if (!cleanContent) continue;
+        } catch (e) {
+            console.warn("流程异常:", e);
+        } finally {
+            updateSummary();
+        }
+    }, delay);
+}
+        // --- 新增：API Key 认证失败处理 ---
+function handleApiKeyFailure(errorMessage) {
+    // 关键修正：设置禁用标记，确保后续输入不再尝试调用 API
+    window.isKeyBanned = true; // 即使不清除 Key，也禁用 API 调用，避免循环弹窗
+    
+    // 1. 弹出警告并提供清除选项
+    const m = document.getElementById('custom-alert-modal');
+    document.getElementById('alert-message').innerHTML = errorMessage + 
+        '<br><br>系统已自动禁用 AI 引擎（本次会话有效）。<br>请选择：<br>1. 清除 Key 强制使用本地正则。<br>2. 继续使用本地解析。';
+    document.getElementById('alert-title').innerHTML = `<i data-lucide="alert-triangle" class="w-5 h-5"></i> 授权失败 / AI 已禁用`;
+    
+    // 2. 接管和配置按钮
+    const primaryBtn = document.getElementById('alert-primary-btn'); // 蓝色按钮
+    const secondaryBtn = document.getElementById('alert-secondary-btn'); // 灰色按钮
+    
+    // Primary Button: 清除 Key（推荐操作）
+    primaryBtn.textContent = '清除无效 Key';
+    primaryBtn.onclick = clearAndFallback;
+    primaryBtn.classList.add('bg-purple-600', 'hover:bg-purple-500'); // 改用紫色突出重要性
+    primaryBtn.classList.remove('bg-blue-600', 'hover:bg-blue-500');
+    
+    // Secondary Button: 关闭弹窗，仅继续回退（不清除 Key）
+    secondaryBtn.textContent = '继续使用本地解析';
+    // 注意：关闭弹窗后，isKeyBanned=true 会自动生效，系统直接走正则
+    secondaryBtn.onclick = closeCustomAlert; 
 
-                    const timeRes = parseChineseTimeString(segment);
-                    let displayTime = "";
-                    if (timeRes) displayTime = timeRes.formatted;
-                    
-                    cleanContent = cleanContent.replace(/((?:凌晨|早晨|早上|上午|中午|晌午|下午|傍晚|晚上|夜里|午夜)?\s*(?:[0-9]{1,2}[:点](?:[0-9]{1,2}|半|刻)?|[零一二三四五六七八九十两]+点(?:半|刻|[零一二三四五六七八九十两]+)?))/g, '').trim();
-                    cleanContent = cleanContent.replace(/^(准备|开始)\s*/, '').trim();
+    lucide.createIcons();
+    m.classList.remove('hidden'); 
+    setTimeout(() => m.classList.remove('opacity-0'), 10);
+}
 
-                    if(cleanContent) {
-                        const tagInfo = window.autoDetectTag ? window.autoDetectTag(cleanContent) : {};
-                        
-                        dayObj.tasks.push({
-                            title: cleanContent,
-                            time: displayTime,
-                            duration: null,
-                            tag: tagInfo.label || "",
-                            tagInfo: tagInfo,
-                            rawSegment: segment,
-                            lineIndex: lineIndex,
-                            lineDateWord: matchedDateString || extractLineDateWord(lineTrimmed)
-                        });
-                    }
-                }
-            });
-            return parsedData.sort((a,b) => a.date.localeCompare(b.date));
+// --- 新增：清除 Key 并回退到本地模式 ---
+function clearAndFallback() {
+    localStorage.removeItem('deepflow_sk');
+    window.isKeyBanned = false; // <<< 修正：清除 Key 时，重置禁用标记
+    closeCustomAlert();
+    
+    // 强制刷新输入框，重新触发解析（此时会走本地正则）
+    ai_handleInput();
+    
+    // 再次提醒用户本地解析的输入格式
+    customAlert(
+        "已清除 API Key。当前为**本地正则解析模式**。<br><br>请使用**严格**格式：<br>例如：`周三8点背单词 60分钟`", 
+        "模式切换成功", 
+        "layout-list"
+    );
+}
+        // --- 核心新增：SiliconFlow AI 接口调用 ---
+        // --- 核心修复：SiliconFlow AI 接口调用 (V40 稳定版) ---
+        async function callSiliconFlow(userText, apiKey) {
+    const model = localStorage.getItem('deepflow_model') || 'deepseek-ai/DeepSeek-V3';
+    
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const todayStr = now.toISOString().split('T')[0]; 
+    const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const currentWeekDay = weekDays[now.getDay()];
+
+    // System Prompt: 明确告诉 AI 不要生成 Tags
+    const systemPrompt = `
+    You are DeepFlow, an intelligent Schedule Parser.
+    # 🌍 CURRENT CONTEXT
+    - Reference Date: ${todayStr} (${currentWeekDay})
+    - Reference Year: ${currentYear}
+
+    # 🧠 COGNITIVE TASKS
+    1. **Analyze Structure**: Conversational? Table? List?
+    2. **Determine Anchor Date**: specific dates > relative dates > today.
+    3. **Normalize Time & Duration**:
+       - "早读"->07:00, "下午"->14:00. 
+       - Duration: "40min"->40. IF NO DURATION, RETURN NULL.
+    4. **Content Extraction**: Clean task content.
+
+    # ⛔️ STRICT CONSTRAINT
+    - **DO NOT** generate tags, emojis, or colors. They MUST be null.
+    - We will handle them locally.
+
+    # 📤 OUTPUT FORMAT (Strict JSON)
+    Return a JSON Array.
+    [
+      {
+        "date": "YYYY-MM-DD",
+        "tasks": [
+          {
+            "title": "string",
+            "time": "HH:MM" (24h) or null,
+            "duration": number (minutes) or null,
+            "tag": null,    // ALWAYS NULL
+            "emoji": null,  // ALWAYS NULL
+            "color": null   // ALWAYS NULL
+          }
+        ]
+      }
+    ]
+    `;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90000);
+
+    try {
+        const response = await fetch("https://api.siliconflow.cn/v1/chat/completions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+            body: JSON.stringify({
+                model: model,
+                messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userText }],
+                temperature: 0.1,
+                max_tokens: 8192,
+                response_format: { type: "json_object" }
+            }),
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            if (response.status === 401 || response.status === 403) throw new Error("AUTH_FAILED");
+            throw new Error(`API_ERROR: ${response.status}`);
         }
 
-        function ai_renderPreview(data) {
-            const container = document.getElementById('ai-timeline-container');
-            if (!data.length) { container.innerHTML = '<div class="text-center text-slate-500 mt-10 text-xs">未识别到有效任务</div>'; return; }
-            let html = '';
-            data.forEach((day, dIdx) => {
-                const dateObj = new Date(day.date);
-                const weekStr = ['周日','周一','周二','周三','周四','周五','周六'][dateObj.getDay()];
-                html += `<div class="timeline-day"><div class="timeline-date">${day.date} · ${weekStr}</div>`;
-                day.tasks.forEach((task, tIdx) => {
-                    html += `
-                    <div class="ai-task-card group">
-                        <input type="text" class="ai-time-edit" value="${task.time || ''}" placeholder="时间" onchange="ai_updateTask(${dIdx}, ${tIdx}, 'time', this.value)">
-                        <input type="text" class="ai-duration-edit" value="${task.duration || ''}" placeholder="分钟" onchange="ai_updateTask(${dIdx}, ${tIdx}, 'duration', this.value)">
-                        <input type="text" class="ai-title-edit" value="${task.title}" placeholder="任务内容" onchange="ai_updateTask(${dIdx}, ${tIdx}, 'title', this.value)">
-                        <span class="ai-tag-badge">
-    ${task.tagInfo.emoji ? task.tagInfo.emoji + ' ' : ''}${task.tagInfo.label || '自动'}
-</span>
-                        <button onclick="ai_deleteTask('${day.date}', ${tIdx})" class="mobile-delete-btn md:text-slate-600 md:hover:text-red-400 transition p-2 md:px-2" title="删除"><i data-lucide="trash-2" class="w-4 h-4 md:w-3.5 md:h-3.5"></i></button>
-                    </div>`;
+        const data = await response.json();
+        if (!data.choices || !data.choices[0] || !data.choices[0].message) throw new Error("EMPTY_RESPONSE");
+
+        let rawJson = data.choices[0].message.content.replace(/```json/g, '').replace(/```/g, '').trim();
+        let parsedResult = JSON.parse(rawJson);
+        const days = Array.isArray(parsedResult) ? parsedResult : (parsedResult.days || parsedResult.schedule || []);
+
+        return days.map(day => ({
+            date: day.date,
+            tasks: day.tasks.map(t => {
+                if (!t || !t.title) return null;
+
+                // 为了预览好看，临时匹配一个图标显示，但最终数据强制为 null
+                let previewRule = { category: "日常", label: "Task", emoji: "📝", color: "#8E8E93" };
+                if (typeof window.autoDetectTag === 'function') {
+                    previewRule = window.autoDetectTag(t.title); 
+                }
+
+                return {
+                    title: t.title,
+                    time: t.time || "",
+                    duration: (t.duration && t.duration > 0) ? t.duration : null, 
+                    
+                    // 核心修改：强制设为 NULL
+                    tag: null, 
+                    emoji: null, 
+                    color: null, 
+                    
+                    tagInfo: previewRule, // 仅供预览渲染使用
+                    rawSegment: t.title
+                };
+            }).filter(t => t !== null)
+        })).sort((a, b) => a.date.localeCompare(b.date));
+
+    } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
+    }
+}
+        // 主解析入口 (本地正则版 - 修复默认时长)
+function ai_parseText(text) {
+    const lines = text.split('\n');
+    let parsedData = [];
+    
+    let contextBaseDate = new Date(); 
+    contextBaseDate.setHours(0,0,0,0);
+    
+    let lastEndTime = new Date(contextBaseDate); 
+    lastEndTime.setHours(8, 0, 0, 0); 
+
+    const today = new Date(); today.setHours(0,0,0,0);
+
+    const getDateKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const getDayObj = (d) => {
+        const k = getDateKey(d);
+        let obj = parsedData.find(p => p.date === k);
+        if (!obj) { obj = { date: k, tasks: [] }; parsedData.push(obj); }
+        return obj;
+    };
+
+    lines.forEach((line, lineIndex) => { 
+        let lineTrimmed = line.trim();
+        lineTrimmed = lineTrimmed.replace(/^(\d+)[\.、\s]+/, '');
+        if (!lineTrimmed) return;
+
+        let targetDate = null;
+        let matchedDateString = "";
+        
+        const weekResult = parseSmartWeekDate(lineTrimmed);
+        if (weekResult) {
+            matchedDateString = weekResult.matchStr;
+            if (weekResult.type === 'strong') {
+                targetDate = weekResult.date;
+                contextBaseDate = new Date(targetDate);
+                lastEndTime = new Date(targetDate); lastEndTime.setHours(8,0,0,0);
+            } else {
+                targetDate = getDateInSameWeek(contextBaseDate, weekResult.dayIndex);
+            }
+        } else {
+            const daysExpr = parseDaysExpression(lineTrimmed);
+            if (daysExpr) {
+                targetDate = new Date(today); 
+                if (daysExpr.type === 'after') targetDate.setDate(today.getDate() + daysExpr.days);
+                else if (daysExpr.type === 'sequence') targetDate.setDate(today.getDate() + Math.max(0, daysExpr.days - 1));
+                contextBaseDate = new Date(targetDate);
+                lastEndTime = new Date(targetDate); lastEndTime.setHours(8,0,0,0);
+            }
+            else if (/大后天/.test(lineTrimmed)) { targetDate = new Date(today); targetDate.setDate(today.getDate() + 3); contextBaseDate = new Date(targetDate); matchedDateString="大后天"; }
+            else if (/后天/.test(lineTrimmed)) { targetDate = new Date(today); targetDate.setDate(today.getDate() + 2); contextBaseDate = new Date(targetDate); matchedDateString="后天"; }
+            else if (/明天|明儿/.test(lineTrimmed)) { targetDate = new Date(today); targetDate.setDate(today.getDate() + 1); contextBaseDate = new Date(targetDate); matchedDateString="明天"; }
+            else if (/今天/.test(lineTrimmed)) { targetDate = new Date(today); contextBaseDate = new Date(targetDate); matchedDateString="今天"; }
+        }
+
+        if (!targetDate) targetDate = new Date(contextBaseDate);
+        
+        const taskSegments = lineTrimmed.split(/[，。,；;]/).filter(s => s.trim());
+
+        taskSegments.forEach(segment => {
+            let cleanContent = segment.trim();
+            if (matchedDateString) cleanContent = cleanContent.replace(matchedDateString, '');
+            else cleanContent = cleanContent.replace(/^(?:周|星期|礼拜)[一二三四五六日天]/, '');
+            
+            cleanContent = cleanContent.replace(/(别忘了|就行了|就行|记得|啊|哈|哦|呀|呗|去|来|拼手速)$/g, '');
+
+            if (!cleanContent.trim()) return;
+
+            const durationRes = parseDuration(cleanContent);
+            let taskDuration = null; // 默认必须是 null
+            let isRelativeTime = false;
+
+            if (durationRes) {
+                taskDuration = durationRes.minutes;
+                isRelativeTime = durationRes.isRelative;
+                cleanContent = cleanContent.replace(durationRes.matchStr, ' ').trim();
+            }
+
+            let displayTime = "";
+            let finalTaskDate = new Date(targetDate); 
+
+            const timeRes = parseChineseTimeString(cleanContent);
+            
+            if (isRelativeTime) {
+                const rTime = new Date(lastEndTime);
+                displayTime = `${String(rTime.getHours()).padStart(2,'0')}:${String(rTime.getMinutes()).padStart(2,'0')}`;
+                if(cleanContent.includes('后')) {
+                     rTime.setMinutes(rTime.getMinutes() + (taskDuration || 30)); // 仅用于计算下一个时间点，不影响当前 taskDuration
+                     displayTime = `${String(rTime.getHours()).padStart(2,'0')}:${String(rTime.getMinutes()).padStart(2,'0')}`;
+                     // 注意：这里如果是"30分钟后"，不代表任务时长是30分钟，所以 taskDuration 依然保持原样或者 null
+                }
+            }
+            else if (timeRes) {
+                displayTime = timeRes.formatted;
+                if (timeRes.shiftDay > 0) finalTaskDate.setDate(finalTaskDate.getDate() + timeRes.shiftDay);
+                
+                const timePattern = /((?:凌晨|早晨|早上|明早|上午|中午|晌午|下午|傍晚|晚上|夜里|午夜)?\s*[\d零一二三四五六七八九十]+[:点\.][\d半刻]+(?:分)?)/;
+                cleanContent = cleanContent.replace(timePattern, '').replace(/(开始|出发|左右|大概|预计|前)/g, '').trim();
+            }
+
+            if (displayTime && displayTime.includes(':')) {
+                const [h, m] = displayTime.split(':').map(Number);
+                lastEndTime = new Date(finalTaskDate);
+                lastEndTime.setHours(h, m, 0, 0);
+                // 仅用于推算下一个任务的开始时间，不强制赋值给当前任务
+                lastEndTime.setMinutes(lastEndTime.getMinutes() + (taskDuration || 30)); 
+            }
+
+            cleanContent = cleanContent.replace(/^[:：\.\-\s]+/, '').trim();
+            
+            if (cleanContent) {
+                const dayObj = getDayObj(finalTaskDate);
+                const tagInfo = window.autoDetectTag ? window.autoDetectTag(cleanContent) : {};
+                
+                dayObj.tasks.push({
+                    title: cleanContent,
+                    time: displayTime,
+                    duration: taskDuration || null, // 确保为空时是 null
+                    tag: tagInfo.label || "",
+                    tagInfo: tagInfo,
+                    rawSegment: segment,
+                    lineIndex: lineIndex,
+                    lineDateWord: matchedDateString || extractLineDateWord(lineTrimmed),
+                    emoji: tagInfo.emoji, 
+                    color: tagInfo.color
                 });
-                html += `</div>`;
-            });
-            container.innerHTML = html; lucide.createIcons();
-        }
+            }
+        });
+    });
+    return parsedData.sort((a,b) => a.date.localeCompare(b.date));
+}
+        /* === 3. 渲染函数 (双层卡片逻辑) === */
+        function ai_renderPreview(data) {
+    const container = document.getElementById('ai-timeline-container');
+    
+    // 如果数据为空，显示占位符
+    if (!data || !data.length) { 
+        container.innerHTML = '<div class="flex flex-col items-center justify-center py-10 text-slate-600 opacity-60"><i data-lucide="layout-list" class="w-8 h-8 mb-2"></i><p class="text-xs">等待输入计划...</p></div>'; 
+        return; 
+    }
+    
+    let html = '';
+    data.forEach((day, dIdx) => {
+        const dateObj = new Date(day.date);
+        const weekStr = ['周日','周一','周二','周三','周四','周五','周六'][dateObj.getDay()];
+        
+        // 日期头
+        html += `<div class="mt-4 mb-2 px-1 flex items-center gap-2 animate-slide-in">
+                    <span class="text-blue-400 font-black text-sm">${weekStr}</span>
+                    <span class="text-slate-500 text-xs font-mono">${day.date}</span>
+                 </div>`;
+        
+        day.tasks.forEach((task, tIdx) => {
+            // --- 核心修复：处理 null 值 ---
+            // 如果 task.time 是 null/undefined，显示空字符串 (placeholder 会显示 '--')
+            // 如果 task.duration 是 null/undefined，显示空字符串 (placeholder 会显示 '分')
+            const displayTime = (task.time && task.time !== 'null') ? task.time : '';
+            const displayDuration = (task.duration && task.duration !== 'null') ? task.duration : '';
+
+            html += `
+            <div class="ai-task-card group animate-fadeIn" style="animation-delay: ${tIdx * 50}ms">
+                <div class="ai-task-meta-row">
+                    <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-500"></i>
+                    
+                    <input type="text" class="ai-time-edit" 
+                        value="${displayTime}" 
+                        placeholder="--" 
+                        onclick="this.select()" 
+                        onchange="ai_updateTask(${dIdx}, ${tIdx}, 'time', this.value)">
+                    
+                    <span class="text-slate-600 text-[10px]">+</span>
+                    
+                    <input type="text" class="ai-duration-edit" 
+                        value="${displayDuration}" 
+                        placeholder="分" 
+                        onclick="this.select()" 
+                        onchange="ai_updateTask(${dIdx}, ${tIdx}, 'duration', this.value)">
+                    
+                    <div class="ai-tag-badge">
+                        <span>${task.tagInfo.emoji || '📝'}</span>
+                        <span class="max-w-[50px] truncate">${task.tagInfo.label || 'Task'}</span>
+                    </div>
+
+                    <div class="flex-1"></div> 
+                    <button onclick="ai_deleteTask('${day.date}', ${tIdx})" class="mobile-card-del">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <div class="w-full relative">
+                    <input type="text" class="ai-title-edit" 
+                        value="${task.title}" 
+                        placeholder="任务内容..." 
+                        onchange="ai_updateTask(${dIdx}, ${tIdx}, 'title', this.value)">
+                    <i data-lucide="pencil" class="w-3 h-3 text-slate-700 absolute right-0 top-2 pointer-events-none opacity-50"></i>
+                </div>
+            </div>`;
+        });
+    });
+    container.innerHTML = html; 
+    lucide.createIcons(); 
+}
 
         // --- V22 智能删除核心 (Smart Delete Core) ---
         function ai_deleteTask(dateStr, tIdx) {
@@ -1276,25 +1941,52 @@ function formatExcelTime(value) {
         }
 
         // 大约在第 1072 行
+// --- 修复版：保留 Emoji 和 Color 数据 ---
+// --- 修复版：强制提取 Emoji 和 Color ---
 function convertAIDataToOriginalFormat(aiData) {
     return aiData.map((day, index) => ({
-        date: day.date, dayNum: index + 1,
-        tasks: day.tasks.map(task => ({
-            title: task.title, 
-            tag: task.tag || (task.tagInfo ? task.tagInfo.label : ""),
-            desc: task.desc || "", 
-            time: task.time || "", 
-            duration: task.duration || null,
-            location: (task.tagInfo && task.tagInfo.location) ? task.tagInfo.location : null, 
-            emoji: (task.tagInfo && task.tagInfo.emoji) ? task.tagInfo.emoji : null, 
-            color: (task.tagInfo && task.tagInfo.color) ? task.tagInfo.color : null
-        }))
+        date: day.date, 
+        dayNum: index + 1,
+        tasks: day.tasks.map(task => {
+            // 1. 获取 AI 识别的详细信息
+            const info = task.tagInfo || {};
+            
+            // 2. 如果 AI 没识别出 Emoji，我们尝试再次手动匹配一下规则 (双保险)
+            // 注意：这里需要确保 autoDetectTag 可用
+            let finalEmoji = info.emoji;
+            let finalColor = info.color;
+            let finalLocation = info.location;
+            
+            if (!finalEmoji && window.autoDetectTag) {
+                const retry = window.autoDetectTag(task.title);
+                finalEmoji = retry.emoji;
+                finalColor = retry.color;
+                finalLocation = retry.location;
+            }
+
+            return {
+                title: task.title, 
+                // 优先使用 tagInfo 里的 label，如果没有才用 task.tag
+                tag: info.label || task.tag || "",
+                desc: task.desc || "", 
+                time: task.time || "", 
+                duration: task.duration || null,
+                
+                // 【核心修复】显式将 Emoji、Color、Location 写入数据结构
+                // 这样生成的 App 就能直接读取并在界面上显示了
+                emoji: finalEmoji || "📝", // 给个默认值兜底
+                color: finalColor || "#8E8E93",
+                location: finalLocation || null
+            };
+        })
     }));
 }
 
         async function generateApp() {
+            // 1. 基础校验
             if (!selectedTheme) { customAlert('请选择主题！', '提示', 'info'); return; }
             
+            // 2. UI Loading 状态
             const btn = document.getElementById('generate-button');
             const mBtn = document.getElementById('mobile-generate-btn');
             const originalText = btn.innerText;
@@ -1309,6 +2001,7 @@ function convertAIDataToOriginalFormat(aiData) {
             lucide.createIcons();
 
             try {
+                // 3. 数据准备
                 let structuredData = [];
                 if (currentMode === 'ai') {
                     if (aiData.length === 0) throw new Error('AI 数据为空，请先输入计划');
@@ -1329,6 +2022,7 @@ function convertAIDataToOriginalFormat(aiData) {
 
                 if (structuredData.length === 0) throw new Error('有效数据为空');
 
+                // 4. 获取标题
                 const planTitle = await getPlanTitle();
                 if (!planTitle) { 
                     [btn, mBtn].forEach(b => {
@@ -1338,42 +2032,77 @@ function convertAIDataToOriginalFormat(aiData) {
                     return; 
                 }
 
+                // 5. 读取模板与规则
                 let templateContent = await getTemplateContent(selectedTheme);
                 const rulesDbContent = await getRulesDbContent();
+                
+                // --- 5.1 【核心绝杀技】修改模板逻辑 ---
+                // 这一步会找到模板里忽略 emoji 的那行代码，把它改成“优先使用数据里的 emoji”
+                // 这样无论 app 里的规则库有没有加载成功，它都会直接显示你在预览里看到的那个图标！
+                const fixLogic = `
+                    let autoInfo = autoDetectTag(t.title);
+                    if(t.emoji) autoInfo.emoji = t.emoji;
+                    if(t.color) autoInfo.color = t.color;
+                    if(t.location) autoInfo.location = t.location;
+                `;
+                // 尝试替换模板中的旧逻辑
+                templateContent = templateContent.replace('const autoInfo = autoDetectTag(t.title);', fixLogic);
+                
+                // --- 5.2 准备数据 ---
                 const planId = selectedTheme + '_' + Date.now();
                 const safeTitle = planTitle.replace(/[<>"]/g, '');
-                const escapedData = JSON.stringify(structuredData).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026').replace(/'/g, '\\u0027');
+                const escapedData = JSON.stringify(structuredData)
+                    .replace(/</g, '\\u003c')
+                    .replace(/>/g, '\\u003e');
 
+                // 6. 替换基础变量
                 let finalHtml = templateContent
                     .replace(/{{TASKS_DATA}}/g, escapedData)
                     .replace(/{{PLAN_TITLE}}/g, safeTitle)
                     .replace(/{{PLAN_ID}}/g, planId)
                     .replace(/{{BODY_CLASS}}/g, '');
 
+                // 7. 安全注入规则库 (防止乱码)
                 if (rulesDbContent) {
+                    const sTag = '<scr' + 'ipt>'; 
+                    const eTag = '</scr' + 'ipt>';
+                    const bodyEnd = '</bo' + 'dy>';
+
                     if (finalHtml.includes('src="rules_db.js"')) {
-                        finalHtml = finalHtml.replace(/<script[^>]*src="[^"]*rules_db\.js"[^>]*><\/script>/, '<script>' + rulesDbContent + '<\/script>');
+                        const regex = new RegExp('<scr' + 'ipt[^>]*src="[^"]*rules_db\\.js"[^>]*><\\/scr' + 'ipt>');
+                        finalHtml = finalHtml.replace(regex, sTag + rulesDbContent + eTag);
                     } else {
-                        finalHtml = finalHtml.replace('</head>', '<script>' + rulesDbContent + '<\/script></head>');
+                        const hook = "window.addEventListener('DOMContentLoaded', init);";
+                        if (finalHtml.includes(hook)) {
+                            finalHtml = finalHtml.replace(hook, rulesDbContent + "\n" + hook);
+                        } else {
+                            finalHtml = finalHtml.replace(new RegExp(bodyEnd), sTag + rulesDbContent + eTag + bodyEnd);
+                        }
                     }
                 }
 
+                // 8. 生成文件
                 const safeFileName = safeTitle.replace(/[<>:"/\\|?*]/g, '_') + '_' + selectedTheme + '.html';
                 const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-8' });
                 const blobUrl = URL.createObjectURL(blob);
                 
                 displayResultOptions(blobUrl, safeFileName);
                 customAlert(`成功生成 ${structuredData.length} 天计划！`, '构建完成', 'check-circle');
+
             } catch (error) {
-                console.error(error); customAlert('错误: ' + error.message, '生成失败', 'x-circle');
+                console.error(error);
+                customAlert('错误: ' + error.message, '生成失败', 'x-circle');
             } finally {
+                // 9. 恢复 UI
                 [btn, mBtn].forEach(b => {
-                    if(b) { b.disabled = false; b.innerHTML = b.id.includes('mobile') ? mOriginalText : originalText; }
+                    if(b) { 
+                        b.disabled = false; 
+                        b.innerHTML = b.id.includes('mobile') ? mOriginalText : originalText; 
+                    }
                 });
                 lucide.createIcons();
             }
         }
-
         // ============================================
         // 4. UI 辅助
         // ============================================
@@ -1529,36 +2258,111 @@ function convertAIDataToOriginalFormat(aiData) {
             const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
             XLSX.writeFile(wb, "DeepFlow_Template.xlsx");
         }
-                async function getRulesDbContent() { try { const res = await fetch('templates/rules_db.js'); return res.ok ? await res.text() : ''; } catch { return ''; } }
-        async function loadRulesDbIntoMemory() {
-    // 确保 getRulesDbContent 函数可用
-    if (typeof getRulesDbContent === 'function') {
-        const rulesDbContent = await getRulesDbContent();
-        if (rulesDbContent) {
-            try {
-                // 使用 eval 立即执行脚本内容，将其函数（autoDetectTag）引入 window 作用域
-                eval(rulesDbContent);
-                console.log("Rules DB loaded into memory for AI parsing.");
-            } catch (e) {
-                console.error("Failed to execute rules_db.js in Generator:", e);
-            }
+        // 读取 templates/rules_db.js 的内容，用于打包到新文件
+async function getRulesDbContent() { 
+    try { 
+        const res = await fetch('templates/rules_db.js'); 
+        if (res.ok) return await res.text();
+        console.error("无法读取 templates/rules_db.js");
+        return ''; 
+    } catch (e) { 
+        console.error("读取规则库失败:", e);
+        return ''; 
+    } 
+}
+       window.onload = () => {
+    // 1. 初始化图标
+    lucide.createIcons();
+    
+    // 2. 手机端适配
+    initMobileExperience();
+    
+    // 3. 读取缓存 Key 和 模型
+    const cachedKey = localStorage.getItem('deepflow_sk');
+    const cachedModel = localStorage.getItem('deepflow_model');
+    const enginePref = localStorage.getItem('deepflow_engine_pref'); // 读取用户上次的引擎偏好
+
+    // 4. 填充设置面板
+    if (cachedKey) {
+        document.getElementById('sf-api-key').value = cachedKey;
+        console.log("DeepFlow: API Key loaded.");
+    }
+    if (cachedModel) {
+        document.getElementById('sf-model-name').value = cachedModel;
+    }
+
+    // 5. 决定引擎状态 (优先级：无Key强制Local > 用户偏好 > 默认AI)
+    if (!cachedKey) {
+        useCloudEngine = false; // 没 Key，强制本地
+    } else {
+        // 有 Key 的情况下，看用户上次选了什么
+        if (enginePref === 'local') {
+            useCloudEngine = false;
+        } else {
+            useCloudEngine = true; // 默认或用户选了 cloud
         }
     }
-}
-        window.onload = () => {
-            
-            lucide.createIcons();
-            initMobileExperience();
-            loadRulesDbIntoMemory();
-            const urlParams = new URLSearchParams(window.location.search);
-            if(urlParams.get('theme')) selectTheme(urlParams.get('theme'));
-            const dropArea = document.querySelector('label[for="excel-file"]');
-            if (dropArea) {
-                dropArea.addEventListener('dragover', (e) => { e.preventDefault(); dropArea.classList.add('border-blue-500', 'bg-white/10'); });
-                dropArea.addEventListener('dragleave', () => { dropArea.classList.remove('border-blue-500', 'bg-white/10'); });
-                dropArea.addEventListener('drop', (e) => { e.preventDefault(); dropArea.classList.remove('border-blue-500', 'bg-white/10'); const file = e.dataTransfer.files[0]; if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.csv'))) { const input = document.getElementById('excel-file'); const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files; handleFileChange({ target: input }); switchMode('upload'); } else { customAlert('请上传 .xlsx 或 .csv 文件', '错误', 'file-x'); } });
+
+    // 6. 同步 UI
+    updateEngineUISync();
+
+    // 7. 【核心】注册切屏监听 (修复切屏后状态丢失/卡顿)
+    window.addEventListener('focus', () => {
+        console.log("App 恢复前台，刷新状态...");
+        // 重新读取配置，防止多开页面不同步
+        const currentKey = localStorage.getItem('deepflow_sk');
+        if(!currentKey && useCloudEngine) {
+            // 如果切出去把key删了，切回来要降级
+            useCloudEngine = false;
+            updateEngineUISync();
+        }
+        // 强制重新解析一次，激活 JS 线程
+        const inputVal = document.getElementById('ai-input').value;
+        if(inputVal.trim()) ai_handleInput();
+    });
+
+    // 8. 拖拽上传逻辑
+    const dropArea = document.querySelector('label[for="excel-file"]');
+    if (dropArea) {
+        dropArea.addEventListener('dragover', (e) => { e.preventDefault(); dropArea.classList.add('border-blue-500', 'bg-white/10'); });
+        dropArea.addEventListener('dragleave', () => { dropArea.classList.remove('border-blue-500', 'bg-white/10'); });
+        dropArea.addEventListener('drop', (e) => { e.preventDefault(); dropArea.classList.remove('border-blue-500', 'bg-white/10'); const file = e.dataTransfer.files[0]; if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.csv'))) { const input = document.getElementById('excel-file'); const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files; handleFileChange({ target: input }); switchMode('upload'); } else { customAlert('请上传 .xlsx 或 .csv 文件', '错误', 'file-x'); } });
+    }
+    
+    // 9. 处理 URL 参数
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.get('theme')) selectTheme(urlParams.get('theme'));
+};
+
+        // 辅助函数：专门负责把 UI 滑块和 useCloudEngine 变量同步
+        function updateEngineUISync() {
+            const slider = document.getElementById('engine-slider');
+            const btnLocal = document.getElementById('btn-local');
+            const btnCloud = document.getElementById('btn-cloud');
+            const inputArea = document.getElementById('ai-input');
+
+            if (useCloudEngine) {
+                // AI 状态
+                if(slider) {
+                    slider.style.transform = "translateX(100%)";
+                    slider.classList.remove('bg-emerald-600', 'shadow-emerald-600/30');
+                    slider.classList.add('bg-blue-600', 'shadow-blue-600/30');
+                }
+                if(btnLocal) { btnLocal.classList.remove('text-white'); btnLocal.classList.add('text-slate-400'); }
+                if(btnCloud) { btnCloud.classList.remove('text-slate-400'); btnCloud.classList.add('text-white'); }
+                if(inputArea) inputArea.placeholder = "AI 模式：支持自然语言理解。\n例如：下下周三下午3点开会，记得带电脑。";
+            } else {
+                // 本地状态
+                if(slider) {
+                    slider.style.transform = "translateX(0%)";
+                    slider.classList.remove('bg-blue-600', 'shadow-blue-600/30');
+                    slider.classList.add('bg-emerald-600', 'shadow-emerald-600/30');
+                }
+                if(btnLocal) { btnLocal.classList.remove('text-slate-400'); btnLocal.classList.add('text-white'); }
+                if(btnCloud) { btnCloud.classList.remove('text-white'); btnCloud.classList.add('text-slate-400'); }
+                if(inputArea) inputArea.placeholder = "极速模式：请使用清晰格式。\n例如：周三 14:00 开会";
             }
-        };
+        }
     </script>
 </body>
 </html>
