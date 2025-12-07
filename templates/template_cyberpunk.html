@@ -1107,12 +1107,12 @@ window.addEventListener('DOMContentLoaded', init);
 </div>
 
 <script>
-    // --- 1. 音频引擎 (修复重复showToast) ---
+    // --- 1. 音频引擎 (Web Audio API 版本) ---
     const NOISE_BASE = "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/audio/ambience/";
     const noiseConfig = {
         'rain': [ {n:'霓虹雨夜', f:'rain.mp3'}, {n:'雷暴轰鸣', f:'rain_2.mp3'}, {n:'涓涓雨滴', f:'rain_3.mp3'} ],
-        'ocean': [ {n:'数据之海', f:'ocean.mp3'}, {n:'深潜模式', f:'ocean.mp3?v=2'} ],
-        'forest': [ {n:'全息森林', f:'forest.mp3'}, {n:'电子蝉鸣', f:'forest.mp3?v=2'}, {n:'故障风声', f:'forest.mp3?v=3'} ],
+        'ocean': [ {n:'数据之海', f:'ocean.mp3'}, {n:'深潜模式', f:'ocean_2.mp3'} ],
+        'forest': [ {n:'全息森林', f:'forest.mp3'}, {n:'电子蝉鸣', f:'forest_2.mp3'}, {n:'故障风声', f:'forest_3.mp3'} ],
         'fire': [ {n:'数字篝火', f:'fire.mp3'} ],
         'cafe': [ {n:'网络终端', f:'cafe.mp3'} ],
         'train': [ {n:'超导列车', f:'train.mp3'} ],
@@ -1120,39 +1120,115 @@ window.addEventListener('DOMContentLoaded', init);
         'keyboard': [ {n:'黑客入侵', f:'keyboard.mp3'} ]
     };
     
-    let currentCat = null; let currentVarIdx = 0; let currentAudio = null; let masterVol = 0.6;
+    // Web Audio API 核心组件
+    let audioContext = null; 
+    let masterGainNode = null; // 用于控制全局音量
+    let audioBufferCache = {}; // 缓存已解码的音频数据 (AudioBuffer)
+
+    let currentCat = null; 
+    let currentVarIdx = 0; 
+    let currentSourceNode = null; // 存储当前的 AudioBufferSourceNode
+    let masterVol = 0.6;
     let isPaused = false;
+    
+    // --- 核心函数：初始化 AudioContext ---
+    function initializeAudioContext() {
+        if (!audioContext) {
+            // 解决跨浏览器兼容性问题
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // 创建主增益节点并连接到扬声器
+            masterGainNode = audioContext.createGain();
+            masterGainNode.connect(audioContext.destination);
+            changeNoiseVolume(masterVol); // 设置初始音量
+        }
+    }
+
+    // --- 核心函数：加载和解码音频数据 (异步) ---
+    async function loadSound(url) {
+        if (audioBufferCache[url]) {
+            return audioBufferCache[url];
+        }
+        
+        try {
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            audioBufferCache[url] = audioBuffer;
+            return audioBuffer;
+        } catch (e) {
+            console.error('Error loading audio:', e);
+            showToast(">> 信号加载失败！请检查URL和网络。");
+            return null;
+        }
+    }
 
     function playNoise(cat) {
+        initializeAudioContext(); // 确保 Context 已初始化
         if (currentCat === cat && isPaused) { togglePlayback(); return; }
         if (currentCat === cat) currentVarIdx = (currentVarIdx + 1) % noiseConfig[cat].length;
         else { currentCat = cat; currentVarIdx = 0; }
+        
         loadAndPlay();
     }
 
-    function loadAndPlay() {
-        if(currentAudio) currentAudio.pause();
+    async function loadAndPlay() {
+        if(currentSourceNode) currentSourceNode.stop(); // 停止当前正在播放的节点
+        
         const item = noiseConfig[currentCat][currentVarIdx];
-        currentAudio = new Audio(NOISE_BASE + item.f); 
-        currentAudio.loop = true; currentAudio.volume = masterVol;
-        currentAudio.play().catch(e=>console.log(e));
+        const url = NOISE_BASE + item.f;
+        
+        showToast(">> 正在缓冲: " + item.n);
+        
+        const buffer = await loadSound(url);
+        if (!buffer) return;
+
+        // --- 使用 AudioBufferSourceNode 播放 ---
+        currentSourceNode = audioContext.createBufferSource();
+        currentSourceNode.buffer = buffer; 
+        currentSourceNode.loop = true; // Web Audio API 的循环更精确
+        
+        // 连接到音量控制节点
+        currentSourceNode.connect(masterGainNode);
+        
+        // 立即播放
+        currentSourceNode.start(0);
+        
         isPaused = false;
         updateNoiseUI();
         showToast(">> 信号接入: " + item.n); 
     }
 
+    // --- 修改：Web Audio API 没有真正的 '暂停'，只能停止和重新开始 ---
     function togglePlayback() {
-        if (!currentAudio && !currentCat) return;
+        if (!currentSourceNode && !currentCat) return;
+        
         const item = noiseConfig[currentCat][currentVarIdx];
-        if (isPaused) { currentAudio.play(); isPaused = false; showToast(">> 信号恢复: " + item.n); } 
-        else { currentAudio.pause(); isPaused = true; }
+        
+        if (isPaused) { 
+            // 恢复播放：重新加载并播放音频
+            loadAndPlay();
+            showToast(">> 信号恢复: " + item.n); 
+        } else { 
+            // 暂停：停止当前节点
+            currentSourceNode.stop();
+            isPaused = true; 
+        }
         updateNoiseUI();
     }
 
     function stopAllNoise() { togglePlayback(); }
-    function changeNoiseVolume(v) { masterVol = v; if(currentAudio) currentAudio.volume = masterVol; }
+    
+    function changeNoiseVolume(v) { 
+        masterVol = parseFloat(v); 
+        if(masterGainNode) {
+            // 通过 GainNode 控制音量，范围是 0.0 到 1.0
+            masterGainNode.gain.setValueAtTime(masterVol, audioContext.currentTime);
+        }
+    }
 
     function updateNoiseUI() {
+        // ... (保持原有的 UI 更新逻辑，因为它仍然依赖 DOM API) ...
         const orb = document.getElementById('noiseOrb');
         const btn = document.getElementById('noiseStopBtn');
         if(currentCat && !isPaused) orb.classList.add('is-playing'); else orb.classList.remove('is-playing');
@@ -1177,10 +1253,12 @@ window.addEventListener('DOMContentLoaded', init);
                 }
             }
         });
-        lucide.createIcons();
+        // 假设 lucide.createIcons() 是一个外部函数
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+            lucide.createIcons();
+        }
     }
     setTimeout(updateNoiseUI, 500);
-
     // --- 2. 物理拖拽与吸附引擎 ---
     const nWrapper = document.getElementById('noiseDockWrapper');
     const nOrb = document.getElementById('noiseOrb');
