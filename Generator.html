@@ -10,13 +10,63 @@
     <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/xlsx.full.min.js"></script>
     <script src="templates/rules_db.js"></script> 
     <script>
-        // 兜底逻辑：防止加载失败报错
-        if (typeof autoDetectTag === 'undefined') {
-            console.warn('rules_db.js not loaded from templates, using fallback.');
-            window.autoDetectTag = function(text) { 
-                return { category: "日常", label: "Task", emoji: "📝", color: "#8E8E93" }; 
-            };
-        }
+        // 这里定义核心匹配逻辑，直接覆盖可能存在的旧逻辑
+        window.autoDetectTag = function(text) {
+            // 1. 如果没有输入，返回默认值
+            if (!text) return { category: "日常", label: "Task", emoji: "📝", color: "#8E8E93" };
+
+            // 2. 尝试获取规则库数据
+            const db = (typeof SCENARIO_DATABASE !== 'undefined') ? SCENARIO_DATABASE : [];
+
+            // 3. 遍历规则库
+            for (const group of db) {
+                if (!group.scenarios) continue;
+
+                for (const scenario of group.scenarios) {
+                    // 检查关键字是否匹配 (不区分大小写)
+                    const isMatch = scenario.keywords.some(k => text.toLowerCase().includes(k.toLowerCase()));
+
+                    if (isMatch) {
+                        // ======================================================
+                        // 👇 随机 Emoji 核心逻辑 (终极修复版) 👇
+                        // ======================================================
+                        
+                        const emojiString = scenario.emoji || "📝";
+                        
+                        // 【核心修复】使用 Intl.Segmenter 按“视觉单元”拆分
+                        // 它可以完美处理 👨‍👩‍👧‍👦 (家庭)、❤️ (红心) 等复杂组合 Emoji，不会产生空白字符
+                        const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
+                        let emojiList = Array.from(segmenter.segment(emojiString)).map(item => item.segment);
+
+                        // 过滤掉逗号、空格等无用字符
+                        emojiList = emojiList.filter(char => {
+                            const c = char.trim();
+                            return c.length > 0 && c !== ',' && c !== '，';
+                        });
+
+                        // 双重保险
+                        if (emojiList.length === 0) {
+                            emojiList = ["📝"];
+                        }
+                        
+                        // 随机取出一个索引
+                        const randomIndex = Math.floor(Math.random() * emojiList.length);
+                        const finalEmoji = emojiList[randomIndex];
+
+                        // 返回结果
+                        return {
+                            category: group.category,
+                            label: scenario.label,
+                            emoji: finalEmoji,
+                            color: group.color
+                        };
+                    }
+                }
+            }
+
+            // 4. 如果没匹配到任何规则，返回默认值
+            return { category: "日常", label: "Task", emoji: "📝", color: "#8E8E93" };
+        };
     </script>
     <script>
         tailwind.config = {
@@ -2150,7 +2200,35 @@ function convertAIDataToOriginalFormat(aiData) {
         })
     }));
 }
+    // === 新增：强制应用 rules_db.js 规则 ===
+function enrichWithRules(data) {
+    if (!window.autoDetectTag) return data; // 防御性检查
 
+    return data.map(day => ({
+        ...day,
+        tasks: day.tasks.map(task => {
+            // 1. 决定用什么关键词去匹配规则
+            // 逻辑：如果用户手动填了“标签”，优先匹配标签；否则匹配“标题”
+            const query = (task.tag && task.tag.trim()) ? task.tag : task.title;
+            
+            // 2. 调用 rules_db.js 进行识别
+            // 注意：这里使用的是你本地加载的规则库
+            const rule = window.autoDetectTag(query);
+            
+            // 3. 返回补全后的任务对象
+            return {
+                ...task,
+                // 如果原任务没标签，就用识别出来的标签；如果有，就保留用户的
+                tag: (task.tag && task.tag.trim()) ? task.tag : (rule.label || 'Task'),
+                // 【核心修复】强制写入识别出的 Emoji 和颜色
+                emoji: rule.emoji || '📝', 
+                color: rule.color || '#8E8E93',
+                // 同时也写入 tagInfo 结构，确保兼容性
+                tagInfo: rule 
+            };
+        })
+    }));
+}
         async function generateApp() {
             // 1. 基础校验
             if (!selectedTheme) { customAlert('请选择主题！', '提示', 'info'); return; }
@@ -2171,22 +2249,40 @@ function convertAIDataToOriginalFormat(aiData) {
 
             try {
                 // 3. 数据准备
+                // 3. 数据准备
                 let structuredData = [];
+                
                 if (currentMode === 'ai') {
                     if (aiData.length === 0) throw new Error('AI 数据为空，请先输入计划');
+                    // AI 模式的数据已经包含 tagInfo，但也建议统一跑一遍确保一致性
                     structuredData = convertAIDataToOriginalFormat(aiData);
+                
                 } else if (currentMode === 'upload') {
                     if (!uploadedData) throw new Error('请先上传 Excel 文件');
-                    structuredData = processTasksData(uploadedData);
+                    
+                    // 1. 先获取原始数据
+                    const rawData = processTasksData(uploadedData);
+                    // 2. 【核心修复】调用规则库补全 Emoji 和 颜色
+                    structuredData = enrichWithRules(rawData);
+
                 } else if (currentMode === 'builder') {
                     if (builderData.length === 0) throw new Error('请至少添加一天任务');
-                    structuredData = builderData.map((d, i) => ({
-                        date: d.date, dayNum: i+1,
+                    
+                    // 1. 先获取原始构建数据
+                    const rawData = builderData.map((d, i) => ({
+                        date: d.date, 
+                        dayNum: i+1,
                         tasks: d.tasks.filter(t => t.title.trim() !== '').map(t => ({
-                            ...t,
+                            title: t.title,
+                            desc: t.desc || '',
+                            time: t.time || '',
+                            duration: (t.duration && t.duration > 0) ? t.duration : null,
                             tag: (t.tag && t.tag.trim()) ? t.tag : null 
                         }))
                     })).filter(d => d.tasks.length > 0);
+
+                    // 2. 【核心修复】调用规则库补全 Emoji 和 颜色
+                    structuredData = enrichWithRules(rawData);
                 }
 
                 if (structuredData.length === 0) throw new Error('有效数据为空');
