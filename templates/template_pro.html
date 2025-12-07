@@ -176,10 +176,18 @@
 .checkbox-ios {
     width: 24px; 
     height: 24px; 
-    border-radius: 8px; 
+    border-radius: 8px; /* 圆角 */
     border: 2px solid #e2e8f0; 
     background: white; 
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    
+    /* 👇 补回这三行，对勾就会乖乖回到正中间 👇 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* 微调：为了跟标题文字对齐，稍微加一点点上边距 */
+    margin-top: 2px;
 }
         .task-checked h4 { text-decoration: line-through; color: #86868b; opacity: 0.8; }
         .task-checked .checkbox-ios { background: var(--primary); border-color: var(--primary); transform: scale(1.05); box-shadow: 0 4px 10px var(--primary-light); }
@@ -620,12 +628,23 @@
         <main class="flex-1 overflow-y-auto relative no-scrollbar rounded-2xl" id="mainScroll">
             <div class="max-w-3xl mx-auto py-2 md:py-4 min-h-[80vh]">
                 <div class="md:hidden mb-4 px-1">
-                    <div class="relative">
-                        <select id="mobileDateSelect" onchange="window.location.hash='day='+this.value" class="w-full appearance-none bg-white/80 backdrop-blur-xl border border-white/60 text-slate-800 font-bold text-sm py-3 px-10 rounded-2xl shadow-sm focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition-all"></select>
-                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[var(--primary)]"><i data-lucide="calendar" class="w-4 h-4"></i></div>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400"><i data-lucide="chevron-down" class="w-4 h-4"></i></div>
-                    </div>
-                </div>
+    <div class="md:hidden mb-4 px-1">
+    <div class="flex items-center justify-between">
+        <button onclick="handleMobileDaySwitch(-1)" class="p-2 w-10 h-10 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 active:bg-slate-200 transition"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+        
+        <div class="mobile-select-wrapper flex-grow mx-2 relative">
+            <select id="mobileDateSelect" 
+                onchange="renderDay(parseInt(this.value))" 
+                class="w-full appearance-none bg-white/80 backdrop-blur-xl border border-white/60 text-slate-800 font-bold text-sm py-3 px-10 rounded-2xl shadow-sm focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition-all">
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[var(--primary)]"><i data-lucide="calendar" class="w-4 h-4"></i></div>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-600"><i data-lucide="chevron-down" class="w-4 h-4"></i></div>
+        </div>
+        
+        <button onclick="handleMobileDaySwitch(1)" class="p-2 w-10 h-10 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 active:bg-slate-200 transition"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+    </div>
+</div>
+</div>
                 
                 <div class="ios-card rounded-2xl p-6 md:p-8 mb-6 relative overflow-hidden group">
                     <div class="absolute -right-8 -top-8 w-40 h-40 opacity-15 rounded-full blur-3xl transition-colors duration-700 theme-transition" style="background: var(--primary)"></div> 
@@ -646,7 +665,7 @@
     
     <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 flex items-center gap-3 px-5 py-2.5 bg-slate-900/90 backdrop-blur text-white rounded-full shadow-2xl transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none z-[100]"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i><span id="toastMsg" class="font-bold text-xs tracking-wide">已完成</span></div>
     
-    <div id="ritualOverlay" class="fixed inset-0 z-40 flex flex-col items-center justify-center bg-white/80 backdrop-blur-xl transition-all duration-500" style="display: none;"><div class="ios-card p-10 rounded-3xl shadow-2xl max-w-sm w-full text-center border border-white"><div class="lock-icon-bg mb-6 inline-flex p-5 rounded-full shadow-sm theme-transition" style="background: var(--primary-light)"><i data-lucide="lock" class="w-8 h-8 theme-transition" style="color: var(--primary)"></i></div><h3 class="text-2xl font-black text-slate-800 mb-2">整装待发</h3><p class="text-slate-500 text-sm mb-8 px-2">今日计划已锁定。心无旁骛，方得始终。</p><button onclick="startDay()" class="w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-transform hover:-translate-y-0.5 active:scale-95 theme-transition" style="background: var(--primary)">开启今日专注之旅</button></div></div>
+    <div id="ritualOverlay" class="absolute inset-0 z-40 flex flex-col items-center justify-center transition-all duration-500" style="display: none;"><div class="ios-card p-10 rounded-3xl shadow-2xl max-w-sm w-full text-center border border-white"><div class="lock-icon-bg mb-6 inline-flex p-5 rounded-full shadow-sm theme-transition" style="background: var(--primary-light)"><i data-lucide="lock" class="w-8 h-8 theme-transition" style="color: var(--primary)"></i></div><h3 class="text-2xl font-black text-slate-800 mb-2">整装待发</h3><p class="text-slate-500 text-sm mb-8 px-2">今日计划已锁定。心无旁骛，方得始终。</p><button onclick="startDay()" class="w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-transform hover:-translate-y-0.5 active:scale-95 theme-transition" style="background: var(--primary)">开启今日专注之旅</button></div></div>
 
     <div id="proModalOverlay"><div class="deepflow-modal"><div class="df-modal-header"><div class="df-modal-title" id="proModalTitle">Title</div><div class="df-modal-desc" id="proModalDesc">Description</div><input type="text" id="proModalInput" class="df-modal-input" style="display: none;"></div><div class="df-modal-actions"><button class="df-modal-btn df-btn-cancel" onclick="closeProModal()">取消</button><button class="df-modal-btn df-btn-confirm" id="proModalConfirmBtn" onclick="">确定</button></div></div></div>
     <div id="profileModalOverlay" class="fixed inset-0 z-[10000] bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300" onclick="if(event.target===this) closeProfileModal()">
@@ -825,102 +844,198 @@ window.addEventListener('load', initLucideSafe);
         const RAW_DATA = '{{TASKS_DATA}}';
         const OSS_BASE = "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com";
         const NOISE_BASE = "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/audio/ambience/";
-        // --- ⭐ 新增：粒子特效引擎 (Particle Engine) ⭐ ---
-// --- ⭐ 终极修复版：高清粒子引擎 (适配手机 Retina 屏) ⭐ ---
+       // --- ⭐ 粒子引擎 V4.0：旗舰流星 (拒绝敷衍版) + 绝美樱花 ⭐ ---
 const PARTICLE_ENGINE = {
     canvas: null, ctx: null, width: 0, height: 0, particles: [], animationId: null, mode: 'off',
+    
     init: function() {
         this.canvas = document.getElementById('particleCanvas');
         if(!this.canvas) return;
         this.ctx = this.canvas.getContext('2d');
         this.resize();
         
-        // 监听屏幕旋转和缩放，确保特效始终全屏
         window.addEventListener('resize', () => this.resize());
         
         const savedMode = localStorage.getItem('pro_visual_mode') || 'sakura';
         this.setMode(savedMode);
     },
+
     resize: function() { 
-        // 1. 获取设备像素比 (解决手机端显示一半或模糊的问题)
+        // 关键：获取设备像素比，保证手机端清晰度
         const dpr = window.devicePixelRatio || 1;
-        
-        // 2. 获取逻辑尺寸
         this.width = window.innerWidth; 
         this.height = window.innerHeight; 
         
-        // 3. 设置 Canvas 物理像素尺寸 (高清)
         this.canvas.width = this.width * dpr;
         this.canvas.height = this.height * dpr;
         
-        // 4. 强制 CSS 尺寸匹配视口
         this.canvas.style.width = this.width + 'px';
         this.canvas.style.height = this.height + 'px';
         
-        // 5. 缩放绘图上下文，让我们后续的坐标计算可以直接用逻辑像素
         this.ctx.scale(dpr, dpr);
     },
+
     setMode: function(mode) {
-        this.mode = mode; this.particles = [];
+        this.mode = mode; 
+        this.particles = [];
         if(this.animationId) cancelAnimationFrame(this.animationId);
-        // 清除画布时要考虑到 DPI 缩放，清除足够大的区域
-        if(mode !== 'off') this.start(); else this.ctx.clearRect(0,0,this.width+100,this.height+100);
+        if(mode !== 'off') this.start(); 
+        else this.ctx.clearRect(0,0,this.width+100,this.height+100);
     },
+
     start: function() { this.loop(); },
+
     createParticle: function() {
-        // 这里的坐标 (x, y) 使用的是逻辑像素，不用管 DPI，因为 resize 里已经 scale 过了
+        const isMobile = this.width < 768;
+
         if(this.mode === 'meteor') {
+            // 🌠 旗舰级流星生成逻辑
+            // 范围扩大到 2倍 宽度，确保全屏都有划过
+            const startX = Math.random() * this.width * 2 - (this.width * 0.5); 
+            const startY = -Math.random() * this.height * 0.5; // 从上方更高处落下
+            
             return {
-                x: Math.random() * this.width, y: Math.random() * this.height * -0.5,
-                speed: Math.random() * 15 + 10, angle: Math.PI / 3, // 稍微减慢流星速度，手机观感更好
-                length: Math.random() * 200 + 100, width: Math.random() * 2 + 1,
+                x: startX, 
+                y: startY,
+                angle: Math.PI / 4 + (Math.random() - 0.5) * 0.2, // 角度稍微随机一点
+                
+                // 🚀 核心优化 1：速度
+                // 手机上稍微慢一点，因为屏幕小，太快看不清
+                speed: (Math.random() * 10 + 8) * (isMobile ? 0.6 : 1), 
+                
+                // 📏 核心优化 2：长度
+                // 手机上要更长的拖尾，视觉效果才好
+                length: Math.random() * (isMobile ? 250 : 200) + 100, 
+                
+                // 🖌️ 核心优化 3：宽度 (粗细)
+                // 手机端强制加粗！最小 2px，最大 4px
+                width: isMobile ? (Math.random() * 2 + 2) : (Math.random() * 1.5 + 0.5), 
+                
+                alpha: Math.random() * 0.5 + 0.5,
                 type: 'meteor'
             };
         }
-        if(this.mode === 'sakura') return { x: Math.random() * this.width, y: -20, speed: Math.random() * 2 + 1, size: Math.random() * 8 + 4, oscillation: Math.random() * 2, type: 'sakura' };
+
+        if(this.mode === 'sakura') {
+            return {
+                x: Math.random() * this.width,
+                y: -Math.random() * 50 - 20, 
+                size: Math.random() * 12 + 8, 
+                speedX: Math.random() * 1 - 0.5, 
+                speedY: Math.random() * 1.5 + 1, 
+                rotation: Math.random() * Math.PI * 2, 
+                rotationSpeed: (Math.random() - 0.5) * 0.02, 
+                flip: Math.random(), 
+                flipSpeed: Math.random() * 0.03 + 0.005, 
+                colorPhase: Math.random(), 
+                type: 'sakura'
+            };
+        }
+
         if(this.mode === 'bubbles') return { x: Math.random() * this.width, y: this.height + 20, speed: Math.random() * 2 + 0.5, size: Math.random() * 20 + 5, color: `hsla(${Math.random()*360}, 80%, 70%, 0.6)`, wobble: Math.random() * Math.PI * 2, type: 'bubble' };
+        
         if(this.mode === 'fireflies') return { x: Math.random() * this.width, y: Math.random() * this.height, vx: (Math.random() - 0.5) * 1, vy: (Math.random() - 0.5) * 1, size: Math.random() * 3 + 1, opacity: Math.random(), fadeDir: 1, type: 'firefly' };
     },
+
+    drawSakuraPetal: function(ctx, p) {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        const flipScale = Math.abs(Math.sin(p.flip)); 
+        ctx.rotate(p.rotation);
+        ctx.scale(1, flipScale); 
+        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, p.size);
+        if (p.colorPhase > 0.7) {
+            gradient.addColorStop(0, "rgba(255, 255, 255, 0.9)");
+            gradient.addColorStop(1, "rgba(255, 220, 230, 0.8)");
+        } else {
+            gradient.addColorStop(0, "rgba(255, 240, 245, 0.9)");
+            gradient.addColorStop(1, "rgba(255, 183, 197, 0.85)");
+        }
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.moveTo(0, p.size); 
+        ctx.bezierCurveTo(p.size / 2, p.size / 2, p.size, -p.size / 2, 0, -p.size);
+        ctx.bezierCurveTo(-p.size, -p.size / 2, -p.size / 2, p.size / 2, 0, p.size);
+        ctx.fill();
+        ctx.restore();
+    },
+
     loop: function() {
         if(this.mode === 'off') return;
         
-        // 清除画布
         this.ctx.clearRect(0, 0, this.width + 100, this.height + 100);
-        this.ctx.globalCompositeOperation = 'screen'; 
-
-        // 手机端减少粒子数量，提升性能
+        
         const isMobile = this.width < 768;
-        const maxParticles = isMobile ? 60 : 120; // 手机最多60个粒子
+        
+        // 📊 数量控制
+        let maxParticles = 100;
+        // 手机端流星数量：从 15 提升到 25，虽然不多，但配合加粗效果会很明显
+        if (this.mode === 'meteor') maxParticles = isMobile ? 25 : 40; 
+        if (this.mode === 'sakura') maxParticles = isMobile ? 40 : 80;
 
-        // 生成控制
+        // 🎲 生成概率 (Chance)
         let chance = 0.05;
-        if(this.mode === 'meteor') chance = 0.3;
-        if(this.mode === 'sakura') chance = 0.08;
-        if(Math.random() < chance && this.particles.length < maxParticles) this.particles.push(this.createParticle());
+        // 手机端流星生成概率提升
+        if(this.mode === 'meteor') chance = isMobile ? 0.15 : 0.3; 
+        if(this.mode === 'sakura') chance = 0.04;
+        
+        if(Math.random() < chance && this.particles.length < maxParticles) {
+            this.particles.push(this.createParticle());
+        }
 
         for(let i=0; i<this.particles.length; i++) {
             let p = this.particles[i];
             
-            // 绘制逻辑
             if(p.type === 'meteor') {
-                p.x -= p.speed * Math.cos(p.angle); p.y += p.speed * Math.sin(p.angle);
-                const g = this.ctx.createLinearGradient(p.x, p.y, p.x + p.length * Math.cos(p.angle), p.y - p.length * Math.sin(p.angle));
-                g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(1, "rgba(255,255,255,0)");
-                this.ctx.strokeStyle = g; this.ctx.lineWidth = p.width; this.ctx.beginPath(); this.ctx.moveTo(p.x, p.y); this.ctx.lineTo(p.x + p.length*Math.cos(p.angle), p.y - p.length*Math.sin(p.angle)); this.ctx.stroke();
-                if(p.y > this.height + 200) { this.particles.splice(i, 1); i--; }
+                this.ctx.globalCompositeOperation = 'screen'; // 发光模式
+                
+                p.x -= p.speed * Math.cos(p.angle); 
+                p.y += p.speed * Math.sin(p.angle);
+
+                const tailX = p.x + p.length * Math.cos(p.angle);
+                const tailY = p.y - p.length * Math.sin(p.angle);
+
+                const gradient = this.ctx.createLinearGradient(p.x, p.y, tailX, tailY);
+                // 头部：纯白高亮
+                gradient.addColorStop(0, `rgba(255, 255, 255, ${p.alpha})`);
+                // 中部：冰蓝色，带一点点紫，增加高级感
+                gradient.addColorStop(0.1, `rgba(160, 210, 255, ${p.alpha * 0.8})`);
+                // 尾部：透明
+                gradient.addColorStop(1, "rgba(100, 200, 255, 0)");
+
+                this.ctx.strokeStyle = gradient;
+                this.ctx.lineWidth = p.width; // 使用加粗后的宽度
+                this.ctx.lineCap = 'round';
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(p.x, p.y);
+                this.ctx.lineTo(tailX, tailY);
+                this.ctx.stroke();
+
+                if(p.y > this.height + 200 || p.x < -300) { 
+                    this.particles.splice(i, 1); i--; 
+                }
             } 
-            else if (p.type === 'sakura') {
-                p.y += p.speed; p.x += Math.sin(p.oscillation) * 1.5; p.oscillation += 0.03;
-                this.ctx.fillStyle = "rgba(255, 192, 203, 0.8)"; this.ctx.beginPath(); this.ctx.arc(p.x, p.y, p.size/2, 0, Math.PI*2); this.ctx.fill();
-                if(p.y > this.height + 20) { this.particles.splice(i, 1); i--; }
+            else if(p.type === 'sakura') {
+                this.ctx.globalCompositeOperation = 'source-over';
+                p.x += p.speedX + Math.sin(p.flip) * 0.5; 
+                p.y += p.speedY;
+                p.rotation += p.rotationSpeed;
+                p.flip += p.flipSpeed;
+                this.drawSakuraPetal(this.ctx, p);
+                if(p.y > this.height + 30 || p.x < -50 || p.x > this.width + 50) { 
+                    this.particles.splice(i, 1); i--; 
+                }
             }
             else if (p.type === 'bubble') {
+                this.ctx.globalCompositeOperation = 'screen';
                 p.y -= p.speed; p.x += Math.sin(p.wobble); p.wobble += 0.03;
                 this.ctx.beginPath(); this.ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); this.ctx.fillStyle = p.color; this.ctx.fill();
                 this.ctx.beginPath(); this.ctx.arc(p.x - p.size*0.3, p.y - p.size*0.3, p.size*0.25, 0, Math.PI*2); this.ctx.fillStyle = "rgba(255,255,255,0.6)"; this.ctx.fill();
                 if(p.y < -50) { this.particles.splice(i, 1); i--; }
             }
             else if (p.type === 'firefly') {
+                this.ctx.globalCompositeOperation = 'screen';
                 p.x += p.vx; p.y += p.vy; p.opacity += 0.02 * p.fadeDir;
                 if(p.opacity > 1 || p.opacity < 0) p.fadeDir *= -1;
                 const g = this.ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 4);
@@ -934,7 +1049,6 @@ const PARTICLE_ENGINE = {
         this.animationId = requestAnimationFrame(() => this.loop());
     }
 };
-
 // 菜单控制函数
 function toggleVisualMenu(e) { 
     if(e) e.stopPropagation(); 
@@ -1448,7 +1562,7 @@ function renderDay(idx) {
             el.className += ' bg-white shadow-sm font-bold border-l-4 text-slate-800'; 
             el.style.borderLeftColor = itemColor; 
         } else { 
-            el.className += ' text-slate-500 border-l-4 border-transparent'; 
+            el.className += ' text-slate-600 border-l-4 border-transparent';
         } 
         const done = d.tasks.filter((_, ti) => userProgress[d.date+'_'+ti]).length; 
         const isAll = done === d.tasks.length && d.tasks.length > 0; 
@@ -1549,7 +1663,21 @@ function renderDay(idx) {
     checkLock(day.date); 
     if(window.lucide) initLucideSafe();
 }
+        // 新增：处理移动端日期切换和滚动逻辑
+function handleMobileDaySwitch(delta) {
+    let newIndex = currentDayIdx + delta;
+    
+    // 确保索引在有效范围内
+    if (newIndex >= 0 && newIndex < tasksData.length) {
+        renderDay(newIndex);
         
+        // 优化 UX：自动滚动到顶部
+        const mainScroll = document.getElementById('mainScroll');
+        if (mainScroll) mainScroll.scrollTop = 0;
+    } else {
+        showToast("已到达计划边缘");
+    }
+}
         async function toggleTask(tid) { 
     if(document.getElementById('contentLocker').style.filter.includes('blur')) return; 
     
@@ -1633,36 +1761,56 @@ function renderDay(idx) {
     }, 500); 
 }        
         function checkLock(date) { 
-    const overlay = document.getElementById('ritualOverlay'); 
     const locker = document.getElementById('contentLocker'); 
-    
-    // 检查该日期是否已解锁
+    const overlay = document.getElementById('ritualOverlay'); 
+    const mainContent = document.querySelector('main'); // 瞄准主内容区
+
     const hasStarted = startedDays.includes(date) || Object.keys(userProgress).some(k => k.startsWith(date)); 
     
-    // 【修复核心】：切换天数时，只要检测到有正在跑的定时器，立刻杀掉！
-    // 这样就阻止了“上一步的隐藏命令”执行到“这一步的界面”上
+    // 确保切换天数时，正在运行的动画被停止
     if(window.proTimer) {
         clearTimeout(window.proTimer);
         window.proTimer = null;
     }
 
     if(hasStarted) { 
-        // 状态：已开始 -> 立即隐藏遮罩，显示内容
-        overlay.style.opacity = '0'; 
-        overlay.style.display = 'none'; 
-        overlay.style.pointerEvents = 'none'; 
-        unlockContent(); 
-    } else { 
-        // 状态：未开始 -> 立即显示遮罩，模糊内容
-        overlay.style.display = 'flex'; 
-        overlay.offsetHeight; // 强制浏览器重绘一帧，确保显示生效
-        overlay.style.opacity = '1'; 
-        overlay.style.pointerEvents = 'auto'; 
+        // 状态：已开始 -> 立即清除锁定效果
+        if(overlay) { 
+             overlay.style.opacity = '0';
+             overlay.style.display = 'none';
+        }
         
+        locker.style.filter = 'none'; 
+        locker.style.pointerEvents = 'auto'; 
+        locker.style.opacity = '1'; 
+    } else { 
+        // 状态：未开始 -> 应用锁定效果 (局部覆盖)
+        if(overlay && mainContent) {
+            // ⭐ 核心：将 overlay 移动到任务容器上方（因为它现在是 absolute inset-0）
+            // 我们只需要确保它在 DOM 结构中位于正确的位置 (即 main/locker 里面)
+            
+            // 确保 overlay 挂载在 main 元素上，实现覆盖效果
+            if (!mainContent.contains(overlay)) {
+                mainContent.appendChild(overlay);
+            }
+            
+            // 样式调整：移除模糊，只让内容模糊
+            overlay.classList.remove('bg-white/80', 'backdrop-blur-xl');
+            
+            overlay.style.position = 'absolute';
+            overlay.style.inset = '0'; // 覆盖整个 main 区域
+            overlay.style.background = 'rgba(255, 255, 255, 0.7)'; // 增加半透明白色背景
+            
+            overlay.style.display = 'flex'; 
+            overlay.style.opacity = '1'; 
+            overlay.style.pointerEvents = 'auto'; 
+        }
+
+        // ⭐ 关键：只对任务列表应用模糊，而不是整个页面
         locker.style.filter = 'blur(8px)'; 
         locker.style.pointerEvents = 'none'; 
         locker.style.opacity = '0.5'; 
-    } 
+    }
 }
         function unlockContent() { const locker = document.getElementById('contentLocker'); locker.style.filter = 'none'; locker.style.pointerEvents = 'auto'; locker.style.opacity = '1'; }
         
@@ -2371,6 +2519,7 @@ function showProfileModalAndCloseTip() {
             if (!RAW_DATA.includes('{{')) { const st = localStorage.getItem(TITLE_KEY); if(st) document.getElementById('planTitleText').innerText = st; } 
             document.getElementById('totalDaysLabel').innerText = tasksData.length; 
             const mobSelect = document.getElementById('mobileDateSelect'); if(mobSelect) { tasksData.forEach((d, i) => { const opt = document.createElement('option'); opt.value = i; opt.text = `📅 ${d.date} - Day ${d.dayNum}`; mobSelect.appendChild(opt); }); } 
+            if(mobSelect) mobSelect.onchange = (e) => renderDay(parseInt(e.target.value));
             let initialDayIdx = parseInt(localStorage.getItem(CURRENT_DAY_KEY) || '0'); 
             const hashMatch = window.location.hash.match(/day=(\d+)/); if (hashMatch) { initialDayIdx = parseInt(hashMatch[1]); } 
             const urlParams = new URLSearchParams(window.location.search); if (urlParams.has('day')) { const urlDayIdx = parseInt(urlParams.get('day')); if (!isNaN(urlDayIdx) && urlDayIdx >= 0 && urlDayIdx < tasksData.length) { initialDayIdx = urlDayIdx; } } 

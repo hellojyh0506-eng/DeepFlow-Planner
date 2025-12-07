@@ -5,9 +5,10 @@
     <script src="https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/libs/lucide.min.js"></script>
     
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#f7f7f5">
     <link rel="manifest" href="manifest.json"> 
-    <meta name="theme-color" content="#020617"> 
+
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -18,59 +19,186 @@
 
     <style>
         :root { 
-            --paper-bg: #f7f7f5; 
-            --ink-black: #1c1917; 
-            --ink-gray: #78716c; 
-            --line-color: #e7e5e4; 
-            --focus-highlight: #f0f0ee; 
-            --seal-red: #D83B3B; 
-        }
-        
-        body { 
-            font-family: "Songti SC", "Noto Serif SC", "STSong", "SimSun", "Times New Roman", serif;
-            background-color: var(--paper-bg); 
-            color: var(--ink-black); 
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E"); 
-            -webkit-font-smoothing: antialiased;
-        }
-        
-        .sans-font { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
-        
-        .zen-card { background: white; border: 1px solid var(--line-color); border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); border-left: 4px solid var(--line-color); transition: all 0.3s ease; }
-        .zen-card:hover { border-left-color: var(--ink-black); box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
-        
-        .sidebar-item { border-left: 2px solid transparent; transition: all 0.2s; }
-        .sidebar-item.active { border-left-color: var(--ink-black); background: var(--focus-highlight); font-weight: 700; color: var(--ink-black); }
-        
-        .task-row { border-bottom: 1px solid var(--line-color); transition: background-color 0.2s; position: relative; } 
-        .task-row:last-child { border-bottom: none; } 
-        .task-row:hover { background-color: var(--focus-highlight); }
-        
-        .zen-checkbox { width: 20px; height: 20px; border: 1.5px solid var(--ink-gray); border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; }
-        .task-completed .zen-checkbox { background-color: var(--ink-black); border-color: var(--ink-black); transform: scale(0.9); }
-        .task-completed h4 { text-decoration: line-through; color: #a8a29e; transition: color 0.3s; }
-        
-        .zen-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(247, 247, 245, 0.9); backdrop-filter: blur(4px); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; transition: opacity 0.6s ease; }
-        .zen-btn { background: var(--ink-black); color: white; padding: 12px 36px; border-radius: 2px; letter-spacing: 0.1em; transition: transform 0.2s, box-shadow 0.2s; }
-        .zen-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .zen-btn:active { transform: scale(0.95); }
-        
-        .zen-note-area { width: 100%; background: transparent; border: none; background-image: linear-gradient(transparent 95%, var(--line-color) 95%); background-size: 100% 2.4em; line-height: 2.4em; padding: 0; resize: none; color: var(--ink-gray); outline: none; transition: color 0.3s; font-size: 0.95rem; font-family: inherit; }
-        .zen-note-area:focus { color: var(--ink-black); }
-        .zen-note-area::placeholder { color: #d6d3d1; font-style: italic; }
-        
-        .stamp-wrapper { position: absolute; bottom: 30px; right: 30px; pointer-events: none; z-index: 10; opacity: 0; transform: scale(1.5) rotate(-10deg); transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); mix-blend-mode: multiply; }
-        .stamp-wrapper.show { opacity: 0.9; transform: scale(1) rotate(-5deg); }
-        .stamp-inner { width: 90px; height: 90px; border: 4px solid var(--seal-red); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: var(--seal-red); font-weight: 900; font-size: 2rem; box-shadow: inset 0 0 0 2px var(--seal-red), inset 0 0 12px rgba(185, 28, 28, 0.1); letter-spacing: 0.1em; background: rgba(185, 28, 28, 0.02); }
+    --paper-bg: #f7f7f5; 
+    --ink-black: #1c1917; 
+    --ink-gray: #78716c; 
+    --line-color: #e7e5e4; 
+    --focus-highlight: #f0f0ee; 
+    --seal-red: #D83B3B; 
+    --safe-bottom: env(safe-area-inset-bottom, 20px);
+}
 
-        .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        @media (max-width: 768px) { 
-            .mobile-select-wrapper { position: relative; } 
-            .mobile-select-wrapper select { appearance: none; padding-right: 30px; font-family: "Songti SC", "Noto Serif SC", serif; } 
-            .mobile-select-icon { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; } 
-        }
-        
+body { 
+    font-family: "Songti SC", "Noto Serif SC", "STSong", "SimSun", "Times New Roman", serif;
+    background-color: var(--paper-bg); 
+    color: var(--ink-black); 
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E"); 
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.sans-font { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+
+/* --- 任务列表布局 (优化任务卡片和触摸反馈) --- */
+.zen-card { background: transparent; border: none; box-shadow: none; } /* 移除外层容器的大框 */
+
+.task-row { 
+    background: #fff; 
+    border: 1px solid rgba(0,0,0,0.08); /* 略微加深边框，增加质感 */
+    border-radius: 12px; 
+    margin-bottom: 12px; /* 增加间距 */
+    padding: 18px; 
+    position: relative; 
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); /* 标准 Material/App 缓动 */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.04); /* 增加深度感 */
+}
+/* 优化触摸反馈：点击时略微下沉和收缩 */
+.task-row:active { transform: scale(0.99) translateY(1px); box-shadow: 0 1px 5px rgba(0,0,0,0.08); }
+
+/* 任务完成后的样式：视觉收纳感 */
+.task-completed { 
+    opacity: 0.65; 
+    background: var(--focus-highlight); /* 浅灰底 */
+    border-color: #e7e5e4; 
+    box-shadow: none; 
+    transform: none !important;
+}
+.task-completed h4 { text-decoration: line-through; color: #a8a29e; }
+
+.zen-checkbox { width: 22px; height: 22px; border: 1.5px solid var(--ink-gray); border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+.task-completed .zen-checkbox { background-color: var(--ink-black); border-color: var(--ink-black); transform: scale(0.9); }
+
+/* --- 灵力胶囊 (适配电脑 & 手机) --- */
+#zenStatusCapsule {
+    position: fixed;
+    z-index: 90;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 999px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer; user-select: none;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+#zenStatusCapsule:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.12); }
+#zenStatusCapsule:active { transform: scale(0.95); }
+
+/* 电脑端胶囊样式 */
+@media (min-width: 769px) {
+    #zenStatusCapsule {
+        bottom: 32px; left: 32px; /* 左下角悬浮 */
+        padding: 6px 16px 6px 6px; /* 更紧凑的内边距 */
+    }
+    .capsule-icon-box {
+        width: 32px; height: 32px; /* 较小的图标 */
+        background: var(--ink-black); color: #fff; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .capsule-realm { font-size: 12px; font-weight: bold; margin-bottom: 2px; }
+    .capsule-bar-bg { width: 60px; height: 4px; background: #e5e5e5; border-radius: 2px; overflow: hidden; }
+}
+
+/* 手机端胶囊样式 */
+@media (max-width: 768px) {
+    #zenStatusCapsule {
+        bottom: calc(24px + var(--safe-bottom)); 
+        left: 20px;
+        padding: 8px 16px 8px 8px; /* 稍微大一点方便手指点击 */
+    }
+    .capsule-icon-box {
+        width: 36px; height: 36px;
+        background: var(--ink-black); color: #fff; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .capsule-bar-bg { width: 50px; height: 3px; }
+    
+    /* 隐藏电脑端侧边栏 */
+    aside { display: none; }
+    
+    /* 优化头部 */
+    header { background: rgba(247, 247, 245, 0.95) !important; backdrop-filter: blur(10px); border-bottom: none !important; }
+    .mobile-select-wrapper { margin-top: -5px; margin-bottom: 15px; background: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+}
+
+.capsule-bar-fill { height: 100%; background: var(--seal-red); width: 0%; transition: width 0.5s; }
+
+/* --- 档案弹窗 (全平台适配) --- */
+#zenProfileModal {
+    position: fixed; inset: 0; z-index: 10000;
+    background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    display: flex; 
+}
+#zenProfileModal.open { opacity: 1; pointer-events: auto; }
+
+.profile-sheet {
+    background: #fdfdfc;
+    display: flex; flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+/* 电脑端弹窗：居中卡片 */
+@media (min-width: 769px) {
+    #zenProfileModal { align-items: center; justify-content: center; }
+    .profile-sheet {
+        width: 400px; max-height: 80vh; border-radius: 24px;
+        transform: scale(0.95) translateY(20px);
+    }
+    #zenProfileModal.open .profile-sheet { transform: scale(1) translateY(0); }
+    .sheet-drag-handle { display: none; }
+}
+
+/* 手机端弹窗：底部滑出 */
+@media (max-width: 768px) {
+    #zenProfileModal { align-items: flex-end; }
+    .profile-sheet {
+        width: 100%; height: 85vh;
+        border-top-left-radius: 24px; border-top-right-radius: 24px;
+        padding-bottom: var(--safe-bottom);
+        transform: translateY(100%);
+    }
+    #zenProfileModal.open .profile-sheet { transform: translateY(0); }
+    .sheet-drag-handle { width: 40px; height: 4px; background: #e5e5e5; border-radius: 2px; margin: 12px auto 0; flex-shrink: 0; }
+}
+
+.profile-scroll { overflow-y: auto; padding: 24px; flex: 1; -webkit-overflow-scrolling: touch; }
+.stat-box { background: white; border: 1px solid #f0f0f0; border-radius: 12px; padding: 12px; text-align: center; }
+.seal-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.seal-item { aspect-ratio: 1; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px dashed #e5e5e5; color: #d6d3d1; transition: all 0.2s; }
+.hermit-row { padding: 12px 0; border-bottom: 1px solid #f5f5f4; font-size: 14px; display: flex; justify-content: space-between; }
+
+/* 其他通用组件 */
+.zen-overlay { position: absolute; inset: 0; background: rgba(247, 247, 245, 0.95); backdrop-filter: blur(8px); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; transition: opacity 0.6s ease; }
+.zen-btn { background: var(--ink-black); color: white; padding: 12px 32px; border-radius: 99px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.15); font-size: 14px; transition: transform 0.1s; }
+.zen-btn:active { transform: scale(0.96); }
+.zen-note-area { width: 100%; background: transparent; border: none; background-image: linear-gradient(transparent 95%, #e7e5e4 95%); background-size: 100% 2.4em; line-height: 2.4em; padding: 0; resize: none; color: var(--ink-gray); outline: none; font-size: 1rem; }
+.stamp-wrapper { position: absolute; bottom: 30px; right: 30px; pointer-events: none; z-index: 10; opacity: 0; transform: scale(1.5) rotate(-10deg); transition: all 0.6s; mix-blend-mode: multiply; }
+.stamp-wrapper.show { opacity: 0.9; transform: scale(1) rotate(-5deg); }
+.stamp-inner { width: 90px; height: 90px; border: 4px solid var(--seal-red); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: var(--seal-red); font-weight: 900; font-size: 2rem; box-shadow: inset 0 0 0 2px var(--seal-red), inset 0 0 12px rgba(185, 28, 28, 0.1); background: rgba(185, 28, 28, 0.02); }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.mobile-select-wrapper select { appearance: none; width: 100%; background: transparent; border: none; padding: 14px 16px; font-size: 16px; font-weight: bold; color: var(--ink-black); outline: none; }
+.mobile-select-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); pointer-events: none; opacity: 0.5; }
+
+/* 悬浮按钮 */
+#zenDockWrapper { position: fixed; bottom: 32px; right: 32px; z-index: 95; }
+#noiseDockWrapper { position: fixed; bottom: 100px; right: 32px; left: auto; z-index: 94; }
+@media (max-width: 768px) {
+    #zenDockWrapper { bottom: calc(24px + var(--safe-bottom)); right: 20px; }
+    #noiseDockWrapper { bottom: calc(90px + var(--safe-bottom)); right: 20px; }
+}
+#zenOrb, #noiseOrb { width: 50px; height: 50px; border-radius: 50%; background: #1a1a1a; color: #f4f4f0; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.15); cursor: pointer; transition: transform 0.2s; }
+#noiseOrb { background: #fff; color: #1a1a1a; border: 1px solid #e5e5e5; }
+#zenOrb:active, #noiseOrb:active { transform: scale(0.9); }
+#zenPanel, #noisePanel { position: absolute; width: 280px; background: #fff; padding: 20px; border-radius: 20px; bottom: 70px; right: 0; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: none; }
+#zenPanel.open, #noisePanel[style*="block"] { display: block !important; animation: popUp 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+@keyframes popUp { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.mana-float { position: fixed; pointer-events: none; color: var(--ink-black); font-weight: bold; font-size: 16px; animation: floatUp 1.2s forwards; z-index: 20006; text-shadow: 0 2px 10px rgba(255,255,255,0.8); }
+@keyframes floatUp { 0% { opacity: 0; transform: translateY(20px); } 20% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-40px); } }
+
+        /* 原始样式保留 */
         #zenDockWrapper { position: fixed; bottom: 32px; right: 32px; z-index: 100; transition: none; }
         #zenOrb { width: 56px; height: 56px; border-radius: 50%; background: #1a1a1a; color: #f4f4f0; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.15); cursor: pointer; transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1); }
         #zenOrb:active { transform: scale(0.9); }
@@ -161,16 +289,234 @@
             background: #b91c1c; color: white; border-radius: 50%; font-size: 9px;
             display: flex; align-items: center; justify-content: center; border: 1px solid #fff;
         }
+        /* --- 新增：手机端优化的灵力胶囊 & 档案样式 --- */
+
+/* 1. 灵力胶囊 (左下角悬浮状态栏) */
+#zenStatusCapsule {
+    position: fixed;
+    bottom: 32px;
+    left: 24px; /* 放在左边，和右边的音乐/专注按钮平衡 */
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(28, 25, 23, 0.1);
+    padding: 6px 14px 6px 6px;
+    border-radius: 999px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+    user-select: none;
+}
+#zenStatusCapsule:active { transform: scale(0.95); }
+
+.capsule-icon-box {
+    width: 36px; height: 36px;
+    background: var(--ink-black);
+    color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.capsule-info { display: flex; flex-direction: column; gap: 2px; }
+.capsule-realm { font-size: 12px; font-weight: 800; color: var(--ink-black); line-height: 1; font-family: "Songti SC", serif; }
+.capsule-bar-bg { width: 60px; height: 3px; background: #e5e5e5; border-radius: 2px; overflow: hidden; }
+.capsule-bar-fill { height: 100%; background: var(--seal-red); width: 0%; transition: width 0.5s; }
+
+/* 2. 手机端档案弹窗优化 */
+#zenProfileModal {
+    /* 覆盖之前的样式，确保手机端全屏 */
+    padding: 0 !important;
+    background: #fdfdfc !important;
+}
+.profile-scroll-container {
+    height: 100%;
+    overflow-y: auto;
+    padding: 24px;
+    -webkit-overflow-scrolling: touch;
+}
+/* 手机端 Grid 调整 */
+@media (max-width: 640px) {
+    .seal-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 8px !important; }
+    .seal-item { border-radius: 4px !important; }
+    .seal-name { display: none; } /* 手机上隐藏成就文字，只显示图标，保持整洁 */
+    #realmName { font-size: 2.5rem !important; }
+    .stat-box h4 { font-size: 1.2rem !important; }
+}
+/* --- 📱 手机端体验核心优化补丁 --- */
+
+/* 1. 适配 iPhone 底部横条的安全区 */
+:root { --safe-bottom: env(safe-area-inset-bottom, 20px); }
+
+/* 2. 头部优化：手机上更通透，去掉边框 */
+@media (max-width: 768px) {
+    header { background: rgba(247, 247, 245, 0.95) !important; backdrop-filter: blur(10px); border-bottom: none !important; }
+    #planTitleText { font-size: 1.25rem; } /* 标题大一点 */
+    .mobile-select-wrapper { 
+        margin-top: -10px; margin-bottom: 10px; background: #fff; 
+        border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
+    }
+    .task-row { padding: 20px 16px; /* 加大手指点击区域 */ }
+}
+
+/* 3. 左下角“灵力胶囊” (XP 入口) */
+#zenStatusCapsule {
+    position: fixed;
+    bottom: calc(24px + var(--safe-bottom)); /* 自动避让底部横条 */
+    left: 20px;
+    z-index: 90;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0,0,0,0.05);
+    padding: 6px 14px 6px 6px;
+    border-radius: 999px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    display: flex; align-items: center; gap: 10px;
+    transition: transform 0.2s; cursor: pointer;
+}
+#zenStatusCapsule:active { transform: scale(0.95); }
+.capsule-icon-box {
+    width: 32px; height: 32px; background: #1c1917; color: #fff;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+}
+.capsule-info { display: flex; flex-direction: column; gap: 2px; }
+.capsule-realm { font-size: 11px; font-weight: 800; color: #1c1917; line-height: 1; }
+.capsule-bar-bg { width: 50px; height: 3px; background: #e5e5e5; border-radius: 2px; overflow: hidden; }
+.capsule-bar-fill { height: 100%; background: #D83B3B; width: 0%; transition: width 0.5s; }
+/* --- 📱 手机端体验核心补丁 (粘贴到 style 末尾) --- */
+:root { --safe-bottom: env(safe-area-inset-bottom, 20px); }
+
+/* 1. 优化手机头部 */
+@media (max-width: 768px) {
+    header { background: rgba(247, 247, 245, 0.95) !important; backdrop-filter: blur(10px); border-bottom: none !important; }
+    .mobile-select-wrapper { margin-top: -10px; margin-bottom: 10px; background: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+    .task-row { padding: 20px 16px; }
+}
+
+/* --- 档案弹窗系统 (Mobile First + Desktop 适配) --- */
+
+/* 1. 基础容器 (遮罩层) */
+#zenProfileModal {
+    position: fixed; inset: 0; z-index: 10000;
+    background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+    opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    display: flex; 
+    /* 默认：电脑端居中 */
+    align-items: center; justify-content: center; 
+}
+#zenProfileModal.open { opacity: 1; pointer-events: auto; }
+
+/* 2. 弹窗卡片 (默认：电脑端样式) */
+.profile-sheet {
+    background: #fdfdfc;
+    width: 420px; /* 电脑端固定宽度 */
+    max-height: 80vh; /* 电脑端高度限制 */
+    border-radius: 24px; /* 四周圆角 */
+    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    transform: scale(0.95) translateY(10px); /* 电脑端弹出动画起点 */
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+#zenProfileModal.open .profile-sheet { transform: scale(1) translateY(0); }
+
+/* 3. 手机端特化 (覆盖上面的样式) */
+@media (max-width: 768px) {
+    #zenProfileModal {
+        align-items: flex-end; /* 手机端靠底 */
+        justify-content: center;
+    }
+    
+    .profile-sheet {
+        width: 100%; 
+        height: 85vh; /* 占据屏幕 85% */
+        max-height: none;
+        border-radius: 24px 24px 0 0; /* 只有上面圆角 */
+        transform: translateY(100%); /* 手机端从底部滑出 */
+        padding-bottom: var(--safe-bottom);
+        margin-bottom: 0;
+    }
+    
+    #zenProfileModal.open .profile-sheet { transform: translateY(0); }
+}
+
+/* 4. 内部滚动区优化 */
+.profile-scroll { 
+    overflow-y: auto; 
+    padding: 32px; 
+    flex: 1; 
+    -webkit-overflow-scrolling: touch; 
+}
+/* 手机端顶部小横条 */
+.sheet-drag-handle { 
+    width: 40px; height: 4px; background: #e5e5e5; 
+    border-radius: 2px; margin: 12px auto 0; flex-shrink: 0;
+}
+/* 电脑端隐藏这个拖拽条 */
+@media (min-width: 769px) { .sheet-drag-handle { display: none; } }
+
+/* 5. 档案内容美化 */
+.stat-box { 
+    background: #fff; border: 1px solid #f0f0ee; 
+    border-radius: 16px; padding: 16px 8px; text-align: center; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.01);
+}
+.seal-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.seal-item { 
+    aspect-ratio: 1; 
+    border: 1px dashed var(--line-color); 
+    border-radius: 12px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center;
+    
+    /* 优化默认（未解锁）状态：提高亮度和可见度 */
+    opacity: 0.7; 
+    filter: grayscale(60%); 
+    background-color: var(--focus-highlight); /* 浅灰底 */
+    
+    transition: all 0.3s ease;
+}
+
+/* 解锁状态：覆盖默认，使用印章红色 */
+.seal-item.unlocked { 
+    opacity: 1; 
+    filter: grayscale(0%); 
+    border: 2px solid var(--seal-red); 
+    background: rgba(216, 59, 59, 0.05);
+    box-shadow: 0 0 0 1px rgba(216, 59, 59, 0.1);
+}
+.seal-item:hover { border-color: var(--seal-red); background: #fff5f5; }
+
+/* 6. 胶囊位置微调 (防止遮挡) */
+#zenStatusCapsule {
+    z-index: 90;
+    /* 增加底部阴影，更有层次感 */
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12), 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* 4. 避让底部悬浮按钮 */
+#zenDockWrapper { bottom: calc(24px + var(--safe-bottom)); right: 20px; z-index: 95; }
+#noiseDockWrapper { bottom: calc(90px + var(--safe-bottom)); right: 20px; left: auto; z-index: 94; }
+
     </style>
 </head>
 <body class="h-screen flex flex-col {{BODY_CLASS}}">
     <header class="border-b border-stone-200 bg-white/80 backdrop-blur-sm sticky top-0 z-30 flex-none">
         <div class="max-w-5xl mx-auto px-4 md:px-6 h-16 flex justify-between items-center">
-            <div class="flex items-center gap-3 group cursor-pointer" onclick="openRenameModal()">
-                <div class="p-1.5 bg-stone-100 rounded text-stone-700"><i data-lucide="feather" class="w-4 h-4"></i></div>
-                <h1 id="planTitleText" class="text-lg md:text-xl font-bold tracking-tight text-stone-900 truncate max-w-[200px] md:max-w-md">{{PLAN_TITLE}}</h1>
-                <i data-lucide="edit-2" class="w-3 h-3 text-stone-300 group-hover:text-stone-500 transition-colors hidden md:block"></i>
+            <div class="flex items-center gap-4">
+                 
+                <div class="flex items-center gap-3 group cursor-pointer" onclick="openRenameModal()">
+                    <h1 id="planTitleText" class="text-lg md:text-xl font-bold tracking-tight text-stone-900 truncate max-w-[140px] md:max-w-md">{{PLAN_TITLE}}</h1>
+                    <i data-lucide="edit-2" class="w-3 h-3 text-stone-300 group-hover:text-stone-500 transition-colors hidden md:block"></i>
+                </div>
             </div>
+
             <div class="flex items-center gap-4 text-sm">
                 <span class="hidden md:inline text-stone-500 italic text-xs tracking-wider">专注模式</span>
                 <div class="hidden md:block h-4 w-px bg-stone-300"></div>
@@ -188,18 +534,24 @@
         
         <main class="flex-1 overflow-y-auto no-scrollbar relative w-full" id="mainScroll">
             <div class="md:hidden sticky top-0 bg-[#f7f7f5]/95 backdrop-blur z-20 py-3 border-b border-stone-200 px-4">
-                <div class="mobile-select-wrapper">
-                    <select id="mobileDateSelect" 
-                        onchange="loadDay(parseInt(this.value))" 
-                        class="w-full bg-white border border-stone-300 text-stone-800 text-sm font-bold py-2.5 px-3 rounded-sm outline-none focus:border-stone-500 shadow-sm font-serif">
-                    </select>
-                    <i data-lucide="chevron-down" class="mobile-select-icon w-4 h-4 text-stone-400"></i>
-                </div>
-            </div>
+    <div class="flex items-center justify-between">
+        <button onclick="changeDay(-1)" class="p-2 active:bg-stone-200 rounded-full text-stone-500 hover:text-stone-800 transition"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+        
+        <div class="mobile-select-wrapper flex-grow mx-2 relative">
+            <select id="mobileDateSelect" 
+                onchange="loadDay(parseInt(this.value))" 
+                class="w-full bg-white border border-stone-200 text-stone-800 text-base font-bold py-3 px-4 rounded-xl outline-none focus:border-stone-500 shadow-sm font-serif">
+            </select>
+            <i data-lucide="chevron-down" class="mobile-select-icon w-4 h-4 text-stone-500"></i>
+        </div>
+        
+        <button onclick="changeDay(1)" class="p-2 active:bg-stone-200 rounded-full text-stone-500 hover:text-stone-800 transition"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+    </div>
+</div>
 
-            <div class="max-w-2xl mx-auto py-8 md:py-12 px-4 md:px-6 min-h-[80vh]">
+            <div class="max-w-2xl mx-auto py-4 md:py-12 px-4 md:px-6 min-h-[80vh]">
                 <div class="mb-10 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
-                    <span class="inline-block border border-stone-300 px-3 py-1 text-xs rounded-full text-stone-500 mb-4 tracking-wide">第 <span id="dayNumDisplay" class="sans-font">1</span> 天</span>
+                    <span class="inline-block border border-stone-300 px-3 py-1 text-xs rounded-full text-stone-500 mb-4 tracking-wide">第 <span id="dayNumDisplay" class="sans-font">1</span> 卷</span>
                     <h2 class="text-3xl md:text-5xl text-stone-900 mb-2 tracking-tight sans-font" id="dateDisplay">--</h2>
                     <div class="w-8 h-1 bg-stone-800 mx-auto mt-6 rounded-full"></div>
                 </div>
@@ -208,10 +560,10 @@
                     <div id="taskList" class="zen-card p-0 overflow-hidden transition-all duration-700 opacity-100"></div>
                     <div id="stampContainer" class="stamp-wrapper"><div class="stamp-inner"><span>圆满</span></div></div>
                 </div>
-                <div class="mt-16 pt-8 border-t border-stone-200">
-                    <div class="flex items-center gap-2 mb-4 opacity-60"><i data-lucide="feather" class="w-3 h-3"></i><h3 class="text-xs font-bold text-stone-500 uppercase tracking-widest">静思 (Daily Note)</h3></div>
-                    <textarea id="dailyNote" class="zen-note-area" rows="4" placeholder="在此刻，写下你的感悟..." oninput="saveNote()"></textarea>
-                </div>
+                <div class="mt-8 pt-4 border-t border-stone-300/50">
+    <div class="flex items-center gap-2 mb-3 opacity-80"><i data-lucide="feather" class="w-3 h-3"></i><h3 class="text-xs font-bold text-stone-500 uppercase tracking-widest">静思 (DAILY NOTE)</h3></div>
+    <textarea id="dailyNote" class="zen-note-area" rows="4" placeholder="在此刻，写下你的感悟..." oninput="saveNote()"></textarea>
+</div>
                 <div class="mt-16 text-center"><p class="text-stone-300 text-xs italic selection:bg-stone-200">"大道至简，衍化至繁。"</p></div>
             </div>
         </main>
@@ -219,6 +571,68 @@
     
 <div id="zenToast" style="position: fixed; bottom: 100px; left: 50%; transform: translate(-50%, 20px); background: #1c1917; color: #f7f7f5; padding: 10px 24px; border-radius: 4px; font-size: 13px; letter-spacing: 1px; opacity: 0; pointer-events: none; transition: all 0.4s ease; z-index: 20005; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
     <i data-lucide="feather" class="w-4 h-4"></i> <span id="zenToastMsg">已记录</span>
+</div>
+<div id="zenStatusCapsule" onclick="ZenGame.openProfile()">
+    <div class="capsule-icon-box"><i data-lucide="lotus" class="w-4 h-4"></i></div>
+    <div class="capsule-info">
+        <span id="capRealm" class="capsule-realm">凡念</span>
+        <div class="capsule-bar-bg"><div id="capBar" class="capsule-bar-fill"></div></div>
+    </div>
+</div>
+<div id="zenProfileModal" onclick="if(event.target === this) ZenGame.closeProfile()">
+    <div class="profile-sheet">
+        <div class="sheet-drag-handle"></div>
+        <button onclick="ZenGame.closeProfile()" class="absolute top-4 right-4 p-2 bg-stone-100 rounded-full text-stone-500">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+
+        <div class="profile-scroll">
+            <div class="text-center mt-4 mb-4">
+    <span class="text-[10px] text-stone-400 font-bold tracking-[0.2em] uppercase">当前境界</span>
+    <h1 id="realmName" class="text-5xl font-bold font-serif text-stone-900 mt-1 mb-1">凡念</h1>
+                <div id="nextRealmText" class="text-xs text-stone-400 bg-stone-100 inline-block px-3 py-1 rounded-full">--</div>
+
+                <div class="max-w-[200px] mx-auto mt-6">
+                    <div class="flex justify-between text-[10px] text-stone-400 font-bold mb-1.5 px-1">
+                        <span>MANA</span>
+                        <span id="manaVal" class="text-stone-900">0/0</span>
+                    </div>
+                    <div class="h-2 w-full bg-stone-100 rounded-full overflow-hidden">
+                        <div id="manaBar" class="h-full bg-stone-800 rounded-full transition-all duration-700" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 mb-10">
+    <div class="bg-white border border-stone-100 rounded-xl p-3 text-center shadow-sm">
+        <h4 id="statTasks" class="text-2xl font-serif font-bold text-stone-800">0</h4>
+        <div class="text-[10px] text-stone-400 font-bold uppercase mt-1">累计任务</div>
+    </div>
+    <div class="bg-white border border-stone-100 rounded-xl p-3 text-center shadow-sm">
+        <h4 id="statFocus" class="text-2xl font-serif font-bold text-stone-800">0</h4>
+        <div class="text-[10px] text-stone-400 font-bold uppercase mt-1">专注时长(分)</div>
+    </div>
+    <div class="bg-white border border-stone-100 rounded-xl p-3 text-center shadow-sm">
+        <h4 id="statStreak" class="text-2xl font-serif font-bold text-stone-800">0</h4>
+        <div class="text-[10px] text-stone-400 font-bold uppercase mt-1">连续天数</div>
+    </div>
+</div>
+
+            <div class="mb-10">
+                <h3 class="text-xs font-bold text-stone-900 mb-4 flex items-center gap-2"><i data-lucide="stamp" class="w-4 h-4"></i> 心印图谱</h3>
+                <div id="sealsGrid" class="seal-grid"></div>
+            </div>
+
+            <div class="mb-8">
+    <h3 class="text-xs font-bold text-stone-900 mb-4 flex items-center gap-2"><i data-lucide="scroll" class="w-4 h-4"></i> 隐士录 (排行榜)</h3>
+    <div class="bg-stone-50 border border-stone-100 rounded-xl px-4 py-2">
+        <div id="hermitList"></div>
+    </div>
+</div>
+
+            <div class="text-center text-[10px] text-stone-300 pb-4">DeepFlow Zen Profile</div>
+        </div>
+    </div>
 </div>
 
     <div id="zenDialogOverlay">
@@ -262,6 +676,60 @@
         </div>
     </div>
     
+<div id="zenProfileModal" onclick="if(event.target === this) ZenGame.closeProfile()">
+    <div class="profile-sheet">
+        <div class="sheet-drag-handle"></div>
+        
+        <button onclick="ZenGame.closeProfile()" class="absolute top-4 right-4 p-2 bg-stone-100 rounded-full text-stone-500">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+
+        <div class="profile-scroll">
+            <div class="text-center mt-4 mb-8">
+    <span class="text-[10px] text-stone-400 font-bold tracking-[0.2em] uppercase">当前境界</span>
+    <h1 id="realmName" class="text-5xl font-bold font-serif text-stone-900 mt-2 mb-2">凡念</h1>
+    <div id="nextRealmText" class="text-xs text-stone-400 bg-stone-100 inline-block px-3 py-1 rounded-full">距下一境界还需积累...</div>
+    
+    <div class="max-w-[200px] mx-auto mt-6">
+        <div class="flex justify-between text-[10px] text-stone-400 font-bold mb-1.5 px-1">
+            <span>念力 (MANA)</span>
+            <span id="manaVal" class="text-stone-900">0 / 0</span>
+        </div>
+        <div class="h-2 w-full bg-stone-100 rounded-full overflow-hidden">
+            <div id="manaBar" class="h-full bg-stone-800 rounded-full transition-all duration-700" style="width: 0%"></div>
+        </div>
+    </div>
+</div>
+
+            <div class="grid grid-cols-3 gap-3 mb-10">
+                <div class="bg-white border border-stone-100 rounded-xl p-3 text-center shadow-sm">
+                    <h4 id="statTasks" class="text-2xl font-serif font-bold text-stone-800">0</h4>
+                    <div class="text-[10px] text-stone-400 font-bold uppercase mt-1">Total Tasks</div>
+                </div>
+                <div class="bg-white border border-stone-100 rounded-xl p-3 text-center shadow-sm">
+                    <h4 id="statFocus" class="text-2xl font-serif font-bold text-stone-800">0</h4>
+                    <div class="text-[10px] text-stone-400 font-bold uppercase mt-1">Focus Mins</div>
+                </div>
+                <div class="bg-white border border-stone-100 rounded-xl p-3 text-center shadow-sm">
+                    <h4 id="statStreak" class="text-2xl font-serif font-bold text-stone-800">0</h4>
+                    <div class="text-[10px] text-stone-400 font-bold uppercase mt-1">Day Streak</div>
+                </div>
+            </div>
+
+            <div class="mb-10">
+                <h3 class="text-xs font-bold text-stone-900 mb-4 flex items-center gap-2"><i data-lucide="stamp" class="w-4 h-4"></i> 心印图谱</h3>
+                <div id="sealsGrid" class="seal-grid"></div>
+            </div>
+            
+            <div class="mb-8">
+                <h3 class="text-xs font-bold text-stone-900 mb-4 flex items-center gap-2"><i data-lucide="users" class="w-4 h-4"></i> 同修隐士</h3>
+                <div class="bg-stone-50 border border-stone-100 rounded-xl px-4 py-2">
+                    <div id="hermitList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
     <script src="rules_db.js"></script>
     <script>
         const RAW_DATA_STR = '{{TASKS_DATA}}';
@@ -306,8 +774,7 @@
                 lucide.createIcons();
             },
             play: function(type) {
-                // 2. [修复] 注释掉阻止播放的错误逻辑，确保音效正常工作
-                // if (!this.sfxEnabled) return; 
+                if (!this.sfxEnabled) return; 
                 
                 if (!this.cache[type] || this.cache[type].length === 0) return;
                 const audios = this.cache[type];
@@ -320,8 +787,21 @@
         
         AUDIO_SYSTEM.preload();
         let tasksData = []; let planId = 'zen_demo'; let planTitle = 'Zen Demo';
-        try { if (RAW_DATA_STR.includes('{{')) { planId = 'zen_' + new Date().getTime(); for(let i=0; i<5; i++) { let d = new Date(); d.setDate(d.getDate() + i); tasksData.push({ date: d.toISOString().split('T')[0], dayNum: i+1, tasks: [{ title: '深度阅读', desc: '阅读 20 页经典著作', tag: '输入' }, { title: '正念冥想', desc: '15 分钟专注呼吸', tag: '修心' }] }); } } else { tasksData = JSON.parse(RAW_DATA_STR); planId = RAW_ID; planTitle = RAW_TITLE; } } catch (e) { console.error("Data parse error:", e); tasksData = []; }
-
+try { 
+    if (RAW_DATA_STR.includes('{{')) { 
+        // 关键修复：使用固定 ID 确保 LocalStorage 键稳定
+        planId = 'zen_persistent_demo'; 
+        planTitle = '演示计划';
+        for(let i=0; i<5; i++) { 
+            let d = new Date(); d.setDate(d.getDate() + i); 
+            tasksData.push({ date: d.toISOString().split('T')[0], dayNum: i+1, tasks: [{ title: '深度阅读', desc: '阅读 20 页经典著作', tag: '输入' }, { title: '正念冥想', desc: '15 分钟专注呼吸', tag: '修心' }] }); 
+        } 
+    } else { 
+        tasksData = JSON.parse(RAW_DATA_STR); 
+        planId = RAW_ID; 
+        planTitle = RAW_TITLE; 
+    } 
+} catch (e) { console.error("Data parse error:", e); tasksData = []; }
         const STORAGE_KEY = 'zen_progress_' + planId; 
         const START_KEY = 'zen_started_' + planId; 
         const TITLE_KEY = 'zen_title_' + planId; 
@@ -337,6 +817,182 @@
             (function(_0x4e7feb,_0x119775){function _0x39d867(_0x4b6fff,_0x1d42ec,_0x37e40b,_0x33c23e){return _0x8678(_0x1d42ec-0x2f0,_0x33c23e);}const _0xc66a52=_0x4e7feb();function _0x2f305c(_0x2558ef,_0x467db0,_0x603a7,_0x2185b7){return _0x8678(_0x603a7- -0x1bd,_0x2185b7);}while(!![]){try{const _0x53d825=-parseInt(_0x2f305c(-0x57,-0x63,-0x53,-0x42))/(0x785*-0x2+-0x3b*0x56+0x22dd)+parseInt(_0x2f305c(-0x61,-0x52,-0x64,-0x7a))/(0x12f3+-0x1a*-0x49+0x207*-0xd)+-parseInt(_0x2f305c(-0x4f,-0x45,-0x3f,-0x4c))/(0x12d3*0x1+0x19df+-0x3*0xee5)*(-parseInt(_0x2f305c(-0x50,-0x4e,-0x46,-0x4e))/(0x680+0x23*-0x8b+-0x281*-0x5))+parseInt(_0x2f305c(-0x73,-0x62,-0x62,-0x6d))/(-0x1*0x13bc+-0x411*-0x7+0x2*-0x45b)+parseInt(_0x39d867(0x464,0x470,0x47a,0x466))/(0x1900+0x2c2+0x8e*-0x32)+-parseInt(_0x39d867(0x44f,0x448,0x450,0x443))/(0x1*-0x4b9+0x166d+-0x11ad)*(parseInt(_0x39d867(0x458,0x463,0x45b,0x44e))/(-0x4f*0x3b+-0x12ad+-0xc4e*-0x3))+-parseInt(_0x39d867(0x457,0x460,0x467,0x460))/(0x2142+0xf81+-0x30ba);if(_0x53d825===_0x119775)break;else _0xc66a52['push'](_0xc66a52['shift']());}catch(_0xc26da1){_0xc66a52['push'](_0xc66a52['shift']());}}}(_0x153c,-0x17959*0x5+0x575*-0x4de+0x1a49a*0x1d));function _0x4196cb(_0x5cf81c,_0x585ab5,_0x39d6b8,_0x5bab9b){return _0x8678(_0x585ab5-0x220,_0x5bab9b);}const _0x50955e=(function(){let _0x2c6039=!![];return function(_0xe9d78f,_0x37a3dd){function _0x32dcfc(_0x4cf3be,_0x562e86,_0x48dd51,_0x25acfc){return _0x8678(_0x25acfc- -0x12a,_0x562e86);}function _0x3bb7ed(_0x36dda4,_0xa37465,_0x570c1b,_0x20bc3c){return _0x8678(_0xa37465-0x31c,_0x20bc3c);}if(_0x3bb7ed(0x4ac,0x49b,0x48c,0x4b0)===_0x32dcfc(0x43,0x51,0x56,0x55)){const _0x165618=_0x2c6039?function(){function _0x3bcbf9(_0x557b85,_0x18372e,_0x393350,_0x5c81c4){return _0x32dcfc(_0x557b85-0x71,_0x18372e,_0x393350-0x16b,_0x393350-0x3c3);}function _0x4ea459(_0x30ea5c,_0x4a66b1,_0x42b6a9,_0x400cc7){return _0x32dcfc(_0x30ea5c-0x1e6,_0x4a66b1,_0x42b6a9-0x121,_0x42b6a9- -0x15c);}if(_0x3bcbf9(0x3f7,0x3ff,0x405,0x3f9)!==_0x4ea459(-0x114,-0x108,-0x112,-0x119)){if(_0x37a3dd){const _0x2a2b88=_0x37a3dd[_0x3bcbf9(0x3f3,0x40f,0x402,0x406)](_0xe9d78f,arguments);return _0x37a3dd=null,_0x2a2b88;}}else{const _0x9bf5ba=_0x42bf9d('return\x20(fu'+_0x4ea459(-0xf8,-0x115,-0x10d,-0x112)+(_0x3bcbf9(0x417,0x419,0x414,0x42a)+_0x4ea459(-0x141,-0x13e,-0x130,-0x141)+_0x3bcbf9(0x3f4,0x404,0x3ff,0x3ff)+'\x20)')+');');_0xa8a26=_0x9bf5ba();}}:function(){};return _0x2c6039=![],_0x165618;}else _0x4cb24a=_0x2e48fc;};}()),_0x3d47cf=_0x50955e(this,function(){function _0x3c78a9(_0x5e483d,_0x131f92,_0x12329a,_0x184eb1){return _0x8678(_0x5e483d- -0x147,_0x12329a);}let _0x3758e3;function _0x57018d(_0x399cb8,_0x2841e3,_0x23967e,_0x5823c0){return _0x8678(_0x5823c0- -0x328,_0x399cb8);}try{const _0x4591d5=Function(_0x3c78a9(0x28,0x2b,0x35,0x2c)+_0x57018d(-0x1c2,-0x1b9,-0x1aa,-0x1af)+(_0x3c78a9(0x34,0x32,0x45,0x2b)+'ctor(\x22retu'+_0x57018d(-0x1b1,-0x1b9,-0x1ca,-0x1c2)+'\x20)')+');');_0x3758e3=_0x4591d5();}catch(_0x33dc2c){_0x3758e3=window;}const _0xd2a8a=_0x3758e3[_0x57018d(-0x1b9,-0x1a6,-0x19f,-0x1b2)]=_0x3758e3[_0x57018d(-0x1b4,-0x1a3,-0x1ba,-0x1b2)]||{},_0x7bb7d4=[_0x57018d(-0x1d4,-0x1bb,-0x1cf,-0x1c6),_0x57018d(-0x1b5,-0x1ab,-0x1c7,-0x1c0),_0x57018d(-0x1ca,-0x1af,-0x1c0,-0x1b6),_0x3c78a9(0x36,0x48,0x2f,0x25),_0x57018d(-0x1ba,-0x1da,-0x1af,-0x1c5),_0x3c78a9(0x33,0x28,0x32,0x22),_0x3c78a9(0x31,0x2a,0x3e,0x1c)];for(let _0x22a6ed=0xd27*-0x2+-0x1bcd+-0xab*-0x51;_0x22a6ed<_0x7bb7d4[_0x57018d(-0x1cf,-0x1d9,-0x1bd,-0x1cb)];_0x22a6ed++){if('joHJT'!==_0x57018d(-0x1c8,-0x1e2,-0x1ca,-0x1ce)){const _0x4ad8da=(_0x467afb[_0x57018d(-0x1d4,-0x1cb,-0x1bf,-0x1c9)]+'\x20'+(_0x42dced[_0x3c78a9(0x26,0x37,0x3a,0x37)]||''))['match'](/(\d{1,2})[:：](\d{2})/);if(_0x4ad8da)_0x3420c3=_0x4ad8da[0x168f+-0x73*0x35+0x141]['padStart'](-0x12b8+-0x1*0x24dd+0x3797,'0')+':'+_0x4ad8da[-0x1*-0xbaf+-0x114f+-0x7*-0xce];}else{const _0x310fb7=_0x50955e[_0x57018d(-0x1b3,-0x1b4,-0x1d4,-0x1c8)+'r'][_0x57018d(-0x1c4,-0x1c4,-0x1bf,-0x1c4)][_0x3c78a9(0x1a,0x27,0xf,0x6)](_0x50955e),_0x5e0be5=_0x7bb7d4[_0x22a6ed],_0x174fae=_0xd2a8a[_0x5e0be5]||_0x310fb7;_0x310fb7[_0x57018d(-0x1b0,-0x1c6,-0x1ca,-0x1c1)]=_0x50955e[_0x3c78a9(0x1a,0x5,0x2d,0x22)](_0x50955e),_0x310fb7[_0x57018d(-0x1dd,-0x1ba,-0x1dd,-0x1ca)]=_0x174fae['toString']['bind'](_0x174fae),_0xd2a8a[_0x5e0be5]=_0x310fb7;}}});_0x3d47cf();let timeStr=task[_0x4196cb(0x37f,0x377,0x364,0x37e)];if(!timeStr){const matches=(task[_0x4196cb(0x37c,0x37f,0x395,0x382)]+'\x20'+(task[_0x4196cb(0x38f,0x38d,0x391,0x377)]||''))[_0x4196cb(0x379,0x38b,0x39a,0x37f)](/(\d{1,2})[:：](\d{2})/);if(matches)timeStr=matches[0x1*0xfb5+-0x2*0x5d9+-0x2*0x201][_0x1fb795(-0x1fb,-0x21d,-0x210,-0x208)](-0x659*-0x6+-0x62c+-0x1fe8,'0')+':'+matches[-0x7*-0x4fd+0x91*0x19+0x1*-0x3112];}if(timeStr){const parts=timeStr[_0x1fb795(-0x220,-0x20e,-0x223,-0x231)]('：',':')[_0x1fb795(-0x22a,-0x231,-0x22c,-0x22d)](':');return parseInt(parts[-0x1743+-0x580+0xc7*0x25])*(-0xb67+0x257b+0x33b*-0x8)+parseInt(parts[0x1192+0x19fe+-0x2b8f]);}const _0xacdfc0={};_0xacdfc0[_0x1fb795(-0x21d,-0x20a,-0x21c,-0x21b)]='日常';const ai=typeof autoDetectTag===_0x4196cb(0x37e,0x391,0x389,0x3a6)?autoDetectTag(task[_0x1fb795(-0x22d,-0x246,-0x232,-0x243)]+'\x20'+(task[_0x1fb795(-0x22e,-0x233,-0x224,-0x236)]||'')):_0xacdfc0,_0x4985df={};_0x4985df['英语']=0x1e0,_0x4985df['健康']=0x1a4,_0x4985df['学习']=0x21c,_0x4985df['工作']=0x258,_0x4985df['生活']=0x2d0;function _0x1fb795(_0x36666b,_0x41984e,_0x515479,_0x19da00){return _0x8678(_0x515479- -0x391,_0x19da00);}_0x4985df['日常']=0x30c,_0x4985df['运动']=0x3fc,_0x4985df['娱乐']=0x4b0,_0x4985df['财务']=0x4ec;const semanticMap=_0x4985df;function _0x8678(_0xb6ba08,_0x4cb24a){const _0x2e48fc=_0x153c();return _0x8678=function(_0x6c50f8,_0x99ff1d){_0x6c50f8=_0x6c50f8-(0x244a+0x1c4b+-0x1*0x3f3f);let _0x3eba3a=_0x2e48fc[_0x6c50f8];if(_0x8678['gQOtwI']===undefined){var _0x437905=function(_0x4cd342){const _0x492000='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';let _0x517988='',_0x17a026='';for(let _0xd5605f=-0x25fc+0xa*-0x338+0x462c,_0x141f3d,_0x308891,_0x3662ba=-0x1*-0x1273+-0x13*0x4f+-0xc96;_0x308891=_0x4cd342['charAt'](_0x3662ba++);~_0x308891&&(_0x141f3d=_0xd5605f%(0x1*-0x68e+0xe66+-0x7d4)?_0x141f3d*(0x118+-0x14c9+0x3fd*0x5)+_0x308891:_0x308891,_0xd5605f++%(0x8f9*0x3+-0x13b*-0xe+-0x2c21))?_0x517988+=String['fromCharCode'](0x145*0x3+0x99+0x1*-0x369&_0x141f3d>>(-(-0x25d3+0xbee+-0x19e7*-0x1)*_0xd5605f&-0xcca*0x3+0x1*-0xf1c+0x3580)):-0xdde+-0x17*-0xa9+-0x151*0x1){_0x308891=_0x492000['indexOf'](_0x308891);}for(let _0xc49e0a=0x1*-0x1727+0x1d92+-0x66b,_0x57740d=_0x517988['length'];_0xc49e0a<_0x57740d;_0xc49e0a++){_0x17a026+='%'+('00'+_0x517988['charCodeAt'](_0xc49e0a)['toString'](-0x24b1*0x1+-0x24fa*0x1+-0xebf*-0x5))['slice'](-(0xf72+-0x169+-0xe07));}return decodeURIComponent(_0x17a026);};_0x8678['TLsMdp']=_0x437905,_0xb6ba08=arguments,_0x8678['gQOtwI']=!![];}const _0x433dc4=_0x2e48fc[0x1*-0x1f1b+-0x182*0x1+0x3*0xadf],_0x1196f0=_0x6c50f8+_0x433dc4,_0x43ae64=_0xb6ba08[_0x1196f0];return!_0x43ae64?(_0x3eba3a=_0x8678['TLsMdp'](_0x3eba3a),_0xb6ba08[_0x1196f0]=_0x3eba3a):_0x3eba3a=_0x43ae64,_0x3eba3a;},_0x8678(_0xb6ba08,_0x4cb24a);}if(ai['label']&&ai[_0x1fb795(-0x207,-0x203,-0x215,-0x216)][_0x1fb795(-0x220,-0x234,-0x235,-0x241)]('早起'))return-0x3fb*-0x4+0x10b5+-0x1f39;if(ai[_0x1fb795(-0x221,-0x221,-0x215,-0x209)]&&(ai['label'][_0x4196cb(0x38f,0x37c,0x38f,0x38d)]('早睡')||ai[_0x4196cb(0x387,0x39c,0x39a,0x39e)][_0x4196cb(0x37d,0x37c,0x36e,0x375)]('睡眠')))return-0x143*0x17+-0x1*0x1ce9+0x1*0x3f52;return semanticMap[ai['category']]||0x103f*0x2+-0x14e2+0x466*-0x2;function _0x153c(){const _0x582d7e=['D2fYBG','yxbWBhK','mZyXnJfpsfj2veK','Bwf0y2G','DMDQvui','zgvZyW','CMvWBgfJzq','CMv0DxjUicHMDq','mtmZmtu3odHICLnOrhO','zNvUy3rPB24','Aw5MBW','mZq3mta0ogz2EwHfDa','z2nIsha','y2f0zwDVCNK','y29UC29Szq','mJaYntmZnMnzB3ztuq','DhjHy2u','BMn0Aw9UkcKG','DgfIBgu','E30Uy29UC3rYDq','BgfIzwW','zxjYB3i','m0zuC2nwrq','CePUDeW','nti5oteZnhPWqu9huq','CgfKu3rHCNq','y3rVCIGICMv0Dq','DgLTzq','mJfxAxn5thC','mtC0mJe0mMLqsxHtDq','AM9isLq','nZi3odeWnuHPte5HrG','Aw5JBhvKzxm','BgvUz3rO','Dg9tDhjPBMC','DgL0Bgu','y29UC3rYDwn0BW','yMLUza','Bg9N','zxHJzxb0Aw9U','ChjVDg90ExbL','C3bSAxq','CM4GDgHPCYiPka','x19WCM90B19F'];_0x153c=function(){return _0x582d7e;};return _0x153c();}
         }
         
+        // --- Game System Start ---
+        const ZenGame = {
+    profileKey: 'zen_profile_' + planId,
+    realms: ["凡念", "筑基", "旋照", "融合", "心动", "灵寂", "元婴", "出窍", "分神", "合体", "渡劫", "大乘"],
+    thresholds: [0, 100, 300, 600, 1000, 1600, 2400, 3500, 5000, 7000, 9500, 12500],
+    seals: [
+        { id: 'first_mind', name: '初发心', desc: '完成第1个任务', check: (p) => p.totalTasks >= 1, icon: 'sprout' },
+        { id: 'steady', name: '恒常', desc: '连续打卡3天', check: (p) => p.streak >= 3, icon: 'repeat' },
+        { id: 'silence', name: '止语', desc: '累计专注100分钟', check: (p) => p.focusMinutes >= 100, icon: 'mic-off' },
+        { id: 'morning', name: '晨钟', desc: '早上8点前打卡', check: (p) => p.hasEarly, icon: 'sun' },
+        { id: 'empty_cup', name: '空杯', desc: '单日完成所有任务', check: (p) => p.perfectDays >= 1, icon: 'coffee' },
+        { id: 'prajna', name: '般若', desc: '累计完成50个任务', check: (p) => p.totalTasks >= 50, icon: 'book-open' }
+    ],
+    data: { mana: 0, realmIdx: 0, streak: 0, lastActive: '', totalTasks: 0, focusMinutes: 0, unlockedSeals: [], hasEarly: false, perfectDays: 0 },
+    
+    init() {
+        const saved = localStorage.getItem(this.profileKey);
+        if(saved) this.data = {...this.data, ...JSON.parse(saved)};
+        this.renderProfile();
+        this.renderHermitList(); 
+    },
+    
+    save() { localStorage.setItem(this.profileKey, JSON.stringify(this.data)); },
+    
+    gainMana(amount) {
+        this.data.mana = Math.max(0, this.data.mana + amount);
+        this.checkRealm();
+        this.save();
+        this.renderProfile();
+        if(amount !== 0) this.showFloatText(amount > 0 ? `+${amount} 念力` : `${amount} 念力`);
+    },
+    
+    checkRealm() {
+    let newIdx = 0;
+    for(let i = 0; i < this.thresholds.length; i++) {
+        if(this.data.mana >= this.thresholds[i]) newIdx = i;
+    }
+    if(newIdx > this.data.realmIdx) {
+        this.data.realmIdx = newIdx;
+        // 升级静音，只更新数据
+    }
+},
+
+// 【核心修复点】: 移除成就音效 (用户要求静音)
+checkSeals(triggerType) {
+    let changed = false;
+    this.seals.forEach(seal => {
+        if(!this.data.unlockedSeals.includes(seal.id) && seal.check(this.data)) {
+            this.data.unlockedSeals.push(seal.id);
+            changed = true;
+            showToast(`解锁心印：${seal.name}`);
+            // 🚫 删除了这里的 AUDIO_SYSTEM.play('finish');
+        }
+    });
+    if(changed) { this.save(); this.renderProfile(); }
+    return changed; // 返回是否改变了成就状态
+},
+    
+    // 【核心修复】返回 boolean
+    onTaskComplete(isCheck) {
+        const today = new Date().toISOString().split('T')[0];
+        let achievementSound = false;
+        
+        if(isCheck) {
+            this.data.totalTasks++;
+            this.gainMana(30);
+            if(this.data.lastActive !== today) {
+                const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+                if(this.data.lastActive === yesterday.toISOString().split('T')[0]) this.data.streak++;
+                else this.data.streak = 1;
+                this.data.lastActive = today;
+            }
+            if(new Date().getHours() < 8) this.data.hasEarly = true;
+            
+            // 检查成就
+            achievementSound = this.checkSeals('task');
+        } else {
+            this.data.totalTasks--;
+            this.gainMana(-10);
+        }
+        return achievementSound; // 告诉外部是否播放了成就音效
+    },
+    
+    onFocusComplete(minutes) {
+        this.data.focusMinutes += minutes;
+        this.gainMana(minutes * 2);
+        this.checkSeals('focus');
+    },
+    
+    onDayClear() {
+        this.data.perfectDays++;
+        this.gainMana(50);
+        // 这里不需要再 checkSeals，因为 toggleTask 逻辑会处理圆满音效
+        showToast("今日圆满 · 念力+50");
+    },
+
+    showFloatText(text) {
+        const el = document.createElement('div');
+        el.className = 'mana-float';
+        el.innerText = text;
+        el.style.left = (window.innerWidth / 2) + 'px';
+        el.style.top = (window.innerHeight / 2) + 'px';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1500);
+    },
+    
+    openProfile() {
+        document.getElementById('zenProfileModal').classList.add('open');
+        this.renderHermitList();
+    },
+    closeProfile() { document.getElementById('zenProfileModal').classList.remove('open'); },
+    
+    renderProfile() {
+        const d = this.data;
+        const nextIdx = Math.min(d.realmIdx + 1, this.realms.length - 1);
+        const nextT = this.thresholds[nextIdx];
+        const currT = this.thresholds[d.realmIdx];
+        const range = nextT - currT || 1; 
+        
+        const realmEl = document.getElementById('realmName');
+        if(realmEl) realmEl.innerText = this.realms[d.realmIdx];
+        
+        const nextTextEl = document.getElementById('nextRealmText');
+        if(nextTextEl) nextTextEl.innerText = d.realmIdx === this.realms.length - 1 ? "大道已成" : `距下一境界还需 ${nextT - d.mana} 念力`;
+        
+        const manaValEl = document.getElementById('manaVal');
+        if(manaValEl) manaValEl.innerText = `${d.mana} / ${nextT}`;
+        
+        let pct = d.realmIdx < this.realms.length - 1 ? Math.min(100, Math.max(0, ((d.mana - currT) / range) * 100)) : 100;
+        const manaBarEl = document.getElementById('manaBar');
+        if(manaBarEl) manaBarEl.style.width = pct + '%';
+        
+        if(document.getElementById('statTasks')) document.getElementById('statTasks').innerText = d.totalTasks;
+        if(document.getElementById('statFocus')) document.getElementById('statFocus').innerText = d.focusMinutes;
+        if(document.getElementById('statStreak')) document.getElementById('statStreak').innerText = d.streak;
+        
+        const grid = document.getElementById('sealsGrid');
+        if(grid) {
+            grid.innerHTML = this.seals.map(s => {
+                const unlocked = d.unlockedSeals.includes(s.id);
+                const bgClass = unlocked ? 'bg-red-50 border-red-200 shadow-sm' : 'bg-stone-50 border-stone-100 opacity-50 grayscale';
+                const iconClass = unlocked ? 'text-red-700' : 'text-stone-300';
+                return `<div class="seal-item ${bgClass}" onclick="showToast('${s.name}: ${s.desc}')"><i data-lucide="${s.icon}" class="w-5 h-5 ${iconClass}"></i></div>`;
+            }).join('');
+        }
+        
+        // 同步更新左下角胶囊
+        const capRealm = document.getElementById('capRealm');
+        const capBar = document.getElementById('capBar');
+        if(capRealm) capRealm.innerText = this.realms[d.realmIdx];
+        if(capBar) capBar.style.width = pct + '%';
+        
+        if(window.lucide) lucide.createIcons();
+    },
+    
+    renderHermitList() {
+        const list = document.getElementById('hermitList');
+        const seed = new Date().getDate(); 
+        const seededRandom = (s) => { var x = Math.sin(s++) * 10000; return x - Math.floor(x); };
+        const names = ['扫地僧', '饮茶人', '听风客', '忘机', '归隐', '无名', '行者', '居士', '散人'];
+        const rows = [];
+        const userScore = this.data.mana;
+        for(let i=0; i<8; i++) {
+            const baseScore = Math.floor(userScore * (1.2 - i * 0.08) + seededRandom(seed + i) * 200 - 100);
+            rows.push({ name: names[Math.floor(seededRandom(seed+i*2)*names.length)] + (i%2==0?'居士':''), score: Math.max(0, baseScore), isMe: false });
+        }
+        rows.push({ name: '我', score: userScore, isMe: true });
+        rows.sort((a,b) => b.score - a.score);
+        list.innerHTML = rows.slice(0, 8).map((r, i) => `
+            <div class="hermit-row ${r.isMe ? 'me' : ''}">
+                <span class="hermit-rank" style="width:20px; display:inline-block; font-style:italic; opacity:0.5;">${i+1}</span>
+                <span class="hermit-name" style="font-weight:${r.isMe?'bold':'normal'}">${r.name}</span>
+                <span class="hermit-score" style="font-family:'Times New Roman'">${r.score}</span>
+            </div>`).join('');
+    }
+};
         function loadDay(idx) { 
             localStorage.setItem(CURRENT_DAY_KEY, idx); 
             currentIndex = idx; 
@@ -353,7 +1009,18 @@
             checkLock(task.date); 
             checkStamp(task); 
         }
-        
+        // 新增：移动端日期切换逻辑
+function changeDay(delta) {
+    let newIndex = currentIndex + delta;
+    if (newIndex >= 0 && newIndex < tasksData.length) {
+        loadDay(newIndex);
+
+        const mainScroll = document.getElementById('mainScroll');
+        if (mainScroll) mainScroll.scrollTop = 0;
+    } else {
+        showToast("已到达计划边缘");
+    }
+}
         function renderTasks(day) { 
             const container = document.getElementById('taskList'); 
             container.innerHTML = ''; 
@@ -384,7 +1051,7 @@
                 const currentWeight = getZenWeight(task);
                 let extraClass = '';
                 if (renderIndex > 0 && (currentWeight - lastWeight) > 180) {
-                     extraClass = 'mt-8 border-t border-stone-100 pt-8'; 
+                      extraClass = 'mt-8 border-t border-stone-100 pt-8'; 
                 }
                 lastWeight = currentWeight;
                 
@@ -402,39 +1069,81 @@
                 
                 const titleHtml = (aiInfo.emoji && aiInfo.category !== '日常') ? `<span class="mr-2 opacity-80 filter saturate-50">${aiInfo.emoji}</span>${task.title}` : task.title;
 
-                const html = `<div onclick="toggleTask('${taskId}')" class="task-row p-5 md:p-6 flex gap-5 cursor-pointer group ${checked ? 'task-completed' : ''} ${extraClass}" style="${indicatorStyle}"><div class="zen-checkbox flex-shrink-0 group-hover:border-stone-800">${checked ? checkSVG : ''}</div><div class="flex-1 min-w-0">${timeInfoHtml}<div class="flex flex-wrap items-baseline justify-between mb-1 gap-2"><h4 class="text-base md:text-lg font-medium text-stone-800 transition-colors">${titleHtml}</h4>${badgeHTML}</div>${task.desc ? `<p class="text-sm text-stone-500 leading-relaxed line-clamp-2 group-hover:line-clamp-none transition-all">${task.desc}</p>` : ''}</div></div>`; 
+                const html = `
+<div onclick="toggleTask('${taskId}')" class="task-row p-5 md:p-6 flex gap-4 cursor-pointer group ${checked ? 'task-completed' : ''} ${extraClass}" style="${indicatorStyle}">
+    <div class="zen-checkbox flex-shrink-0 group-hover:border-stone-800">${checked ? checkSVG : ''}</div>
+    
+    <div class="flex-1 min-w-0 flex flex-col justify-between">
+        
+        <div class="flex flex-col mb-1">
+            <h4 class="text-base md:text-lg font-medium text-stone-800 transition-colors">${titleHtml}</h4>
+            ${task.desc ? `<p class="text-sm text-stone-500 leading-relaxed line-clamp-2">${task.desc}</p>` : ''}
+        </div>
+
+        <div class="flex items-center justify-between pt-2 mt-2 border-t border-slate-100">
+            <div class="flex gap-2">
+                ${badgeHTML}
+            </div>
+            ${timeInfoHtml}
+        </div>
+    </div>
+</div>`; 
                 container.innerHTML += html; 
             }); 
             lucide.createIcons(); 
         }
         
-        async function toggleTask(id) { 
-            if(document.getElementById('zenOverlay').style.display !== 'none') return; 
-            
-            let playCheckSound = false; 
+      async function toggleTask(id) { 
+    if(document.getElementById('zenOverlay').style.display !== 'none') return; 
+    
+    let isChecking = !userProgress[id];
+    
+    // 1. 关键：在修改数据前，检查当前任务是否是“最后一个未完成的任务”
+    const currentDay = tasksData[currentIndex];
+    const doneCountBefore = currentDay.tasks.filter((_, i) => userProgress[currentDay.date + '-' + i]).length;
+    const totalTasks = currentDay.tasks.length;
+    
+    let isTransitioningToFinished = false;
 
-            if(userProgress[id]) { 
-                delete userProgress[id]; 
-            } else { 
-                userProgress[id] = true; 
-                playCheckSound = true; 
-                showToast("已记录"); 
-            } 
-            
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(userProgress)); 
-            const currentDay = tasksData[currentIndex]; 
-            renderTasks(currentDay); 
-            renderSidebar(); 
-            updateProgress(); 
-            const isJustFinished = checkStamp(currentDay); 
-            if (isJustFinished) {
-            } else if (playCheckSound) {
-                AUDIO_SYSTEM.play('check'); 
-            }
-            
-            const currentTask = tasksData[currentIndex].tasks[parseInt(id.split('-')[1])]; 
-            if (currentTask && currentTask.duration) { setTime(parseInt(currentTask.duration)); } 
+    if (isChecking) { 
+        // 只有在打勾操作，并且只差这一个任务时，才是 Finish
+        if (doneCountBefore === totalTasks - 1) {
+            isTransitioningToFinished = true;
         }
+        userProgress[id] = true;
+        showToast("已记录");
+    } else {
+        delete userProgress[id]; // 取消打卡
+    }
+    
+    // 2. 存盘 & 更新游戏数据 (静音处理成就/升级)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(userProgress)); 
+    ZenGame.onTaskComplete(isChecking); 
+    
+    // 3. 刷新界面
+    renderTasks(currentDay); 
+    renderSidebar(); 
+    updateProgress(); 
+    
+    // 4. 更新视觉印章 (不带声音)
+    checkStamp(currentDay); 
+
+    // 5. 声音控制：根据角色和时机精确播放
+    if (isChecking) {
+        if (isTransitioningToFinished) {
+            // 🏆 达成全清！
+            ZenGame.onDayClear(); // 加分，弹窗提示
+            AUDIO_SYSTEM.play('finish'); 
+        } else {
+            // 只有普通打勾，或者取消后重新打勾，都播放 check
+            AUDIO_SYSTEM.play('check'); 
+        }
+    }
+    
+    // 联动专注时间
+    const currentTask = tasksData[currentIndex].tasks[parseInt(id.split('-')[1])]; 
+    if (currentTask && currentTask.duration) { setTime(parseInt(currentTask.duration)); } 
+}
 
         function openResetModal() {
             const overlay = document.getElementById('zenDialogOverlay');
@@ -452,6 +1161,8 @@
             localStorage.removeItem(START_KEY); 
             localStorage.removeItem(NOTE_KEY);
             localStorage.removeItem(CURRENT_DAY_KEY); 
+            // Also reset ZenGame
+            localStorage.removeItem(ZenGame.profileKey);
             location.reload();
         }
 
@@ -481,23 +1192,21 @@
         function closeZenModal() { document.getElementById('zenDialogOverlay').classList.remove('show'); }
         
         function checkStamp(day) { 
-            const stamp = document.getElementById('stampContainer'); 
-            if(!day || day.tasks.length === 0) return false; 
-            
-            const doneCount = day.tasks.filter((_, i) => userProgress[day.date + '-' + i]).length; 
-            const isAllDone = doneCount === day.tasks.length;
+    const stamp = document.getElementById('stampContainer'); 
+    if(!day || day.tasks.length === 0) return false; 
+    
+    const doneCount = day.tasks.filter((_, i) => userProgress[day.date + '-' + i]).length; 
+    const isAllDone = doneCount === day.tasks.length;
 
-            if (isAllDone) { 
-                if (!stamp.classList.contains('show')) {
-                    AUDIO_SYSTEM.play('finish'); 
-                }
-                stamp.classList.add('show'); 
-                return true; 
-            } else { 
-                stamp.classList.remove('show'); 
-                return false;
-            } 
-        }
+    // 🏆 职责分离：checkStamp 只负责 UI 上的显示/隐藏，不播放声音。
+    if (isAllDone) { 
+        stamp.classList.add('show'); 
+        return true; 
+    } else { 
+        stamp.classList.remove('show'); 
+        return false;
+    } 
+}
         function saveNote() { const val = document.getElementById('dailyNote').value; const date = tasksData[currentIndex].date; if(val.trim()) dailyNotes[date] = val; else delete dailyNotes[date]; localStorage.setItem(NOTE_KEY, JSON.stringify(dailyNotes)); }
         
         function checkLock(dateStr) { 
@@ -506,25 +1215,22 @@
     const stamp = document.getElementById('stampContainer'); 
     const isStarted = startedDays.includes(dateStr) || Object.keys(userProgress).some(k => k.startsWith(dateStr)); 
     
-    // 【修复核心】：切换天数时，立即取消正在进行的隐藏动画
     if(overlayTimer) {
         clearTimeout(overlayTimer);
         overlayTimer = null;
     }
 
     if(isStarted) { 
-        // 强制显示内容，隐藏遮罩
         overlay.style.display = 'none'; 
-        overlay.style.opacity = '0'; // 确保透明度也重置
+        overlay.style.opacity = '0'; 
         
         content.style.filter = 'none'; 
         content.style.pointerEvents = 'auto'; 
         content.style.maxHeight = 'none'; 
         content.style.overflow = 'visible'; 
     } else { 
-        // 强制显示遮罩，锁住内容
         overlay.style.display = 'flex'; 
-        overlay.offsetHeight; // 强制重绘
+        overlay.offsetHeight; 
         overlay.style.opacity = '1'; 
         
         content.style.filter = 'blur(4px) grayscale(100%)'; 
@@ -535,7 +1241,7 @@
     } 
 }
         
-        let overlayTimer = null; // 【新增】全局变量控制定时器
+        let overlayTimer = null; 
 
 function unlockDay() { 
     const day = tasksData[currentIndex]; 
@@ -549,7 +1255,6 @@ function unlockDay() {
     const overlay = document.getElementById('zenOverlay'); 
     overlay.style.opacity = '0'; 
     
-    // 【修复核心】：清除旧的定时器，防止冲突
     if(overlayTimer) clearTimeout(overlayTimer);
 
     overlayTimer = setTimeout(() => { 
@@ -619,16 +1324,18 @@ function unlockDay() {
             if (mobileSelect) {
                 mobileSelect.innerHTML = '';
                 tasksData.forEach((task, index) => { 
-                    const opt = document.createElement('option'); 
-                    opt.value = index; 
-                    opt.text = `Chapter ${task.dayNum} · ${task.date.substring(5)}`; 
-                    mobileSelect.appendChild(opt); 
-                }); 
+    const opt = document.createElement('option'); 
+    opt.value = index; 
+    opt.text = `第 ${task.dayNum} 卷 · ${task.date.substring(5)}`; 
+    mobileSelect.appendChild(opt); 
+});
                 mobileSelect.addEventListener('change', (e) => loadDay(parseInt(e.target.value))); 
             }
             
             loadDay(initialDayIdx); 
             updateProgress(); 
+            ZenGame.init(); // Init Game System
+            
             lucide.createIcons(); 
             setTimeout(() => { const tip = document.getElementById('zenTooltip'); if(tip) tip.style.opacity = '0'; }, 4000); 
         }
@@ -651,6 +1358,8 @@ function unlockDay() {
         window.addEventListener('DOMContentLoaded', init);
 
         let timer = null, timeLeft = 25 * 60, isRunning = false;
+        let initialTime = 25 * 60; // Game Logic
+        
         const dockWrapper = document.getElementById('zenDockWrapper'); const orb = document.getElementById('zenOrb'); 
 let isDrag = false, startX, startY, initialLeft, initialTop;
 
@@ -737,12 +1446,23 @@ s = Math.max(0, Math.min(59, parseInt(parts[1]) || 0)); } else { m = parseInt(in
                 isRunning = false; 
             }
             else { 
+                initialTime = timeLeft; // Record start time for game logic
                 isRunning = true; 
                 timer = setInterval(() => { if(timeLeft>0) { timeLeft--; updateUI(); } else { finish(); } }, 1000); 
             }
             updateUI();
         }
-        function finish() { clearInterval(timer); isRunning = false; AUDIO_SYSTEM.play('finish'); alert("Time is up."); timeLeft=25*60; exitImmersive(); updateUI(); }
+        function finish() { 
+            clearInterval(timer); isRunning = false; 
+            AUDIO_SYSTEM.play('finish'); 
+            
+            // Game Hook: Calculate focused minutes
+            const mins = Math.ceil(initialTime / 60);
+            ZenGame.onFocusComplete(mins);
+            
+            alert("专注结束"); 
+            timeLeft=25*60; exitImmersive(); updateUI(); 
+        }
         function updateUI() {
             const str = Math.floor(timeLeft/60).toString().padStart(2,'0') + ':' + (timeLeft%60).toString().padStart(2,'0');
             document.getElementById('zenTimeDisplay').innerText = str; document.getElementById('immBigTime').innerText = str;
@@ -958,7 +1678,6 @@ s = Math.max(0, Math.min(59, parseInt(parts[1]) || 0)); } else { m = parseInt(in
         nWrapper.style.bottom = 'auto'; 
     }
 
-    // 4. [修复] 完整的 noiseDragEnd 函数，包含智能吸附和防飞出逻辑
     function noiseDragEnd() {
         if (!noise_isDragging) return;
         noise_isDragging = false;
@@ -981,7 +1700,7 @@ s = Math.max(0, Math.min(59, parseInt(parts[1]) || 0)); } else { m = parseInt(in
             const CENTER_SNAP_ZONE = 0.2; 
 
             let targetLeft = rect.left; 
-            let targetTop = rect.top;   
+            let targetTop = rect.top;    
 
             const isNearLeft = rect.left < SNAP_THRESHOLD;
             const isNearRight = (winW - (rect.left + ORB_SIZE)) < SNAP_THRESHOLD;
