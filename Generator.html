@@ -527,6 +527,36 @@
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        /* === 新增：AI 进度条与流光特效 === */
+.ai-progress-track {
+    width: 100%;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.ai-progress-track.active {
+    opacity: 1;
+}
+.ai-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6, #3b82f6);
+    background-size: 200% 100%;
+    position: relative;
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+    /* 初始不设 transition，由 JS 动态控制快慢 */
+}
+/* 流光动画：让进度条看起来在“流动” */
+.ai-progress-bar.flowing {
+    animation: shimmy 1.5s infinite linear;
+}
+@keyframes shimmy {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+}
     </style>
 </head>
 <body class="antialiased selection:bg-blue-500/30">
@@ -640,7 +670,9 @@
                                         </button>
                                     </div>
                                 </div>
-
+                                <div id="ai-loader" class="ai-progress-track">
+    <div id="ai-bar" class="ai-progress-bar"></div>
+</div>
                                 <div id="ai-timeline-container" class="ai-timeline custom-scrollbar p-4 flex-1 overflow-y-auto">
                                     <div class="flex flex-col items-center justify-center h-full text-slate-600 opacity-60">
                                         <div class="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-4 border border-white/5">
@@ -832,6 +864,8 @@
         // ============================================
         // 全局变量
         // ============================================
+        let progressTimer = null;
+let statusStepTimer = null;
         let currentMode = 'ai'; 
         let uploadedData = null; 
         let builderData = []; 
@@ -842,7 +876,93 @@
         let recognition = null; // 语音识别
         let isKeyBanned = false; 
         let useCloudEngine = true;
+function startAIProgress(textLength) {
+    const loader = document.getElementById('ai-loader');
+    const bar = document.getElementById('ai-bar');
+    const status = document.getElementById('ai-status');
+    
+    // 1. 显示进度条容器
+    loader.classList.add('active');
+    bar.classList.add('flowing'); // 开启流光特效
 
+    // 2. 智能计算预计时间 (模拟大数据处理)
+    // 基础耗时 800ms，每10个字增加 100ms，云端模式更慢一点以显真实
+    let baseTime = 800 + (textLength / 10) * 100; 
+    if (useCloudEngine) baseTime *= 1.5; // 云端稍微慢点
+    // 限制最长不超过 8秒，最短不低于 1秒
+    const duration = Math.min(Math.max(baseTime, 1000), 8000);
+
+    // 3. 进度条动画逻辑 (贝塞尔曲线模拟思考：快 -> 慢 -> 停顿)
+    // 重置
+    bar.style.width = '0%';
+    bar.style.transition = 'none';
+    
+    // 强制重绘
+    bar.offsetHeight; 
+
+    // 阶段一：迅速启动 (0% -> 20%)
+    setTimeout(() => {
+        bar.style.transition = 'width 0.3s ease-out';
+        bar.style.width = '20%';
+    }, 10);
+
+    // 阶段二：深度思考 (20% -> 85%) - 根据字数动态决定速度
+    setTimeout(() => {
+        bar.style.transition = `width ${duration / 1000}s cubic-bezier(0.2, 0.8, 0.2, 1)`;
+        bar.style.width = '85%';
+    }, 300);
+
+    // 4. 状态文案循环 (增加科技感)
+    const steps = [
+        "正在语义分析...", 
+        "识别时间意图...", 
+        "构建结构化数据...", 
+        "校验逻辑冲突..."
+    ];
+    let stepIdx = 0;
+    
+    // 清除旧定时器
+    if (statusStepTimer) clearInterval(statusStepTimer);
+    
+    statusStepTimer = setInterval(() => {
+        if (stepIdx < steps.length) {
+            status.innerText = steps[stepIdx];
+            status.className = "text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded border border-indigo-500/30 animate-pulse transition-all";
+            stepIdx++;
+        }
+    }, duration / 4); // 根据总时长平均分配文案切换速度
+}
+
+function stopAIProgress(success = true) {
+    const loader = document.getElementById('ai-loader');
+    const bar = document.getElementById('ai-bar');
+    const status = document.getElementById('ai-status');
+
+    // 清除循环文案
+    if (statusStepTimer) clearInterval(statusStepTimer);
+
+    // 阶段三：瞬间完成 (85% -> 100%)
+    bar.style.transition = 'width 0.3s ease-in-out';
+    bar.style.width = '100%';
+
+    setTimeout(() => {
+        // 隐藏并重置
+        loader.classList.remove('active');
+        setTimeout(() => { 
+            bar.style.width = '0%'; 
+            bar.classList.remove('flowing');
+        }, 300);
+        
+        // 更新最终状态文字
+        if (success) {
+            status.innerText = "生成完毕";
+            status.className = "text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded border border-emerald-500/30";
+        } else {
+            status.innerText = "识别失败";
+            status.className = "text-[10px] bg-red-500/20 text-red-400 px-2 py-1 rounded border border-red-500/30";
+        }
+    }, 400); // 等待进度条跑满后再隐藏
+}
         // ============================================
         // Settings Logic (设置逻辑)
         // ============================================
@@ -1192,7 +1312,7 @@ function ai_handleInput() {
     const confirmBtn = document.getElementById('ai-confirm-btn');
     const mobileConfirmBtn = document.getElementById('mobile-confirm-btn');
 
-    // 1. 按钮解锁逻辑 (仅控制按钮可用性，不影响数据)
+    // 1. 按钮解锁逻辑 (保持不变)
     const toggleBtns = (enable) => {
         [confirmBtn, mobileConfirmBtn].forEach(btn => {
             if(!btn) return;
@@ -1213,7 +1333,7 @@ function ai_handleInput() {
         lucide.createIcons();
     };
 
-    // 2. 空输入处理：只有清空文本框时，才清空右侧预览
+    // 2. 空输入处理 (保持不变)
     if (!text.trim()) {
         document.getElementById('ai-timeline-container').innerHTML = `<div class="flex flex-col items-center justify-center h-full text-slate-600 opacity-60"><i data-lucide="message-square-dashed" class="w-12 h-12 mb-3"></i><p class="text-xs">在左侧输入文字<br>右侧将实时显示解析结果</p></div>`;
         status.innerText = "等待输入";
@@ -1227,10 +1347,10 @@ function ai_handleInput() {
 
     // --- 智能防重复：如果文字没变，且已经有数据，绝对不重新请求 ---
     if (text === lastAnalyzedText && aiData.length > 0) {
-        return; // 直接退出，什么都不做，防止切屏闪烁
+        return; 
     }
 
-    // 3. 状态指示 (只改状态字，不清空 aiData，防止消失)
+    // 3. 状态指示 (仅设置一个初始动画状态，具体文本交给 startAIProgress)
     status.innerText = "分析中...";
     status.className = "text-[10px] bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded border border-yellow-500/30 animate-pulse";
 
@@ -1241,6 +1361,9 @@ function ai_handleInput() {
     const delay = useCloudEngine ? 1200 : 300;
 
     aiParseTimeout = setTimeout(async () => {
+        // ⭐【关键修正：在这里开始进度条】
+        startAIProgress(text.length);
+
         try {
             const apiKey = localStorage.getItem('deepflow_sk');
             let isLocalFallback = false;
@@ -1254,7 +1377,7 @@ function ai_handleInput() {
             } else {
                 // AI 模式
                 try {
-                    status.innerText = "AI 思考中...";
+                    // startAIProgress 已经处理了思考中的状态文本
                     newData = await callSiliconFlow(text, apiKey);
                 } catch (err) {
                     console.error("AI Error:", err);
@@ -1265,25 +1388,31 @@ function ai_handleInput() {
                     // 网络错误处理
                     status.innerText = "连接失败";
                     status.className = "text-[10px] bg-red-500/20 text-red-400 px-2 py-1 rounded border border-red-500/30";
-                    // 注意：这里不 throw 也不清空旧数据，让用户保留当前视图
                     return; 
                 }
             }
 
             // 5. 只有成功获取到新数据后，才更新界面！
-            // 过滤空数据
             const validData = newData.filter(d => d.tasks && d.tasks.length > 0);
 
             if (validData.length === 0) {
-                // 如果 AI 返回空，提示未识别，但不清空旧数据（防止误操作导致数据丢失）
+                // 进度条结束（失败状态）
+                stopAIProgress(false); 
+                
                 status.innerText = "未识别到任务";
                 status.className = "text-[10px] bg-slate-500/20 text-slate-400 px-2 py-1 rounded border border-slate-500/30";
+
             } else {
                 // === 成功更新 ===
                 aiData = validData; // 替换全局数据
                 lastAnalyzedText = text; // 记住这段文字，防止重复请求
                 
-                // 更新状态栏颜色
+                // ⭐【关键修正：进度条结束 + 渲染】
+                stopAIProgress(true); // 成功结束进度条动画
+                ai_renderPreview(aiData); // 渲染预览
+                toggleBtns(true); // 解锁按钮
+                
+                // 更新状态栏颜色 (放在进度条结束后，避免被进度条内部的成功提示覆盖)
                 if (isLocalFallback) {
                     status.innerText = "本地极速解析";
                     status.className = "text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded border border-emerald-500/30";
@@ -1291,14 +1420,13 @@ function ai_handleInput() {
                     status.innerText = "AI 深度解析";
                     status.className = "text-[10px] bg-blue-500/20 text-blue-400 px-2 py-1 rounded border border-blue-500/30";
                 }
-                
-                // 重新渲染预览区
-                ai_renderPreview(aiData);
-                toggleBtns(true); // 解锁按钮
             }
 
         } catch (e) {
             console.warn("流程异常:", e);
+            // 确保错误时也停止进度条
+            stopAIProgress(false);
+            
         } finally {
             updateSummary();
         }
@@ -1351,54 +1479,94 @@ function clearAndFallback() {
         "layout-list"
     );
 }
-        // --- 核心新增：SiliconFlow AI 接口调用 ---
-        // --- 核心修复：SiliconFlow AI 接口调用 (V40 稳定版) ---
-        async function callSiliconFlow(userText, apiKey) {
+        // --- 核心修复：SiliconFlow AI 接口调用 (V42 - 刑法级严厉版) ---
+async function callSiliconFlow(userText, apiKey) {
     const model = localStorage.getItem('deepflow_model') || 'deepseek-ai/DeepSeek-V3';
     
+    // ==========================================
+    // 1. 精准的时间锚定 (算死它，不给它瞎猜的机会)
+    // ==========================================
     const now = new Date();
     const currentYear = now.getFullYear();
     const todayStr = now.toISOString().split('T')[0]; 
-    const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const currentWeekDay = weekDays[now.getDay()];
+    
+    // 获取当前星期几 (0-6, 转为 1-7, 周日=7)
+    const dayIndex = now.getDay() || 7; 
+    const weekDaysCN = ["日", "一", "二", "三", "四", "五", "六"];
+    const currentWeekStr = "周" + weekDaysCN[now.getDay()];
 
-    // System Prompt: 明确告诉 AI 不要生成 Tags
+    // 计算关键锚点日期
+    // 本周一
+    const mondayThisWeek = new Date(now);
+    mondayThisWeek.setDate(now.getDate() - dayIndex + 1);
+    
+    // 下周一
+    const mondayNextWeek = new Date(mondayThisWeek);
+    mondayNextWeek.setDate(mondayThisWeek.getDate() + 7);
+    
+    // 下下周一
+    const mondayNextNextWeek = new Date(mondayThisWeek);
+    mondayNextNextWeek.setDate(mondayThisWeek.getDate() + 14);
+
+    // ==========================================
+    // 2. 刑法级 System Prompt (专治各种不服)
+    // ==========================================
     const systemPrompt = `
-    You are DeepFlow, an intelligent Schedule Parser.
-    # 🌍 CURRENT CONTEXT
-    - Reference Date: ${todayStr} (${currentWeekDay})
-    - Reference Year: ${currentYear}
+    Role: You are a strict Chinese Schedule Parser. NO HALLUCINATIONS.
+    
+    # 🌍 TIME ANCHOR (ABSOLUTE TRUTH)
+    - **Current Time**: ${todayStr} (${currentWeekStr}).
+    - **Logic Base (Week 0 Start)**: ${mondayThisWeek.toISOString().split('T')[0]}.
+    - **Next Week (Week 1 Start)**: ${mondayNextWeek.toISOString().split('T')[0]}.
+    - **Week After Next (Week 2 Start)**: ${mondayNextNextWeek.toISOString().split('T')[0]}.
 
-    # 🧠 COGNITIVE TASKS
-    1. **Analyze Structure**: Conversational? Table? List?
-    2. **Determine Anchor Date**: specific dates > relative dates > today.
-    3. **Normalize Time & Duration**:
-       - "早读"->07:00, "下午"->14:00. 
-       - Duration: "40min"->40. IF NO DURATION, RETURN NULL.
-    4. **Content Extraction**: Clean task content.
+    # ⚡️ CORE LOGIC RULES (MUST FOLLOW)
+    1. **The "Forward-Looking" Rule (CRITICAL)**:
+       - If user says a weekday (e.g., "周六") that is earlier in the week or strictly passed, **IT MEANS NEXT WEEK**.
+       - Example: Today is Sunday (${todayStr}). User says "周六".
+       - WRONG: Yesterday (Past).
+       - CORRECT: The coming Saturday (${new Date(mondayNextWeek.getTime() + 5*86400000).toISOString().split('T')[0]}).
+       - NEVER generate tasks for dates in the past.
 
-    # ⛔️ STRICT CONSTRAINT
-    - **DO NOT** generate tags, emojis, or colors. They MUST be null.
-    - We will handle them locally.
+    2. **Dialect & Slang Translation**:
+       - "明儿/明天" = Today + 1 day.
+       - "后儿/后天" = Today + 2 days.
+       - "大后儿/大后天" = Today + 3 days.
+       - "一宿/通宵" -> Duration: 480 mins (8 hours) or set time 22:00-06:00.
+       - "下午三点半" -> 15:30.
+       - "晚上八点" -> 20:00.
+
+    3. **Noise Filtering (Cleaning)**:
+       - **IGNORE** filler words: "那个", "然后", "就是", "呗", "嘛", "哈", "啊", "着", "整", "弄", "稍微".
+       - **IGNORE** politeness: "帮我", "记一下", "麻烦", "请".
+       - **EXTRACT** only the core action. (e.g. "帮我整点饭" -> "做饭").
 
     # 📤 OUTPUT FORMAT (Strict JSON)
-    Return a JSON Array.
-    [
-      {
-        "date": "YYYY-MM-DD",
-        "tasks": [
-          {
-            "title": "string",
-            "time": "HH:MM" (24h) or null,
-            "duration": number (minutes) or null,
-            "tag": null,    // ALWAYS NULL
-            "emoji": null,  // ALWAYS NULL
-            "color": null   // ALWAYS NULL
-          }
-        ]
-      }
-    ]
+    - Returns strictly a JSON Object.
+    - **tag, emoji, color MUST be null** (We handle them locally).
+    {
+      "days": [
+        {
+          "date": "YYYY-MM-DD",
+          "tasks": [
+            {
+              "title": "Cleaned Action Title",
+              "time": "HH:MM" (24h) or null,
+              "duration": number (minutes) or null,
+              "tag": null, "emoji": null, "color": null
+            }
+          ]
+        }
+      ]
+    }
     `;
+
+    // 调试：看看我们给 AI 喂了什么时间药丸
+    console.log("🔥 AI Time Anchors:", { 
+        today: todayStr, 
+        todayWeek: currentWeekStr,
+        nextWeekStart: mondayNextWeek.toISOString().split('T')[0] 
+    });
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 90000);
@@ -1409,9 +1577,15 @@ function clearAndFallback() {
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
             body: JSON.stringify({
                 model: model,
-                messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userText }],
-                temperature: 0.1,
-                max_tokens: 8192,
+                messages: [
+                    { role: "system", content: systemPrompt }, 
+                    // 狠狠地举例教育它
+                    { role: "user", content: `(假设今天是周日 ${todayStr}) 周五去喝酒。明儿早上跑步。麻烦记一下哈，后天那个啥，整点烧烤。` },
+                    { role: "assistant", content: `{"days": [{"date": "${new Date(now.getTime() + 1*86400000).toISOString().split('T')[0]}", "tasks": [{"title": "跑步", "time": "08:00", "duration": null, "tag": null, "emoji": null, "color": null}]}, {"date": "${new Date(now.getTime() + 2*86400000).toISOString().split('T')[0]}", "tasks": [{"title": "吃烧烤", "time": null, "duration": null, "tag": null, "emoji": null, "color": null}]}, {"date": "${new Date(mondayNextWeek.getTime() + 4*86400000).toISOString().split('T')[0]}", "tasks": [{"title": "喝酒", "time": null, "duration": null, "tag": null, "emoji": null, "color": null}]}]}` },
+                    { role: "user", content: userText }
+                ],
+                temperature: 0.1, // 必须冷酷，不能有创造性
+                max_tokens: 4096,
                 response_format: { type: "json_object" }
             }),
             signal: controller.signal
@@ -1434,8 +1608,8 @@ function clearAndFallback() {
             date: day.date,
             tasks: day.tasks.map(t => {
                 if (!t || !t.title) return null;
-
-                // 为了预览好看，临时匹配一个图标显示，但最终数据强制为 null
+                
+                // 本地补充 Tag (正则还是比 AI 快且准，这里兜底)
                 let previewRule = { category: "日常", label: "Task", emoji: "📝", color: "#8E8E93" };
                 if (typeof window.autoDetectTag === 'function') {
                     previewRule = window.autoDetectTag(t.title); 
@@ -1445,13 +1619,8 @@ function clearAndFallback() {
                     title: t.title,
                     time: t.time || "",
                     duration: (t.duration && t.duration > 0) ? t.duration : null, 
-                    
-                    // 核心修改：强制设为 NULL
-                    tag: null, 
-                    emoji: null, 
-                    color: null, 
-                    
-                    tagInfo: previewRule, // 仅供预览渲染使用
+                    tag: null, emoji: null, color: null, 
+                    tagInfo: previewRule,
                     rawSegment: t.title
                 };
             }).filter(t => t !== null)
