@@ -477,7 +477,13 @@
         /* --- 🎮 游戏化系统样式 --- */
 #profileModalOverlay.show { opacity: 1; pointer-events: auto; }
 #profileModalOverlay.show #profileModalContent { transform: scale(1); }
+/* --- 修复：让扭蛋机弹窗可见 --- */
+#gachaModalOverlay.show { 
+    opacity: 1 !important; 
+    pointer-events: auto !important; 
+}
 
+#gachaResult.hidden { display: none; }
 .xp-bar-container { 
     width: 100%; height: 10px; background: #f1f5f9; 
     border-radius: 99px; overflow: hidden; position: relative;
@@ -555,13 +561,115 @@
 .rank-row.is-me::after {
     content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--primary);
 }
+/* 盲盒弹窗动画 */
+@keyframes shake-box {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(5deg); }
+    50% { transform: rotate(0deg); }
+    75% { transform: rotate(-5deg); }
+    100% { transform: rotate(0deg); }
+}
+.gacha-box {
+    font-size: 60px;
+    animation: shake-box 0.5s infinite paused;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.gacha-box:active { transform: scale(0.9); }
+.gacha-box.shaking { animation-play-state: running; }
+
+/* 获得的贴纸展示区 */
+/* --- 🎨 贴纸 DIY 系统样式 --- */
+#stickerLayer {
+    position: fixed; inset: 0; z-index: 100; /* 在背景之上，内容之下 */
+    pointer-events: none; /* 允许点击穿透到背景 */
+    overflow: hidden;
+}
+.placed-sticker {
+    position: absolute;
+    font-size: 40px; /* 贴纸大小 */
+    cursor: grab;
+    pointer-events: auto; /* 贴纸本体可以交互 */
+    user-select: none;
+    transition: transform 0.1s;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+}
+.placed-sticker:active { cursor: grabbing; transform: scale(1.1); }
+.placed-sticker.removing { transform: scale(0); opacity: 0; transition: all 0.3s; }
+
+#sticker-collection {
+display: grid;
+grid-template-columns: repeat(5, 1fr);
+ gap: 10px;
+  margin-top: 15px;
+  max-height: 200px;
+  overflow-y: auto;
+    /* ⭐ 确保左右没有多余的裁剪 ⭐ */
+    padding-top: 5px; 
+    padding-bottom: 5px; 
+}
+.sticker-item {
+background: #f1f5f9;
+border-radius: 8px;
+padding: 5px;
+font-size: 24px;
+text-align: center;
+border: 2px solid transparent;
+transition: all 0.2s;
+}
+.sticker-item.new { border-color: var(--primary); background: var(--primary-light); }
+
+/* --- 修复：让每日签到弹窗可见 (缺失的规则) --- */
+#dailyFortuneOverlay.opacity-100 { 
+opacity: 1 !important; 
+pointer-events: auto !important;
+}
+
+/* 贴纸背包弹窗微调 */
+.sticker-grid-btn {
+font-size: 28px;
+background: #f8fafc;
+border: 2px solid #e2e8f0;
+ border-radius: 12px;
+padding: 10px;
+ cursor: pointer;
+transition: all 0.2s;
+    position: relative; 
+    z-index: 1; 
+    display: flex; 
+    justify-content: center;
+    align-items: center;
+}
+/* ⭐ 修复：选中/悬停时增加外发光和提升层级，防止裁剪和遮挡 ⭐ */
+.sticker-grid-btn:hover,
+.sticker-grid-btn:focus,
+.sticker-grid-btn:active {
+    background: #fff; 
+    border-color: var(--primary); 
+    transform: translateY(-2px) scale(1.1); 
+    box-shadow: 0 0 0 3px var(--primary-light); 
+    z-index: 2; 
+    outline: none;
+}
+/* 贴纸网格容器 (解决裁剪问题) */
+#myStickerGrid {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 12px;
+max-height: 300px;
+overflow-y: auto;
+    /* ⭐ 修复：增加顶部和底部内边距，防止选中框被裁剪 ⭐ */
+    padding-top: 5px; 
+    padding-bottom: 5px; 
+    margin: 0;
+}
     </style>
 </head>
 
 <body class="h-screen flex flex-col overflow-hidden {{BODY_CLASS}}">
     <canvas id="particleCanvas"></canvas>
 <div id="bg-gradient" class="bg-mix-mode"></div>
-    
+    <div id="stickerLayer"></div>
     <header class="ios-card z-40 relative m-3 md:m-4 rounded-2xl flex-none">
     <div class="px-4 py-3 md:px-5 flex justify-between items-center">
         <div class="flex items-center gap-3 md:gap-4 overflow-hidden">
@@ -579,6 +687,14 @@
                 </div>
                 <div id="modeLabel" class="hidden sm:block text-[10px] font-bold text-slate-400 tracking-wide">DOPAMINE MIX</div>
             </div>
+
+            <div class="flex flex-col justify-center min-w-0 ml-6 pl-6 border-l border-slate-200">
+                <div class="text-[10px] font-bold text-slate-400 tracking-wide">🔥 连击天数</div>
+                <div id="streakDisplay" class="font-black text-lg leading-none transition-colors text-orange-500" >
+                    <span id="headerStreakCount">0</span> 天
+                </div>
+            </div>
+            
         </div>
 
         <div class="flex items-center gap-2 md:gap-4 flex-none">
@@ -588,6 +704,9 @@
             
             <div class="palette-wrapper">
                 <div style="position: relative; display: flex; gap: 8px;">
+                    <div class="palette-btn" onclick="openStickerBag()" title="我的贴纸" style="background: #fff; color: #333;">
+    <i data-lucide="sticker" class="w-4 h-4"></i>
+</div>
                     <div class="palette-btn visual-btn" onclick="toggleVisualMenu(event)" title="切换特效" style="background: rgba(255,255,255,0.8); color: #333;">
                         <i data-lucide="wand-2" class="w-4 h-4"></i>
                     </div>
@@ -626,27 +745,24 @@
         </aside>
         
         <main class="flex-1 overflow-y-auto relative no-scrollbar rounded-2xl" id="mainScroll">
-            <div class="max-w-3xl mx-auto py-2 md:py-4 min-h-[80vh]">
-                <div class="md:hidden mb-4 px-1">
+            <div class="max-w-3xl mx-auto py-2 md:py-4 px-4 min-h-[80vh]">
     <div class="md:hidden mb-4 px-1">
-    <div class="flex items-center justify-between">
-        <button onclick="handleMobileDaySwitch(-1)" class="p-2 w-10 h-10 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 active:bg-slate-200 transition"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
-        
-        <div class="mobile-select-wrapper flex-grow mx-2 relative">
-            <select id="mobileDateSelect" 
-                onchange="renderDay(parseInt(this.value))" 
-                class="w-full appearance-none bg-white/80 backdrop-blur-xl border border-white/60 text-slate-800 font-bold text-sm py-3 px-10 rounded-2xl shadow-sm focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition-all">
-            </select>
-            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[var(--primary)]"><i data-lucide="calendar" class="w-4 h-4"></i></div>
-            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-600"><i data-lucide="chevron-down" class="w-4 h-4"></i></div>
+        <div class="flex items-center justify-between">
+            <button onclick="handleMobileDaySwitch(-1)" class="p-2 w-10 h-10 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 active:bg-slate-200 transition"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+            
+            <div class="mobile-select-wrapper flex-grow mx-2 relative">
+                <select id="mobileDateSelect" 
+                    onchange="renderDay(parseInt(this.value))" 
+                    class="w-full appearance-none bg-white/80 backdrop-blur-xl border border-white/60 text-slate-800 font-bold text-sm py-3 px-10 rounded-2xl shadow-sm focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition-all">
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[var(--primary)]"><i data-lucide="calendar" class="w-4 h-4"></i></div>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-600"><i data-lucide="chevron-down" class="w-4 h-4"></i></div>
+            </div>
+            
+            <button onclick="handleMobileDaySwitch(1)" class="p-2 w-10 h-10 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 active:bg-slate-200 transition"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
         </div>
-        
-        <button onclick="handleMobileDaySwitch(1)" class="p-2 w-10 h-10 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 active:bg-slate-200 transition"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
     </div>
-</div>
-</div>
-                
-                <div class="ios-card rounded-2xl p-6 md:p-8 mb-6 relative overflow-hidden group">
+    <div class="ios-card rounded-2xl p-6 md:p-8 mb-6 relative overflow-hidden group">
                     <div class="absolute -right-8 -top-8 w-40 h-40 opacity-15 rounded-full blur-3xl transition-colors duration-700 theme-transition" style="background: var(--primary)"></div> 
                     <div class="relative z-10 flex justify-between items-end">
                         <div>
@@ -667,85 +783,169 @@
     
     <div id="ritualOverlay" class="absolute inset-0 z-40 flex flex-col items-center justify-center transition-all duration-500" style="display: none;"><div class="ios-card p-10 rounded-3xl shadow-2xl max-w-sm w-full text-center border border-white"><div class="lock-icon-bg mb-6 inline-flex p-5 rounded-full shadow-sm theme-transition" style="background: var(--primary-light)"><i data-lucide="lock" class="w-8 h-8 theme-transition" style="color: var(--primary)"></i></div><h3 class="text-2xl font-black text-slate-800 mb-2">整装待发</h3><p class="text-slate-500 text-sm mb-8 px-2">今日计划已锁定。心无旁骛，方得始终。</p><button onclick="startDay()" class="w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-transform hover:-translate-y-0.5 active:scale-95 theme-transition" style="background: var(--primary)">开启今日专注之旅</button></div></div>
 
-    <div id="proModalOverlay"><div class="deepflow-modal"><div class="df-modal-header"><div class="df-modal-title" id="proModalTitle">Title</div><div class="df-modal-desc" id="proModalDesc">Description</div><input type="text" id="proModalInput" class="df-modal-input" style="display: none;"></div><div class="df-modal-actions"><button class="df-modal-btn df-btn-cancel" onclick="closeProModal()">取消</button><button class="df-modal-btn df-btn-confirm" id="proModalConfirmBtn" onclick="">确定</button></div></div></div>
-    <div id="profileModalOverlay" class="fixed inset-0 z-[10000] bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300" onclick="if(event.target===this) closeProfileModal()">
+    <div id="proModalOverlay">
+        <div class="deepflow-modal">
+            <div class="df-modal-header">
+                <div class="df-modal-title" id="proModalTitle">Title</div>
+                <div class="df-modal-desc" id="proModalDesc">Description</div>
+                <input type="text" id="proModalInput" class="df-modal-input" style="display: none;">
+            </div>
+            <div class="df-modal-actions">
+                <button class="df-modal-btn df-btn-cancel" onclick="closeProModal()">取消</button>
+                <button class="df-modal-btn df-btn-confirm" id="proModalConfirmBtn" onclick="">确定</button>
+            </div>
+        </div>
+    </div>
+
     <div id="xpTipModalOverlay" class="fixed inset-0 z-[10001] bg-black/50 backdrop-blur-sm flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
-    <div id="xpTipModal" class="bg-white/95 backdrop-blur-2xl w-80 rounded-2xl p-6 shadow-2xl transform scale-95 transition-all duration-300 text-center" onclick="event.stopPropagation();">
-        <div class="inline-flex p-4 rounded-full mb-4" style="background: var(--primary-light)"><i data-lucide="trophy" class="w-6 h-6" style="color: var(--primary)"></i></div>
-        <h3 class="text-xl font-black text-slate-800 mb-2">🎉 境界提升!</h3>
-        <p class="text-sm text-slate-600 mb-6">经验等级排行榜已解锁。点击 **左上角奖杯图标** 即可查看你的修行阅历和全球排名。</p>
-        <div class="flex gap-3">
-            <button onclick="disableXpTip()" class="flex-1 py-3 rounded-xl font-bold text-sm text-slate-500 hover:bg-slate-100 transition">不再提示</button>
-            <button onclick="showProfileModalAndCloseTip()" class="flex-1 py-3 rounded-xl font-bold text-white shadow-lg theme-transition active:scale-95" style="background: var(--primary)">立即查看</button>
+        <div id="xpTipModal" class="bg-white/95 backdrop-blur-2xl w-80 rounded-2xl p-6 shadow-2xl transform scale-95 transition-all duration-300 text-center" onclick="event.stopPropagation();">
+            <div class="inline-flex p-4 rounded-full mb-4" style="background: var(--primary-light)">
+                <i data-lucide="trophy" class="w-6 h-6" style="color: var(--primary)"></i>
+            </div>
+            <h3 class="text-xl font-black text-slate-800 mb-2">🎉 境界提升!</h3>
+            <p class="text-sm text-slate-600 mb-6">经验等级排行榜已解锁。点击 **左上角奖杯图标** 即可查看你的修行阅历和全球排名。</p>
+            <div class="flex gap-3">
+                <button onclick="disableXpTip()" class="flex-1 py-3 rounded-xl font-bold text-sm text-slate-500 hover:bg-slate-100 transition">不再提示</button>
+                <button onclick="showProfileModalAndCloseTip()" class="flex-1 py-3 rounded-xl font-bold text-white shadow-lg theme-transition active:scale-95" style="background: var(--primary)">立即查看</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="profileModalOverlay" class="fixed inset-0 z-[10000] bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300" onclick="if(event.target===this) closeProfileModal()">
+        <div class="bg-white/95 backdrop-blur-2xl w-[95%] max-w-md rounded-[32px] p-6 shadow-2xl transform scale-95 transition-all duration-300 flex flex-col max-h-[85vh]" id="profileModalContent">
+            
+            <div class="flex justify-between items-center mb-4 flex-none">
+                <div class="flex gap-2 bg-slate-100/80 p-1 rounded-xl">
+                    <button onclick="switchProfileTab('me')" id="tab-me" class="px-4 py-1.5 rounded-lg text-sm font-bold transition-all bg-white shadow-sm text-slate-800">我的修业</button>
+                    <button onclick="switchProfileTab('rank')" id="tab-rank" class="px-4 py-1.5 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-slate-600">琅琊榜</button>
+                </div>
+                <button onclick="closeProfileModal()" class="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition"><i data-lucide="x" class="w-5 h-5 text-slate-500"></i></button>
+            </div>
+        
+            <div class="overflow-y-auto flex-1 no-scrollbar pr-1">
+                
+                <div id="view-me">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl shadow-lg shadow-blue-500/30 flex-none">
+                            <i data-lucide="trophy"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-black text-slate-800" id="profileLevelTitle">Level 1 初窥门径</h2>
+                            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">修行阅历: <span id="xpCount" class="text-slate-600">0</span></div>
+                        </div>
+                    </div>
+        
+                    <div class="mb-8">
+                        <div class="flex justify-between text-xs font-bold text-slate-400 mb-2">
+                            <span>当前进境</span>
+                            <span class="text-indigo-600">距离下一境界: <span id="nextLevelXp">100</span> XP</span>
+                        </div>
+                        <div class="xp-bar-container">
+                            <div id="xpBarFill" class="xp-bar-fill"></div>
+                        </div>
+                    </div>
+        
+                    <div class="grid grid-cols-3 gap-3 mb-8">
+                        <div class="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100">
+                            <div class="text-xl font-black text-orange-500 flex items-baseline justify-center gap-0.5"><span id="streakCount">0</span><small class="text-[10px] text-orange-300">天</small></div>
+                            <div class="text-[10px] font-bold text-slate-400">日积跬步</div>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100">
+                            <div class="text-xl font-black text-blue-500 flex items-baseline justify-center gap-0.5"><span id="totalTasksCount">0</span><small class="text-[10px] text-blue-300">项</small></div>
+                            <div class="text-[10px] font-bold text-slate-400">硕果累累</div>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100">
+                            <div class="text-xl font-black text-purple-500 flex items-baseline justify-center gap-0.5"><span id="focusCount">0</span><small class="text-[10px] text-purple-300">分</small></div>
+                            <div class="text-[10px] font-bold text-slate-400">心流禅定</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center mb-8 flex-none">
+                        <button onclick="openGachaModal()" class="px-5 py-3 rounded-full text-sm font-black text-white shadow-xl transition-all hover:scale-[1.03] active:scale-95 theme-transition" style="background: #a855f7; box-shadow: 0 8px 20px #a855f740;">
+                            🎁 幸运扭蛋机 (100 XP)
+                        </button>
+                    </div>
+
+                    <div>
+                        <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-sm"><i data-lucide="medal" class="w-4 h-4 text-yellow-500"></i> 荣誉勋章 <span class="text-xs font-normal text-slate-400 ml-auto">点击查看条件</span></h3>
+                        <div class="badge-grid" id="badgesGrid"></div>
+                    </div>
+                </div>
+        
+                <div id="view-rank" style="display: none;">
+                    <div class="flex gap-2 mb-4 overflow-x-auto no-scrollbar pb-1">
+                        <button onclick="renderLeaderboard('xp')" class="rank-filter-btn active" data-type="xp">阅历榜</button>
+                        <button onclick="renderLeaderboard('focus')" class="rank-filter-btn" data-type="focus">禅定榜</button>
+                        <button onclick="renderLeaderboard('streak')" class="rank-filter-btn" data-type="streak">毅力榜</button>
+                    </div>
+                    
+                    <div class="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden" id="leaderboardList"></div>
+                    <div class="text-center mt-4 text-[10px] text-slate-300">排行榜数据每小时更新 · 与全球学友共勉</div>
+                </div>
+        
+            </div>
+        </div>
+    </div>
+    <div id="stickerBagOverlay" class="fixed inset-0 z-[10003] bg-black/60 backdrop-blur-sm flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300" onclick="if(event.target===this) closeStickerBag()">
+    <div class="bg-white rounded-[32px] p-6 w-80 shadow-2xl transform scale-95 transition-all duration-300" id="stickerBagContent">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-black text-lg text-slate-800 flex items-center gap-2">🎒 我的收藏 <span id="stickerCount" class="text-xs bg-slate-100 px-2 py-1 rounded text-slate-500">0</span></h3>
+            <button onclick="closeStickerBag()" class="p-2 bg-slate-50 rounded-full hover:bg-slate-100"><i data-lucide="x" class="w-4 h-4 text-slate-400"></i></button>
+        </div>
+        
+        <div id="emptyStickerTip" class="text-center py-8 text-slate-400 text-xs hidden">
+            <div class="text-2xl mb-2">🍃</div>
+            背包空空如也<br>快去扭蛋机进货吧！
+        </div>
+
+        <div id="myStickerGrid" class="grid grid-cols-4 gap-3 max-h-[300px] overflow-y-auto no-scrollbar pb-2">
+            </div>
+        
+        <div class="mt-4 pt-3 border-t border-slate-100 text-center">
+            <p class="text-[10px] text-slate-400">点击贴纸贴在桌面上，长按桌面贴纸可移除</p>
         </div>
     </div>
 </div>
-    <div class="bg-white/95 backdrop-blur-2xl w-[95%] max-w-md rounded-[32px] p-6 shadow-2xl transform scale-95 transition-all duration-300 flex flex-col max-h-[85vh]" id="profileModalContent">
-        
-        <div class="flex justify-between items-center mb-4 flex-none">
-            <div class="flex gap-2 bg-slate-100/80 p-1 rounded-xl">
-                <button onclick="switchProfileTab('me')" id="tab-me" class="px-4 py-1.5 rounded-lg text-sm font-bold transition-all bg-white shadow-sm text-slate-800">我的修业</button>
-                <button onclick="switchProfileTab('rank')" id="tab-rank" class="px-4 py-1.5 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-slate-600">琅琊榜</button>
-            </div>
-            <button onclick="closeProfileModal()" class="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition"><i data-lucide="x" class="w-5 h-5 text-slate-500"></i></button>
+    <div id="gachaModalOverlay" class="fixed inset-0 z-[10002] bg-black/60 backdrop-blur-sm flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-white rounded-3xl p-8 w-80 text-center shadow-2xl transform scale-95 transition-all" id="gachaContent">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-black text-xl text-slate-800">幸运扭蛋</h3>
+            <button onclick="closeGachaModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
-    
-        <div class="overflow-y-auto flex-1 no-scrollbar pr-1">
+        
+        <div class="bg-slate-50 rounded-2xl p-6 mb-6 relative overflow-hidden">
+            <div id="gachaBox" class="gacha-box mx-auto">🎁</div>
+            <div id="gachaResult" class="hidden fade-in-up">
+                <div class="text-4xl mb-2" id="rewardIcon">🌟</div>
+                <div class="font-bold text-slate-800" id="rewardName">稀有贴纸</div>
+                <div class="text-xs text-slate-400 mt-1" id="rewardRarity">R - 稀有</div>
+            </div>
+        </div>
+
+        <p class="text-xs text-slate-400 mb-4">消耗 <span class="font-bold text-purple-600">100 XP</span> 抽取随机收藏品</p>
+        
+        <button id="btnDraw" onclick="playGacha()" class="w-full py-3 rounded-xl font-bold text-white shadow-lg bg-purple-600 active:scale-95 transition">
+            立即抽取
+        </button>
+    </div>
+</div>  
+<div id="dailyFortuneOverlay" class="fixed inset-0 z-[10005] bg-black/60 backdrop-blur-sm flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-500">
+    <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-1 w-80 shadow-2xl transform scale-90 transition-all duration-500" id="fortuneCard">
+        <div class="bg-white rounded-[20px] p-8 text-center relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-yellow-300 rounded-full blur-3xl opacity-30"></div>
+            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-blue-300 rounded-full blur-3xl opacity-30"></div>
             
-            <div id="view-me">
-                <div class="flex items-center gap-4 mb-6">
-                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl shadow-lg shadow-blue-500/30 flex-none">
-                        <i data-lucide="trophy"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-2xl font-black text-slate-800" id="profileLevelTitle">Level 1 初窥门径</h2>
-                        <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">修行阅历: <span id="xpCount" class="text-slate-600">0</span></div>
-                    </div>
-                </div>
-    
-                <div class="mb-8">
-                    <div class="flex justify-between text-xs font-bold text-slate-400 mb-2">
-                        <span>当前进境</span>
-                        <span class="text-indigo-600">距离下一境界: <span id="nextLevelXp">100</span> XP</span>
-                    </div>
-                    <div class="xp-bar-container">
-                        <div id="xpBarFill" class="xp-bar-fill"></div>
-                    </div>
-                </div>
-    
-                <div class="grid grid-cols-3 gap-3 mb-8">
-                    <div class="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100">
-                        <div class="text-xl font-black text-orange-500 flex items-baseline justify-center gap-0.5"><span id="streakCount">0</span><small class="text-[10px] text-orange-300">天</small></div>
-                        <div class="text-[10px] font-bold text-slate-400">日积跬步</div>
-                    </div>
-                    <div class="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100">
-                        <div class="text-xl font-black text-blue-500 flex items-baseline justify-center gap-0.5"><span id="totalTasksCount">0</span><small class="text-[10px] text-blue-300">项</small></div>
-                        <div class="text-[10px] font-bold text-slate-400">硕果累累</div>
-                    </div>
-                    <div class="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100">
-                        <div class="text-xl font-black text-purple-500 flex items-baseline justify-center gap-0.5"><span id="focusCount">0</span><small class="text-[10px] text-purple-300">分</small></div>
-                        <div class="text-[10px] font-bold text-slate-400">心流禅定</div>
-                    </div>
-                </div>
-    
-                <div>
-                    <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-sm"><i data-lucide="medal" class="w-4 h-4 text-yellow-500"></i> 荣誉勋章 <span class="text-xs font-normal text-slate-400 ml-auto">点击查看条件</span></h3>
-                    <div class="badge-grid" id="badgesGrid"></div>
-                </div>
-            </div>
-    
-            <div id="view-rank" style="display: none;">
-                <div class="flex gap-2 mb-4 overflow-x-auto no-scrollbar pb-1">
-                    <button onclick="renderLeaderboard('xp')" class="rank-filter-btn active" data-type="xp">阅历榜</button>
-                    <button onclick="renderLeaderboard('focus')" class="rank-filter-btn" data-type="focus">禅定榜</button>
-                    <button onclick="renderLeaderboard('streak')" class="rank-filter-btn" data-type="streak">毅力榜</button>
-                </div>
-                
-                <div class="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden" id="leaderboardList">
-                    </div>
-                <div class="text-center mt-4 text-[10px] text-slate-300">排行榜数据每小时更新 · 与全球学友共勉</div>
-            </div>
-    
+            <div class="text-sm font-bold text-slate-400 mb-2 tracking-widest uppercase">DAILY FORTUNE</div>
+            <h3 class="text-2xl font-black text-slate-800 mb-6">今日运势</h3>
+            
+            <div class="text-6xl mb-6 animate-bounce">🌟</div>
+            
+            <p id="fortuneText" class="text-lg font-bold text-slate-700 mb-2">"保持热爱，奔赴山海"</p>
+            <p id="fortuneColor" class="text-xs text-slate-400 mb-8">幸运色：天空蓝</p>
+            
+            <button onclick="claimFortune()" class="w-full py-3.5 rounded-xl font-bold text-white shadow-lg shadow-indigo-200 transition transform active:scale-95 bg-gradient-to-r from-indigo-500 to-purple-600">
+                领取奖励 (+50 XP)
+            </button>
         </div>
     </div>
 </div>
@@ -1111,7 +1311,7 @@ let userProfile = JSON.parse(localStorage.getItem(PROFILE_KEY) || JSON.stringify
     xp: 0, level: 1, streak: 0, lastActive: null, badges: [], 
     totalTasks: 0, focusSessions: 0, focusMinutes: 0, maxSession: 0, // 加了 maxSession
     hasEarlyTask: false, hasLateTask: false,
-    perfectDays: 0, aiUsed: false, activeDays: 0, completionRate: 0
+    perfectDays: 0, aiUsed: false, activeDays: 0, completionRate: 0, stickers: [], placedStickers: []
 }));
 
 function saveProfile() { localStorage.setItem(PROFILE_KEY, JSON.stringify(userProfile)); }
@@ -1159,6 +1359,360 @@ function gainXP(amount) {
     saveProfile();
 }
 
+// --- 🎰 盲盒系统配置：在 BADGES_CONFIG 和 LEVEL_THRESHOLDS 附近粘贴 ---
+// --- 🎰 1. 扭蛋机奖池配置 (海量扩充版) ---
+const GACHA_POOL = [
+    // N (Common) - 普通物资
+    { id: 'n1', icon: '🍔', name: '快乐汉堡', rarity: 'N' },
+    { id: 'n2', icon: '🍟', name: '薯条', rarity: 'N' },
+    { id: 'n3', icon: '🍕', name: '披萨', rarity: 'N' },
+    { id: 'n4', icon: '🌭', name: '热狗', rarity: 'N' },
+    { id: 'n5', icon: '🍿', name: '爆米花', rarity: 'N' },
+    { id: 'n6', icon: '🥤', name: '肥宅水', rarity: 'N' },
+    { id: 'n7', icon: '🎮', name: '手柄', rarity: 'N' },
+    { id: 'n8', icon: '📷', name: '相机', rarity: 'N' },
+    { id: 'n9', icon: '🔋', name: '能量电池', rarity: 'N' },
+    { id: 'n10', icon: '💡', name: '灵感灯泡', rarity: 'N' },
+    
+    // R (Rare) - 稀有伙伴
+    { id: 'r1', icon: '🐱', name: '橘猫', rarity: 'R' },
+    { id: 'r2', icon: '🐶', name: '修勾', rarity: 'R' },
+    { id: 'r3', icon: '🦊', name: '狐狸', rarity: 'R' },
+    { id: 'r4', icon: '🦄', name: '独角兽', rarity: 'R' },
+    { id: 'r5', icon: '🌈', name: '彩虹', rarity: 'R' },
+    { id: 'r6', icon: '🌵', name: '仙人掌', rarity: 'R' },
+    { id: 'r7', icon: '🍄', name: '超级蘑菇', rarity: 'R' },
+    
+    // SR (Super Rare) - 史诗奇观
+    { id: 'sr1', icon: '🚀', name: '星际火箭', rarity: 'SR' },
+    { id: 'sr2', icon: '🏰', name: '迪士尼', rarity: 'SR' },
+    { id: 'sr3', icon: '🎡', name: '摩天轮', rarity: 'SR' },
+    { id: 'sr4', icon: '🪐', name: '土星', rarity: 'SR' },
+    { id: 'sr5', icon: '🌋', name: '富士山', rarity: 'SR' },
+    
+    // SSR (Legendary) - 传说级
+    { id: 'ssr1', icon: '💎', name: '以太钻石', rarity: 'SSR' },
+    { id: 'ssr2', icon: '👑', name: '皇冠', rarity: 'SSR' },
+    { id: 'ssr3', icon: '🐲', name: '神龙', rarity: 'SSR' },
+    { id: 'ssr4', icon: '👽', name: '外星人', rarity: 'SSR' },
+    { id: 'ssr5', icon: '🦄', name: '梦幻兽', rarity: 'SSR' }
+];
+
+// --- 🎰 2. 扭蛋机控制函数 ---
+function openGachaModal() {
+    const m = document.getElementById('gachaModalOverlay');
+    if(m) {
+        m.classList.add('show');
+        // 重置动画状态
+        const content = document.getElementById('gachaContent');
+        content.classList.remove('scale-95');
+        content.classList.add('scale-100');
+        resetGachaUI();
+    }
+}
+
+function closeGachaModal() {
+    const m = document.getElementById('gachaModalOverlay');
+    if(m) {
+        m.classList.remove('show');
+        const content = document.getElementById('gachaContent');
+        content.classList.remove('scale-100');
+        content.classList.add('scale-95');
+    }
+}
+
+function resetGachaUI() {
+    document.getElementById('gachaBox').style.display = 'block';
+    document.getElementById('gachaBox').classList.remove('shaking');
+    document.getElementById('gachaResult').classList.add('hidden');
+    
+    const btn = document.getElementById('btnDraw');
+    btn.disabled = false;
+    btn.innerText = '立即抽取';
+    btn.style.opacity = '1';
+    btn.onclick = playGacha; // 重新绑定事件
+}
+
+function playGacha() {
+    // 1. 检查 XP
+    if (typeof userProfile === 'undefined' || userProfile.xp < 100) {
+        showToast("XP 不足 100，快去完成任务！");
+        return;
+    }
+
+    // 2. 扣除 XP
+    gainXP(-100); 
+    
+    const btn = document.getElementById('btnDraw');
+    btn.disabled = true;
+    btn.innerText = "抽取中...";
+    btn.style.opacity = '0.7';
+
+    // 3. 播放动画 (⭐ 核心修复：强制重绘，解决不摇动问题 ⭐)
+    const box = document.getElementById('gachaBox');
+    box.classList.remove('shaking');
+    void box.offsetWidth; // 👈 这一行是黑魔法，强制浏览器重绘
+    box.classList.add('shaking');
+
+    // 4. 计算结果 (模拟延迟 1.5秒)
+    setTimeout(() => {
+        box.style.display = 'none';
+        box.classList.remove('shaking');
+        
+        // 概率算法: 50% N, 35% R, 12% SR, 3% SSR
+        const rand = Math.random();
+        let rarity = 'N';
+        if (rand > 0.97) rarity = 'SSR';
+        else if (rand > 0.85) rarity = 'SR';
+        else if (rand > 0.50) rarity = 'R';
+        
+        // 从对应稀有度池中随机抽一个
+        const pool = GACHA_POOL.filter(i => i.rarity === rarity);
+        const item = pool[Math.floor(Math.random() * pool.length)] || GACHA_POOL[0];
+
+        // 展示结果
+        const resDiv = document.getElementById('gachaResult');
+        resDiv.classList.remove('hidden');
+        document.getElementById('rewardIcon').innerText = item.icon;
+        document.getElementById('rewardName').innerText = item.name;
+        
+        const rText = document.getElementById('rewardRarity');
+        rText.innerText = `${item.rarity} - 稀有度`;
+        
+        // 颜色区分
+        const colorMap = { 'N': '#94a3b8', 'R': '#3b82f6', 'SR': '#a855f7', 'SSR': '#eab308' };
+        rText.style.color = colorMap[item.rarity];
+
+        // 存入背包
+        if (!userProfile.stickers) userProfile.stickers = [];
+        userProfile.stickers.push(item);
+        saveProfile();
+        
+        // 特效庆祝
+        if(typeof confettiEffect === 'function') confettiEffect();
+        if(typeof AUDIO_SYSTEM !== 'undefined') AUDIO_SYSTEM.play('finish');
+        showToast(`🎉 获得: ${item.name}`);
+
+        // 按钮变为“再抽一次”
+        btn.innerText = '再抽一次 (100 XP)';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        
+        // ⭐ 修复：点击再抽一次时，先重置界面
+        btn.onclick = () => {
+            resetGachaUI(); // 先回到箱子状态
+            setTimeout(playGacha, 100); // 稍微延迟后自动开始抽
+        };
+        
+    }, 1500);
+}
+// --- 🎨 贴纸系统核心逻辑 ---
+
+// 1. 初始化放置的贴纸
+// 在 userProfile 初始化时，我们需要确保 placedStickers 字段存在
+// 请在代码里搜索 "let userProfile =" 确保里面有 placedStickers: [] 
+// 如果没有，这行代码会自动补救：
+if (!userProfile.placedStickers) userProfile.placedStickers = [];
+
+// 页面加载时渲染已有的贴纸
+setTimeout(renderPlacedStickers, 500);
+
+function openStickerBag() {
+    const m = document.getElementById('stickerBagOverlay');
+    const content = document.getElementById('stickerBagContent');
+    const grid = document.getElementById('myStickerGrid');
+    const empty = document.getElementById('emptyStickerTip');
+    const count = document.getElementById('stickerCount');
+    
+    m.classList.add('show'); m.style.opacity = '1'; m.style.pointerEvents = 'auto';
+    content.classList.remove('scale-95'); content.classList.add('scale-100');
+    
+    // 渲染背包内容
+    grid.innerHTML = '';
+    const uniqueStickers = [...new Set(userProfile.stickers.map(s => JSON.stringify(s)))].map(s => JSON.parse(s));
+    
+    count.innerText = uniqueStickers.length;
+    
+    if (uniqueStickers.length === 0) {
+        empty.classList.remove('hidden');
+    } else {
+        empty.classList.add('hidden');
+        uniqueStickers.forEach(item => {
+            const btn = document.createElement('div');
+            btn.className = 'sticker-grid-btn flex items-center justify-center';
+            btn.innerHTML = item.icon;
+            btn.onclick = () => stickToDesktop(item);
+            grid.appendChild(btn);
+        });
+    }
+    if(window.lucide) initLucideSafe();
+}
+
+function closeStickerBag() {
+    const m = document.getElementById('stickerBagOverlay');
+    const content = document.getElementById('stickerBagContent');
+    m.style.opacity = '0'; m.style.pointerEvents = 'none';
+    content.classList.add('scale-95'); content.classList.remove('scale-100');
+}
+
+// 2. 将贴纸贴到桌面上
+function stickToDesktop(item) {
+    const id = Date.now() + Math.random().toString(36).substr(2, 9);
+    
+    // 默认位置：屏幕中心随机一点偏移
+    const x = window.innerWidth / 2 + (Math.random() - 0.5) * 100;
+    const y = window.innerHeight / 2 + (Math.random() - 0.5) * 100;
+    
+    const stickerData = { id, icon: item.icon, x, y };
+    
+    // 保存数据
+    userProfile.placedStickers.push(stickerData);
+    saveProfile();
+    
+    // 渲染 DOM
+    createStickerElement(stickerData);
+    
+    closeStickerBag();
+    showToast('贴纸已放置，可拖拽移动');
+    AUDIO_SYSTEM.play('check');
+}
+
+// 3. 渲染单个贴纸 DOM & 绑定拖拽事件
+function createStickerElement(data) {
+    const el = document.createElement('div');
+    el.className = 'placed-sticker';
+    el.innerText = data.icon;
+    el.id = 'sticker-' + data.id;
+    el.style.left = data.x + 'px';
+    el.style.top = data.y + 'px';
+    
+    // 随机旋转一点点，更自然
+    const rot = (Math.random() - 0.5) * 30;
+    el.style.transform = `rotate(${rot}deg)`;
+
+    // --- 拖拽和长按删除核心逻辑 ---
+    let isDragging = false;
+    let isMoving = false; // 新增标记：是否发生显著移动
+    let startX, startY, initLeft, initTop;
+    let longPressTimer;
+
+    const DRAG_THRESHOLD = 5; // 移动超过5像素才算拖拽
+    const LONG_PRESS_TIME = 1000; // 长按 1000毫秒 (1秒) 触发删除
+
+    const startDrag = (e) => {
+        // 排除删除按钮（如果有的话）
+        if(e.target.closest('.delete-btn')) return;
+        
+        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        
+        startX = clientX;
+        startY = clientY;
+        initLeft = parseFloat(el.style.left) || 0;
+        initTop = parseFloat(el.style.top) || 0;
+        
+        isDragging = true;
+        isMoving = false; // 重置移动标记
+        el.style.zIndex = 101; 
+
+        // 启动长按定时器 (1秒后自动删除)
+        longPressTimer = setTimeout(() => {
+            // 只有当没有发生移动时，才触发静默删除
+            if (!isMoving) {
+                // ⭐ 核心修改：直接删除，不再弹出 confirm ⭐
+                removeSticker(data.id);
+                isDragging = false; 
+                el.style.zIndex = ''; 
+            }
+        }, LONG_PRESS_TIME);
+
+        // 绑定全局事件监听器
+        window.addEventListener('mousemove', onDrag);
+        window.addEventListener('touchmove', onDrag, {passive: false});
+        window.addEventListener('mouseup', endDrag);
+        window.addEventListener('touchend', endDrag);
+        
+        // 阻止默认的触摸行为，例如浏览器滚动
+        if (e.type === 'touchstart') e.preventDefault();
+    };
+
+    const onDrag = (e) => {
+        if (!isDragging) return;
+        
+        // 获取当前位置 (兼容触摸)
+        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        
+        const dx = clientX - startX;
+        const dy = clientY - startY;
+        
+        // 检查是否超过拖拽阈值 (防止手抖误触)
+        if ((Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) && !isMoving) {
+            clearTimeout(longPressTimer); // 只要发生显著移动，就取消删除定时器
+            isMoving = true; // 标记为正在移动/拖拽
+        }
+        
+        // 只有当 isMoving 为 true 时才移动（防止长按静止时的抖动）
+        if (isMoving) {
+            el.style.left = (initLeft + dx) + 'px';
+            el.style.top = (initTop + dy) + 'px';
+        }
+        
+        // 阻止默认的触摸滚动
+        if (e.type.includes('touch')) e.preventDefault();
+    };
+
+    const endDrag = () => {
+        if (!isDragging) return;
+        
+        // 无论如何，结束时都要清除定时器
+        clearTimeout(longPressTimer);
+
+        // 只有当是拖拽结束（有移动）且贴纸没有被删除时，才保存新位置
+        if (isMoving) {
+            const idx = userProfile.placedStickers.findIndex(s => s.id === data.id);
+            if (idx > -1) {
+                userProfile.placedStickers[idx].x = parseFloat(el.style.left);
+                userProfile.placedStickers[idx].y = parseFloat(el.style.top);
+                saveProfile();
+            }
+        }
+        
+        el.style.zIndex = '';
+        isDragging = false;
+        isMoving = false;
+        
+        // 移除事件监听器
+        window.removeEventListener('mousemove', onDrag);
+        window.removeEventListener('touchmove', onDrag);
+        window.removeEventListener('mouseup', endDrag);
+        window.removeEventListener('touchend', endDrag);
+    };
+
+    // 绑定初始事件
+    el.addEventListener('mousedown', startDrag);
+    el.addEventListener('touchstart', startDrag, {passive: false});
+
+    document.getElementById('stickerLayer').appendChild(el);
+}
+function renderPlacedStickers() {
+    const layer = document.getElementById('stickerLayer');
+    layer.innerHTML = ''; // 清空防重复
+    if (userProfile.placedStickers) {
+        userProfile.placedStickers.forEach(s => createStickerElement(s));
+    }
+}
+
+function removeSticker(id) {
+    const el = document.getElementById('sticker-' + id);
+    if(el) {
+        el.classList.add('removing');
+        setTimeout(() => el.remove(), 300);
+    }
+    userProfile.placedStickers = userProfile.placedStickers.filter(s => s.id !== id);
+    saveProfile();
+    showToast('贴纸已回收');
+}
 function checkBadges() {
     // 重新计算总进度
     let totalAll = 0; let doneAll = 0;
@@ -2666,6 +3220,7 @@ function showProfileModalAndCloseTip() {
         function init() { 
             if (!RAW_DATA.includes('{{')) { const st = localStorage.getItem(TITLE_KEY); if(st) document.getElementById('planTitleText').innerText = st; } 
             document.getElementById('totalDaysLabel').innerText = tasksData.length; 
+            if(document.getElementById('headerStreakCount')) document.getElementById('headerStreakCount').innerText = userProfile.streak || 0;
             const mobSelect = document.getElementById('mobileDateSelect'); if(mobSelect) { tasksData.forEach((d, i) => { const opt = document.createElement('option'); opt.value = i; opt.text = `📅 ${d.date} - Day ${d.dayNum}`; mobSelect.appendChild(opt); }); } 
             if(mobSelect) mobSelect.onchange = (e) => renderDay(parseInt(e.target.value));
             let initialDayIdx = parseInt(localStorage.getItem(CURRENT_DAY_KEY) || '0'); 
@@ -2688,10 +3243,65 @@ PARTICLE_ENGINE.init();
             
             AUDIO_SYSTEM.preload();
             if(window.lucide) initLucideSafe();
+            checkDailyFortune();
         }
 
         // 统一入口，解决执行时机问题
         window.addEventListener('DOMContentLoaded', init);
+         // --- 📅 每日签到逻辑 ---
+const FORTUNE_QUOTES = [
+    "自律即自由。", "种一棵树最好的时间是十年前，其次是现在。",
+    "保持热爱，奔赴山海。", "星光不问赶路人。", "你若盛开，清风自来。",
+    "慢慢来，比较快。", "专注当下，未来可期。", "每一次努力都是幸运的伏笔。"
+];
+const LUCKY_COLORS = ["🔴 珊瑚红", "🔵 天空蓝", "🟢 薄荷绿", "🟡 柠檬黄", "🟣 薰衣草紫", "🟠 活力橙"];
+
+function checkDailyFortune() {
+    const lastCheck = localStorage.getItem('last_fortune_date_' + planId);
+    const today = new Date().toISOString().split('T')[0];
+    
+    // 如果今天还没签到
+    if (lastCheck !== today) {
+        setTimeout(openFortuneModal, 2000); // 延迟2秒弹出，给用户一点准备
+    }
+}
+
+function openFortuneModal() {
+    const overlay = document.getElementById('dailyFortuneOverlay');
+    const card = document.getElementById('fortuneCard');
+    
+    // 随机内容
+    document.getElementById('fortuneText').innerText = FORTUNE_QUOTES[Math.floor(Math.random() * FORTUNE_QUOTES.length)];
+    document.getElementById('fortuneColor').innerText = "幸运色：" + LUCKY_COLORS[Math.floor(Math.random() * LUCKY_COLORS.length)];
+    
+    overlay.classList.remove('pointer-events-none', 'opacity-0');
+    overlay.classList.add('opacity-100', 'pointer-events-auto');
+    card.classList.remove('scale-90');
+    card.classList.add('scale-100');
+    
+    if(typeof AUDIO_SYSTEM !== 'undefined') AUDIO_SYSTEM.play('check');
+}
+
+function claimFortune() {
+    const overlay = document.getElementById('dailyFortuneOverlay');
+    const card = document.getElementById('fortuneCard');
+    const today = new Date().toISOString().split('T')[0];
+    
+    // 发放奖励
+    gainXP(50);
+    localStorage.setItem('last_fortune_date_' + planId, today);
+    
+    // 关闭动画
+    overlay.classList.remove('opacity-100');
+    overlay.classList.add('opacity-0');
+    setTimeout(() => {
+        overlay.classList.add('pointer-events-none');
+        overlay.classList.remove('pointer-events-auto');
+    }, 500);
+    
+    showToast("签到成功！XP +50");
+    if(typeof confettiEffect === 'function') confettiEffect();
+}
     </script>
     <script>
     // 强制每 100ms 检查一次图标是否渲染，尝试 10 次
@@ -2704,6 +3314,7 @@ PARTICLE_ENGINE.init();
         }
         if(checkCount > 10) clearInterval(forceRender);
     }, 100);
+   
 </script>
 
 </body>
