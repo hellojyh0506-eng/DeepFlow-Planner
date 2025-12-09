@@ -725,7 +725,9 @@ function renderListA(day) {
 const el = document.getElementById('list_A'); el.innerHTML = '';
 day.tasks.forEach((t, i) => {
 const uid = day.date + '_' + i; const checked = !!userProgress[uid];
-const aiInfo = typeof autoDetectTag === 'function' ? autoDetectTag(t.title + " " + (t.desc||"")) : {category:'日常'};
+let aiInfo = typeof autoDetectTag === 'function' ? autoDetectTag(t.title + " " + (t.desc||"")) : {category:'日常'};
+if (t.emoji) aiInfo.emoji = t.emoji;
+if (t.color) aiInfo.color = t.color;
 const displayTag = t.tag || (aiInfo.category !== '日常' ? aiInfo.label : '');
 const aiPrefix = (aiInfo.emoji && aiInfo.category !== '日常') ? `<span class="mr-2 opacity-80 text-cyan-200 text-xs">${aiInfo.emoji}</span>` : '';
 let timeInfoHtml = '';

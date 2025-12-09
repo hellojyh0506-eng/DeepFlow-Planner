@@ -1035,8 +1035,7 @@ function changeDay(delta) {
             sortedTasks.forEach((task, renderIndex) => { 
                 const taskId = day.date + '-' + task.originalIndex;
                 const checked = !!userProgress[taskId]; 
-                
-                const aiInfo = typeof autoDetectTag === 'function' ? autoDetectTag(task.title + " " + (task.desc||"")) : {category:'日常'};
+                let aiInfo = typeof autoDetectTag === 'function' ? autoDetectTag(task.title + " " + (task.desc||"")) : {category:'日常'};if (task.emoji) aiInfo.emoji = task.emoji;if (task.color) aiInfo.color = task.color;
                 const displayTag = task.tag || (aiInfo.category !== '日常' ? aiInfo.label : ''); 
                 
                 let indicatorStyle = 'border-left-color: transparent;'; 
