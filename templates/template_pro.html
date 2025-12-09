@@ -25,19 +25,52 @@
         /* 滚动条隐藏工具类 (修复缺失) */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .bg-spotlight { 
-    position: fixed; 
-    top: -20%; 
-    left: -20%; 
-    width: 140vw; 
-    height: 140vh; 
-    z-index: -1; 
-    /* 核心修改：使用更细腻的径向渐变，制造“呼吸感”光晕 */
-    background: radial-gradient(circle at 50% 30%, var(--primary-light), transparent 60%); 
-    opacity: 1; 
-    transition: background 0.8s ease; 
-    pointer-events: none; 
+        /* --- 新增：动态背景与特效样式 --- */
+#particleCanvas { 
+    position: fixed; inset: 0; z-index: -2; pointer-events: none; 
+    mix-blend-mode: screen; /* 让粒子发光的关键 */
 }
+
+/* --- 修复版：背景动画 (完美适配手机) --- */
+#bg-gradient {
+    position: fixed; inset: 0; z-index: -5;
+    width: 100%; height: 100%; /* 强制宽高 */
+    transition: opacity 1s ease;
+    transform: translate3d(0,0,0); /* 开启硬件加速 */
+}
+
+/* 多巴胺混合模式 - 使用大尺寸背景移动 */
+.bg-mix-mode {
+    background: linear-gradient(135deg, #ff9a9e, #fad0c4, #fad0c4, #a18cd1, #fbc2eb);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+}
+
+/* 专注单色模式 */
+.bg-single-mode {
+    background: radial-gradient(circle at 50% 30%, var(--primary-light), transparent 80%),
+                linear-gradient(180deg, #ffffff 0%, #f0f2f5 100%);
+    background-size: 100% 100%;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* 强制修复图标颜色 */
+#headerIcon i, #headerIcon svg {
+    color: #ffffff !important; /* 强制白色，防止变量失效 */
+    stroke: #ffffff !important;
+}
+/* 特效菜单样式微调 */
+.visual-option {
+    padding: 8px; font-size: 12px; font-weight: bold; color: #555;
+    cursor: pointer; border-radius: 8px; transition: all 0.2s;
+    text-align: left;
+}
+.visual-option:hover { background: rgba(0,0,0,0.05); color: var(--primary); }
 .ios-card .blur-3xl {
     filter: blur(64px); /* 增大模糊半径 */
     opacity: 0.2;       /*稍微增加不透明度让颜色更显眼 */
@@ -174,29 +207,175 @@
         .pro-input { background: transparent; border: none; border-bottom: 2px solid var(--primary); font-size: 2rem; font-weight: 800; text-align: center; color: #1d1d1f; width: 80%; outline: none; margin-bottom: 10px; font-family: monospace; }
         
         /* 沉浸模式 */
-        #immersiveLayer { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.6s ease; }
-        #immersiveLayer.active { opacity: 1; pointer-events: auto; }
-        .aurora-bg { position: absolute; inset: -50%; background: radial-gradient(circle at 50% 50%, var(--primary), #000 70%); opacity: 0.6; filter: blur(100px); animation: pulse-aurora 8s ease-in-out infinite; }
-        @keyframes pulse-aurora { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 0.7; } }
-        .giant-time { font-size: 110px; font-weight: 800; color: white; font-variant-numeric: tabular-nums; letter-spacing: -2px; text-shadow: 0 0 40px var(--primary); position: relative; z-index: 10; }
-        #dockTime { cursor: pointer; transition: color 0.2s; }
-        #dockTime:hover { color: var(--primary); opacity: 0.8; }
+/* --- 沉浸模式 (主题跟随 + 手机适配版) --- */
+/* --- 沉浸模式 (最终修正版) --- */
+#immersiveLayer { 
+    position: fixed; inset: 0; z-index: 999; 
+    background: #0f172a; 
+    opacity: 0; pointer-events: none; transition: opacity 0.5s ease; 
+    overflow: hidden; 
+}
+#immersiveLayer.active { opacity: 1; pointer-events: auto; }
 
-        /* --- iOS Modal --- */
-        #proModalOverlay { position: fixed; inset: 0; z-index: 9999; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+/* 强制内容绝对居中容器 */
+.full-center-wrapper {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; 
+    align-items: center; justify-content: center;
+    z-index: 20; /* 确保在光团之上 */
+    width: 100%; height: 100%;
+}
+
+/* 光团样式 (保持流体感) */
+.immersive-blob {
+    position: absolute; border-radius: 50%;
+    filter: blur(60px); opacity: 0.8;
+    will-change: transform; mix-blend-mode: hard-light;
+    animation: flowMove 20s infinite alternate;
+}
+@media (max-width: 768px) {
+    .immersive-blob { width: 150vw; height: 150vw; opacity: 0.7; }
+}
+@media (min-width: 769px) {
+    .immersive-blob { width: 80vw; height: 80vw; filter: blur(100px); mix-blend-mode: screen; }
+}
+
+/* 颜色模式 */
+.im-mix { background: #1a0b2e; }
+.im-mix .blob-1 { top: -20%; left: -20%; background: #FF3B30; animation-duration: 25s; }
+.im-mix .blob-2 { bottom: -20%; right: -20%; background: #007AFF; animation-duration: 30s; animation-direction: alternate-reverse; }
+.im-mix .blob-3 { top: 40%; left: 10%; background: #FF9500; width: 120vw; height: 120vw; opacity: 0.5; animation: flowPulse 15s infinite; }
+
+.im-single { background: #000; }
+.im-single .blob-1 { top: -30%; left: -30%; background: var(--primary); opacity: 0.4; }
+.im-single .blob-2 { bottom: -30%; right: -30%; background: var(--primary); opacity: 0.3; }
+.im-single .blob-3 { top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--primary); opacity: 0.15; width: 180vw; height: 180vw; animation: flowPulse 10s infinite; }
+
+/* 动画关键帧 */
+@keyframes flowMove { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(15%, 10%) scale(1.1); } }
+@keyframes flowPulse { 0%, 100% { transform: scale(1); opacity: 0.3; } 50% { transform: scale(1.1); opacity: 0.5; } }
+
+/* 文本与按钮优化 */
+.flow-label {
+    font-size: 12px; font-weight: 800; letter-spacing: 0.5em; 
+    color: rgba(255,255,255,0.6); text-transform: uppercase; 
+    margin-bottom: 2vh; text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+.giant-time { 
+    font-size: 20vw; font-weight: 800; color: white; 
+    font-variant-numeric: tabular-nums; letter-spacing: -2px; 
+    text-shadow: 0 10px 30px rgba(0,0,0,0.3); margin-bottom: 8vh;
+}
+@media (min-width: 768px) { .giant-time { font-size: 140px; margin-bottom: 60px; } }
+
+/* --- 按钮分级系统 (关键修改) --- */
+/* 主按钮 (大) */
+.btn-hero {
+    width: 88px; height: 88px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.btn-hero:active { transform: scale(0.9); background: rgba(255,255,255,0.25); }
+
+/* 副按钮 (小且透明) */
+.btn-sub {
+    width: 50px; height: 50px;
+    border-radius: 50%;
+    background: transparent; /* 透明背景 */
+    border: 1px solid rgba(255,255,255,0.1); /* 极细边框 */
+    color: rgba(255,255,255,0.6); /* 灰色图标 */
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+}
+.btn-sub:active { background: rgba(255, 59, 48, 0.2); border-color: #FF3B30; color: #FF3B30; transform: scale(0.95); }
+        /* --- 多巴胺专业 Modal --- */
+        #proModalOverlay { 
+            position: fixed; inset: 0; z-index: 9999; 
+            background: rgba(0, 0, 0, 0.4); 
+            backdrop-filter: blur(8px); 
+            display: flex; align-items: center; justify-content: center; 
+            opacity: 0; pointer-events: none; transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); 
+        }
         #proModalOverlay.show { opacity: 1; pointer-events: auto; }
-        .ios-modal { width: 280px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px); border-radius: 14px; text-align: center; overflow: hidden; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2); transform: scale(1.1); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        #proModalOverlay.show .ios-modal { transform: scale(1); }
-        .ios-modal-header { padding: 20px 16px 10px; }
-        .ios-modal-title { font-weight: 700; font-size: 17px; color: #000; margin-bottom: 4px; }
-        .ios-modal-desc { font-size: 13px; color: #666; line-height: 1.4; }
-        .ios-modal-input { margin: 10px 0 0; width: 100%; padding: 6px; font-size: 14px; border: 1px solid #ccc; border-radius: 6px; background: #fff; outline: none; text-align: center; }
-        .ios-modal-input:focus { border-color: var(--primary); }
-        .ios-modal-actions { display: flex; border-top: 0.5px solid rgba(60, 60, 67, 0.29); }
-        .ios-modal-btn { flex: 1; padding: 12px 0; font-size: 17px; color: #007AFF; background: transparent; border: none; cursor: pointer; border-right: 0.5px solid rgba(60, 60, 67, 0.29); font-weight: 400; }
-        .ios-modal-btn:last-child { border-right: none; font-weight: 600; }
-        .ios-modal-btn:active { background: rgba(0,0,0,0.1); }
-        .ios-modal-btn.destructive { color: #FF3B30; }
+        
+        .deepflow-modal { 
+            width: 300px; /* 略微增大 */
+            background: rgba(255, 255, 255, 0.95); /* 更不透明 */
+            backdrop-filter: blur(30px); 
+            border-radius: 20px; /* 更圆润 */
+            overflow: hidden; 
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25); 
+            transform: translateY(20px) scale(0.9); 
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+        #proModalOverlay.show .deepflow-modal { transform: translateY(0) scale(1); }
+        
+        .df-modal-header { padding: 24px 24px 16px; text-align: center; }
+        .df-modal-title { font-weight: 800; font-size: 20px; color: #1d1d1f; margin-bottom: 4px; }
+        .df-modal-desc { font-size: 14px; color: #64748b; line-height: 1.5; }
+        .df-modal-input { 
+            margin: 15px 0 10px; width: 100%; 
+            padding: 10px 16px; font-size: 16px; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 12px; 
+            background: #f8fafc; 
+            outline: none; 
+            text-align: center; 
+            font-weight: 600;
+            color: #1d1d1f;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .df-modal-input:focus { 
+            border-color: var(--primary); 
+            background: #fff;
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        
+        .df-modal-actions { 
+            display: flex; 
+            padding: 16px 24px;
+            background: #f8fafc; /* 底部操作区背景 */
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .df-modal-btn { 
+            flex: 1; 
+            padding: 12px; 
+            font-size: 15px; 
+            font-weight: 700; 
+            border: none; 
+            cursor: pointer; 
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        
+        .df-btn-cancel { 
+            background: #e2e8f0; 
+            color: #475569; 
+            margin-right: 8px; 
+        }
+        .df-btn-cancel:hover { background: #cbd5e1; }
+        .df-btn-cancel:active { transform: scale(0.98); }
+
+        .df-btn-confirm { 
+            background: var(--primary); 
+            color: white; 
+            box-shadow: 0 4px 12px var(--primary-light); 
+        }
+        .df-btn-confirm:hover { filter: brightness(1.05); }
+        .df-btn-confirm:active { transform: scale(0.98); }
+        
+        .df-btn-confirm.destructive { 
+            background: #FF3B30; 
+            box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
+        }
         
         /* --- Pro Theme Noise UI --- */
         #noiseOrb {
@@ -266,30 +445,131 @@
             opacity: 1 !important;
             transform: translate(-50%, 0) !important;
         }
+        /* --- 🎮 游戏化系统样式 --- */
+#profileModalOverlay.show { opacity: 1; pointer-events: auto; }
+#profileModalOverlay.show #profileModalContent { transform: scale(1); }
+
+.xp-bar-container { 
+    width: 100%; height: 10px; background: #f1f5f9; 
+    border-radius: 99px; overflow: hidden; position: relative;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+}
+.xp-bar-fill { 
+    height: 100%; 
+    background: linear-gradient(90deg, #4f46e5, #9333ea); 
+    width: 0%; 
+    border-radius: 99px;
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 0 10px rgba(147, 51, 234, 0.3);
+}
+
+.badge-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.badge-item { 
+    aspect-ratio: 1; background: #f8fafc; border-radius: 16px; 
+    display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px; 
+    transition: all 0.3s; border: 1px solid #e2e8f0; opacity: 0.4; filter: grayscale(100%); 
+}
+.badge-item.unlocked { 
+    opacity: 1; filter: grayscale(0%); background: #fff; 
+    box-shadow: 0 8px 20px -4px rgba(0,0,0,0.1); border-color: #e0e7ff; transform: translateY(-2px);
+}
+.badge-name { font-size: 10px; font-weight: 700; color: #64748b; text-align: center; line-height: 1.1; }
+/* --- 排行榜与Tab样式 --- */
+.rank-filter-btn {
+    padding: 6px 12px; border-radius: 99px; font-size: 12px; font-weight: bold; color: #64748b; background: transparent; border: 1px solid transparent; transition: all 0.2s; white-space: nowrap;
+}
+.rank-filter-btn.active {
+    background: var(--primary); color: white; box-shadow: 0 4px 10px var(--primary-light);
+}
+.rank-row {
+    display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid #f1f5f9; transition: background 0.2s;
+}
+.rank-row:last-child { border-bottom: none; }
+.rank-num {
+    font-size: 14px; font-weight: 900; width: 30px; color: #94a3b8; font-style: italic;
+}
+.rank-1 .rank-num { color: #eab308; font-size: 18px; text-shadow: 0 2px 4px rgba(234, 179, 8, 0.2); }
+.rank-2 .rank-num { color: #94a3b8; font-size: 16px; }
+.rank-3 .rank-num { color: #b45309; font-size: 16px; }
+
+.rank-avatar {
+    width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-size: 14px;
+}
+.rank-name {
+    flex: 1; font-size: 13px; font-weight: 600; color: #334155;
+}
+.rank-val {
+    font-family: monospace; font-weight: 700; color: var(--primary); font-size: 14px;
+}
+.rank-row.is-me {
+    background: var(--primary-light); position: relative;
+}
+.rank-row.is-me::after {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--primary);
+}
     </style>
 </head>
 
 <body class="h-screen flex flex-col overflow-hidden {{BODY_CLASS}}">
-    <div class="bg-spotlight theme-transition"></div>
+    <canvas id="particleCanvas"></canvas>
+<div id="bg-gradient" class="bg-mix-mode"></div>
     
     <header class="ios-card z-40 relative m-3 md:m-4 rounded-2xl flex-none">
-        <div class="px-5 py-3 flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <div id="headerIcon" class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-colors duration-500 theme-transition" style="background: var(--primary)"><i data-lucide="trophy" class="w-5 h-5 theme-transition" style="color: var(--text-on-primary)"></i></div>
-                <div><div class="flex items-center gap-2 group cursor-pointer" onclick="openRenameModal()"><h1 id="planTitleText" class="text-lg font-black tracking-tight text-slate-800">{{PLAN_TITLE}}</h1><i data-lucide="edit-3" class="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500"></i></div><div id="modeLabel" class="text-[10px] font-bold text-slate-400 tracking-wide">DOPAMINE MIX</div></div>
+    <div class="px-4 py-3 md:px-5 flex justify-between items-center">
+        <div class="flex items-center gap-3 md:gap-4 overflow-hidden">
+            <div id="headerIcon" onclick="openProfileModal()" class="flex-none w-11 h-11 rounded-xl flex flex-col items-center justify-center shadow-lg transition-transform duration-200 active:scale-90 cursor-pointer theme-transition relative" style="background: var(--primary)">
+                
+                <i data-lucide="trophy" class="w-5 h-5 text-white mb-0.5"></i>
+                
+                <span class="text-[8px] font-black text-white leading-none">XP</span>
             </div>
-            <div class="flex items-center gap-4">
-                <div class="palette-btn reset-btn" onclick="openResetModal()" title="重置进度"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></div>
-                <div class="palette-wrapper">
-                    <div class="palette-btn theme-transition" onclick="togglePalette(event)" title="更改主题色" style="background: var(--primary)"><i data-lucide="palette" class="w-4 h-4 theme-transition" style="color: var(--text-on-primary)"></i></div>
-                    <div id="palettePopover" class="palette-popover"></div>
-                    <input type="color" id="customPickerInput" onchange="switchToSingleColor(this.value)">
+            
+            <div class="flex flex-col justify-center min-w-0">
+                <div class="flex items-center gap-2 group cursor-pointer" onclick="openRenameModal()">
+                    <h1 id="planTitleText" class="text-lg font-black tracking-tight text-slate-800 truncate">{{PLAN_TITLE}}</h1>
+                    <i data-lucide="edit-3" class="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500 flex-none"></i>
                 </div>
-                <div class="text-right hidden sm:block"><div class="text-[10px] text-slate-400 font-bold uppercase">Progress</div><div class="font-black text-lg leading-none transition-colors theme-transition" style="color: var(--primary)" id="totalCompletionDisplay">0%</div></div>
+                <div id="modeLabel" class="hidden sm:block text-[10px] font-bold text-slate-400 tracking-wide">DOPAMINE MIX</div>
             </div>
         </div>
-        <div class="h-1 w-full bg-slate-100 overflow-hidden rounded-b-2xl relative"><div id="overallProgressBar" class="absolute h-full transition-all duration-700 w-0 theme-transition" style="background: var(--primary)"></div></div>
-    </header>
+
+        <div class="flex items-center gap-2 md:gap-4 flex-none">
+            <div class="palette-btn reset-btn" onclick="openResetModal()" title="重置进度">
+                <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+            </div>
+            
+            <div class="palette-wrapper">
+                <div style="position: relative; display: flex; gap: 8px;">
+                    <div class="palette-btn visual-btn" onclick="toggleVisualMenu(event)" title="切换特效" style="background: rgba(255,255,255,0.8); color: #333;">
+                        <i data-lucide="wand-2" class="w-4 h-4"></i>
+                    </div>
+                    <div id="visualPopover" class="palette-popover" style="width: 140px; grid-template-columns: 1fr; right: 0; left: auto;">
+                        <div class="visual-option" onclick="setVisualMode('off')">🚫 关闭特效</div>
+                        <div class="visual-option" onclick="setVisualMode('sakura')">🌸 浪漫樱花</div>
+                        <div class="visual-option" onclick="setVisualMode('bubbles')">🫧 梦幻气泡</div>
+                        <div class="visual-option" onclick="setVisualMode('meteor')">🌠 极速流星</div>
+                        <div class="visual-option" onclick="setVisualMode('fireflies')">✨ 夏夜萤火</div>
+                    </div>
+                    
+                    <div class="palette-btn theme-transition" onclick="togglePalette(event)" style="background: var(--primary)">
+                        <i data-lucide="palette" class="w-4 h-4 text-white"></i>
+                    </div>
+                </div>
+
+                <div id="palettePopover" class="palette-popover"></div>
+                <input type="color" id="customPickerInput" onchange="switchToSingleColor(this.value)">
+            </div>
+
+            <div class="text-right hidden sm:block">
+                <div class="text-[10px] text-slate-400 font-bold uppercase">总体完成度</div>
+                <div class="font-black text-lg leading-none transition-colors theme-transition" style="color: var(--primary)" id="totalCompletionDisplay">0%</div>
+            </div>
+        </div>
+    </div>
+    <div class="h-1 w-full bg-slate-100 overflow-hidden rounded-b-2xl relative">
+        <div id="overallProgressBar" class="absolute h-full transition-all duration-700 w-0 theme-transition" style="background: var(--primary)"></div>
+    </div>
+</header>
     
     <div class="flex flex-1 overflow-hidden max-w-7xl mx-auto w-full px-3 md:px-4 pb-4">
         <aside class="hidden md:flex w-64 flex-col ios-card mr-4 rounded-2xl overflow-hidden my-0 flex-none">
@@ -311,7 +591,7 @@
                     <div class="absolute -right-8 -top-8 w-40 h-40 opacity-15 rounded-full blur-3xl transition-colors duration-700 theme-transition" style="background: var(--primary)"></div> 
                     <div class="relative z-10 flex justify-between items-end">
                         <div>
-                            <div class="flex items-center gap-2 mb-2"><span class="text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm" style="background: #1d1d1f">DAY <span id="dayCountDisplay">1</span></span></div>
+                            <div class="flex items-center gap-2 mb-2"><span class="text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm" style="background: #1d1d1f"> 第<span id="dayCountDisplay">1</span>天 </span></div>
                             <h2 class="text-3xl md:text-4xl font-black text-slate-800 tracking-tight" id="currentDateDisplay">--</h2>
                             <div class="mt-4 flex items-center gap-3"><div class="w-32 h-2 bg-slate-100 rounded-full overflow-hidden"><div id="dailyProgressBar" class="h-full transition-all duration-500 w-0 theme-transition" style="background: var(--primary)"></div></div><span class="text-xs font-mono font-bold text-slate-400" id="dailyProgressText">0/0</span></div>
                         </div>
@@ -326,14 +606,117 @@
     
     <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 flex items-center gap-3 px-5 py-2.5 bg-slate-900/90 backdrop-blur text-white rounded-full shadow-2xl transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none z-[100]"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i><span id="toastMsg" class="font-bold text-xs tracking-wide">已完成</span></div>
     
-    <div id="ritualOverlay" class="fixed inset-0 z-40 flex flex-col items-center justify-center bg-white/80 backdrop-blur-xl transition-all duration-500" style="display: none;"><div class="ios-card p-10 rounded-3xl shadow-2xl max-w-sm w-full text-center border border-white"><div class="lock-icon-bg mb-6 inline-flex p-5 rounded-full shadow-sm theme-transition" style="background: var(--primary-light)"><i data-lucide="lock" class="w-8 h-8 theme-transition" style="color: var(--primary)"></i></div><h3 class="text-2xl font-black text-slate-800 mb-2">Ready?</h3><p class="text-slate-500 text-sm mb-8 px-2">今日任务已锁定。点击开始，全情投入。</p><button onclick="startDay()" class="w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-transform hover:-translate-y-0.5 active:scale-95 theme-transition" style="background: var(--primary)">开启今日计划</button></div></div>
+    <div id="ritualOverlay" class="fixed inset-0 z-40 flex flex-col items-center justify-center bg-white/80 backdrop-blur-xl transition-all duration-500" style="display: none;"><div class="ios-card p-10 rounded-3xl shadow-2xl max-w-sm w-full text-center border border-white"><div class="lock-icon-bg mb-6 inline-flex p-5 rounded-full shadow-sm theme-transition" style="background: var(--primary-light)"><i data-lucide="lock" class="w-8 h-8 theme-transition" style="color: var(--primary)"></i></div><h3 class="text-2xl font-black text-slate-800 mb-2">整装待发</h3><p class="text-slate-500 text-sm mb-8 px-2">今日计划已锁定。心无旁骛，方得始终。</p><button onclick="startDay()" class="w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-transform hover:-translate-y-0.5 active:scale-95 theme-transition" style="background: var(--primary)">开启今日专注之旅</button></div></div>
 
-    <div id="proModalOverlay"><div class="ios-modal"><div class="ios-modal-header"><div class="ios-modal-title" id="proModalTitle">Title</div><div class="ios-modal-desc" id="proModalDesc">Description</div><input type="text" id="proModalInput" class="ios-modal-input" style="display: none;"></div><div class="ios-modal-actions"><button class="ios-modal-btn" onclick="closeProModal()">取消</button><button class="ios-modal-btn" id="proModalConfirmBtn" onclick="">确定</button></div></div></div>
+    <div id="proModalOverlay"><div class="deepflow-modal"><div class="df-modal-header"><div class="df-modal-title" id="proModalTitle">Title</div><div class="df-modal-desc" id="proModalDesc">Description</div><input type="text" id="proModalInput" class="df-modal-input" style="display: none;"></div><div class="df-modal-actions"><button class="df-modal-btn df-btn-cancel" onclick="closeProModal()">取消</button><button class="df-modal-btn df-btn-confirm" id="proModalConfirmBtn" onclick="">确定</button></div></div></div>
+    <div id="profileModalOverlay" class="fixed inset-0 z-[10000] bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300" onclick="if(event.target===this) closeProfileModal()">
+    <div id="xpTipModalOverlay" class="fixed inset-0 z-[10001] bg-black/50 backdrop-blur-sm flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+    <div id="xpTipModal" class="bg-white/95 backdrop-blur-2xl w-80 rounded-2xl p-6 shadow-2xl transform scale-95 transition-all duration-300 text-center" onclick="event.stopPropagation();">
+        <div class="inline-flex p-4 rounded-full mb-4" style="background: var(--primary-light)"><i data-lucide="trophy" class="w-6 h-6" style="color: var(--primary)"></i></div>
+        <h3 class="text-xl font-black text-slate-800 mb-2">🎉 境界提升!</h3>
+        <p class="text-sm text-slate-600 mb-6">经验等级排行榜已解锁。点击 **左上角奖杯图标** 即可查看你的修行阅历和全球排名。</p>
+        <div class="flex gap-3">
+            <button onclick="disableXpTip()" class="flex-1 py-3 rounded-xl font-bold text-sm text-slate-500 hover:bg-slate-100 transition">不再提示</button>
+            <button onclick="showProfileModalAndCloseTip()" class="flex-1 py-3 rounded-xl font-bold text-white shadow-lg theme-transition active:scale-95" style="background: var(--primary)">立即查看</button>
+        </div>
+    </div>
+</div>
+    <div class="bg-white/95 backdrop-blur-2xl w-[95%] max-w-md rounded-[32px] p-6 shadow-2xl transform scale-95 transition-all duration-300 flex flex-col max-h-[85vh]" id="profileModalContent">
+        
+        <div class="flex justify-between items-center mb-4 flex-none">
+            <div class="flex gap-2 bg-slate-100/80 p-1 rounded-xl">
+                <button onclick="switchProfileTab('me')" id="tab-me" class="px-4 py-1.5 rounded-lg text-sm font-bold transition-all bg-white shadow-sm text-slate-800">我的修业</button>
+                <button onclick="switchProfileTab('rank')" id="tab-rank" class="px-4 py-1.5 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-slate-600">琅琊榜</button>
+            </div>
+            <button onclick="closeProfileModal()" class="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition"><i data-lucide="x" class="w-5 h-5 text-slate-500"></i></button>
+        </div>
     
-    <div id="focusDockWrapper"><div id="dockTooltip" class="show"><span>启动心流进程</span> <i data-lucide="activity" class="w-4 h-4"></i></div><div id="dockOrb"><i data-lucide="activity" class="w-6 h-6 dock-icon theme-transition" style="color: var(--primary)"></i></div><div id="dockPanel"><div class="flex justify-between items-center mb-6"><span class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">PHYSIO-SYNC CLOCK</span><button onclick="toggleDock()" class="p-1 hover:bg-slate-100 rounded-full"><i data-lucide="x" class="w-4 h-4 text-slate-400"></i></button></div><div class="flex items-center justify-between mb-6 bg-slate-50 rounded-2xl p-2 relative overflow-hidden"><button onclick="adjustTime(-5)" class="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-white text-slate-400 font-bold transition active:scale-95">-5</button><div id="dockTime" onclick="showTimeInput()" title="点击修改时间" class="text-4xl font-black text-slate-800 font-mono tracking-tight cursor-pointer hover:opacity-80 transition">25:00</div><button onclick="adjustTime(5)" class="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-white text-slate-400 font-bold transition active:scale-95">+5</button><div id="customTimeOverlay"><input type="text" id="customTimeInput" class="pro-input" placeholder="25:00" onkeydown="if(event.key==='Enter') submitTime()"><div class="flex gap-2"><button onclick="submitTime()" class="text-xs bg-slate-900 text-white px-3 py-1 rounded-lg">确认</button><button onclick="hideTimeInput()" class="text-xs text-slate-400 px-2 py-1">取消</button></div></div></div><button id="mainBtn" onclick="toggleTimer()" class="w-full py-4 rounded-xl font-bold text-white shadow-lg shadow-blue-500/20 active:scale-95 transition flex items-center justify-center gap-2 mb-2 theme-transition" style="background: var(--primary)"><i data-lucide="play" class="w-4 h-4"></i> <span>开始</span></button><button onclick="enterImmersive()" class="w-full py-3 rounded-xl font-bold text-slate-500 border border-slate-200 hover:bg-slate-50 active:scale-95 transition text-xs flex items-center justify-center gap-2"><i data-lucide="maximize" class="w-3 h-3"></i> 流光模式</button></div></div>
+        <div class="overflow-y-auto flex-1 no-scrollbar pr-1">
+            
+            <div id="view-me">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl shadow-lg shadow-blue-500/30 flex-none">
+                        <i data-lucide="trophy"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800" id="profileLevelTitle">Level 1 初窥门径</h2>
+                        <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">修行阅历: <span id="xpCount" class="text-slate-600">0</span></div>
+                    </div>
+                </div>
     
-    <div id="immersiveLayer"><div class="aurora-bg theme-transition" style="background: radial-gradient(circle at 50% 50%, var(--primary), #000 70%);"></div><div class="z-10 text-center"><div class="text-white/50 text-sm font-bold tracking-[0.2em] mb-4 uppercase">Flow State</div><div id="immTime" class="giant-time mb-12">25:00</div><div class="flex gap-8 justify-center"><button onclick="toggleTimer()" class="p-6 rounded-full bg-white/10 backdrop-blur border border-white/20 text-white hover:bg-white/20 transition active:scale-95"><i id="immIcon" data-lucide="pause" class="w-8 h-8"></i></button><button onclick="exitImmersive()" class="p-6 rounded-full bg-white/10 backdrop-blur border border-white/20 text-white hover:bg-red-500/20 hover:border-red-500 hover:text-red-400 transition active:scale-95"><i data-lucide="x" class="w-8 h-8"></i></button></div></div></div>
+                <div class="mb-8">
+                    <div class="flex justify-between text-xs font-bold text-slate-400 mb-2">
+                        <span>当前进境</span>
+                        <span class="text-indigo-600">距离下一境界: <span id="nextLevelXp">100</span> XP</span>
+                    </div>
+                    <div class="xp-bar-container">
+                        <div id="xpBarFill" class="xp-bar-fill"></div>
+                    </div>
+                </div>
     
+                <div class="grid grid-cols-3 gap-3 mb-8">
+                    <div class="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100">
+                        <div class="text-xl font-black text-orange-500 flex items-baseline justify-center gap-0.5"><span id="streakCount">0</span><small class="text-[10px] text-orange-300">天</small></div>
+                        <div class="text-[10px] font-bold text-slate-400">日积跬步</div>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100">
+                        <div class="text-xl font-black text-blue-500 flex items-baseline justify-center gap-0.5"><span id="totalTasksCount">0</span><small class="text-[10px] text-blue-300">项</small></div>
+                        <div class="text-[10px] font-bold text-slate-400">硕果累累</div>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100">
+                        <div class="text-xl font-black text-purple-500 flex items-baseline justify-center gap-0.5"><span id="focusCount">0</span><small class="text-[10px] text-purple-300">分</small></div>
+                        <div class="text-[10px] font-bold text-slate-400">心流禅定</div>
+                    </div>
+                </div>
+    
+                <div>
+                    <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-sm"><i data-lucide="medal" class="w-4 h-4 text-yellow-500"></i> 荣誉勋章 <span class="text-xs font-normal text-slate-400 ml-auto">点击查看条件</span></h3>
+                    <div class="badge-grid" id="badgesGrid"></div>
+                </div>
+            </div>
+    
+            <div id="view-rank" style="display: none;">
+                <div class="flex gap-2 mb-4 overflow-x-auto no-scrollbar pb-1">
+                    <button onclick="renderLeaderboard('xp')" class="rank-filter-btn active" data-type="xp">阅历榜</button>
+                    <button onclick="renderLeaderboard('focus')" class="rank-filter-btn" data-type="focus">禅定榜</button>
+                    <button onclick="renderLeaderboard('streak')" class="rank-filter-btn" data-type="streak">毅力榜</button>
+                </div>
+                
+                <div class="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden" id="leaderboardList">
+                    </div>
+                <div class="text-center mt-4 text-[10px] text-slate-300">排行榜数据每小时更新 · 与全球学友共勉</div>
+            </div>
+    
+        </div>
+    </div>
+</div>
+    <div id="focusDockWrapper"><div id="dockTooltip" class="show"><span>启动心流进程</span> <i data-lucide="activity" class="w-4 h-4"></i></div><div id="dockOrb"><i data-lucide="activity" class="w-6 h-6 dock-icon theme-transition" style="color: var(--primary)"></i></div><div id="dockPanel"><div class="flex justify-between items-center mb-6"><span class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">   番   茄   钟   🍅</span><button onclick="toggleDock()" class="p-1 hover:bg-slate-100 rounded-full"><i data-lucide="x" class="w-4 h-4 text-slate-400"></i></button></div><div class="flex items-center justify-between mb-6 bg-slate-50 rounded-2xl p-2 relative overflow-hidden"><button onclick="adjustTime(-5)" class="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-white text-slate-400 font-bold transition active:scale-95">-5</button><div id="dockTime" onclick="showTimeInput()" title="点击修改时间" class="text-4xl font-black text-slate-800 font-mono tracking-tight cursor-pointer hover:opacity-80 transition">25:00</div><button onclick="adjustTime(5)" class="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-white text-slate-400 font-bold transition active:scale-95">+5</button><div id="customTimeOverlay"><input type="text" id="customTimeInput" class="pro-input" placeholder="25:00" onkeydown="if(event.key==='Enter') submitTime()"><div class="flex gap-2"><button onclick="submitTime()" class="text-xs bg-slate-900 text-white px-3 py-1 rounded-lg">确认</button><button onclick="hideTimeInput()" class="text-xs text-slate-400 px-2 py-1">取消</button></div></div></div><button id="mainBtn" onclick="toggleTimer()" class="w-full py-4 rounded-xl font-bold text-white shadow-lg shadow-blue-500/20 active:scale-95 transition flex items-center justify-center gap-2 mb-2 theme-transition" style="background: var(--primary)"><i data-lucide="play" class="w-4 h-4"></i> <span>开始</span></button><button onclick="enterImmersive()" class="w-full py-3 rounded-xl font-bold text-slate-500 border border-slate-200 hover:bg-slate-50 active:scale-95 transition text-xs flex items-center justify-center gap-2"><i data-lucide="maximize" class="w-3 h-3"></i> 流光模式</button></div></div>
+    
+    <div id="immersiveLayer" class="im-mix"> 
+    <div class="immersive-blob blob-1"></div>
+    <div class="immersive-blob blob-2"></div>
+    <div class="immersive-blob blob-3"></div>
+
+    <div class="full-center-wrapper">
+        <div class="flow-label">FLOW STATE</div>
+        <div id="immTime" class="giant-time">25:00</div>
+        
+        <div class="flex items-center gap-10">
+            <button onclick="exitImmersive()" class="btn-sub" title="退出">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+
+            <button onclick="toggleTimer()" class="btn-hero">
+                <i id="immIcon" data-lucide="pause" class="w-10 h-10 fill-current"></i>
+            </button>
+            
+            <button onclick="toggleSFX()" class="btn-sub" title="静音">
+                <i data-lucide="volume-2" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </div>
+</div>
+</div>
     <div id="noiseDockWrapper" style="position: fixed; bottom: 100px; left: 20px; z-index: 20000; touch-action: none;">
         <div id="noiseTooltip" style="position: absolute; left: 70px; top: 50%; transform: translateY(-50%); background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); color: #1d1d1f; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 600; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.5s; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05);">
             白噪音 & 音效设置
@@ -343,33 +726,33 @@
             <i data-lucide="headphones" class="w-6 h-6 pointer-events-none relative z-10"></i>
         </div>
         
-        <div id="noisePanel" style="position: absolute; bottom: 0; width: 260px; padding: 20px; border-radius: 20px; display: none; opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 20001;">
-            <div class="flex justify-between items-center mb-4">
-                <div class="flex items-center gap-2">
-                    <span class="text-[10px] font-bold uppercase tracking-widest opacity-60">Soundscape</span>
-                    <button id="sfxToggleBtn" onclick="toggleSFX()" class="text-[10px] bg-slate-100 px-2 py-1 rounded-md text-slate-500 font-bold hover:bg-slate-200 transition-colors flex items-center gap-1">
-                        <i data-lucide="volume-2" class="w-3 h-3"></i> UI音
-                    </button>
-                </div>
-                <input type="range" min="0" max="1" step="0.1" value="0.6" oninput="changeNoiseVolume(this.value)" class="w-20 h-1 rounded-lg appearance-none bg-gray-500/30 cursor-pointer accent-current">
-            </div>
-            
-            <div class="grid grid-cols-4 gap-3 mb-4">
-                <div class="noise-card relative" onclick="playNoise('rain')"><i data-lucide="cloud-rain"></i></div>
-                <div class="noise-card relative" onclick="playNoise('ocean')"><i data-lucide="waves"></i></div>
-                <div class="noise-card relative" onclick="playNoise('forest')"><i data-lucide="trees"></i></div>
-                <div class="noise-card relative" onclick="playNoise('fire')"><i data-lucide="flame"></i></div>
-                <div class="noise-card relative" onclick="playNoise('cafe')"><i data-lucide="coffee"></i></div>
-                <div class="noise-card relative" onclick="playNoise('train')"><i data-lucide="train"></i></div>
-                <div class="noise-card relative" onclick="playNoise('night')"><i data-lucide="moon"></i></div>
-                <div class="noise-card relative" onclick="playNoise('keyboard')"><i data-lucide="keyboard"></i></div>
-            </div>
-            
-            <button id="noiseStopBtn" onclick="stopAllNoise()" class="w-full text-xs py-2 rounded-lg font-bold opacity-60 hover:opacity-100 transition border border-current flex items-center justify-center gap-2">
-                <i data-lucide="square" class="w-3 h-3"></i> 停止播放
+        <div id="noisePanel" style="position: absolute; bottom: 0; width: 260px; padding: 24px; border-radius: 24px; display: none; opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 20001; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(30px); box-shadow: 0 20px 50px -12px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.8);">
+    
+    <div class="flex justify-between items-center mb-5">
+        <div class="flex items-center gap-2">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">白 噪 音 </span>
+            <button id="sfxToggleBtn" onclick="toggleSFX()" class="text-[10px] bg-slate-100 px-2 py-1 rounded-md text-slate-500 font-bold hover:bg-slate-200 transition-colors flex items-center gap-1">
+                <i data-lucide="volume-2" class="w-3 h-3"></i> 交互音
             </button>
         </div>
+        <input type="range" min="0" max="1" step="0.1" value="0.6" oninput="changeNoiseVolume(this.value)" class="w-20 h-1.5 rounded-lg appearance-none bg-slate-200 cursor-pointer accent-slate-600">
     </div>
+    
+    <div class="grid grid-cols-4 gap-3 mb-5">
+        <div class="noise-card relative" onclick="playNoise('rain')" title="空山新雨"><i data-lucide="cloud-rain"></i></div>
+        <div class="noise-card relative" onclick="playNoise('ocean')" title="沧海听涛"><i data-lucide="waves"></i></div>
+        <div class="noise-card relative" onclick="playNoise('forest')" title="林间蝉鸣"><i data-lucide="trees"></i></div>
+        <div class="noise-card relative" onclick="playNoise('fire')" title="红泥火炉"><i data-lucide="flame"></i></div>
+        <div class="noise-card relative" onclick="playNoise('cafe')" title="市井喧嚣"><i data-lucide="coffee"></i></div>
+        <div class="noise-card relative" onclick="playNoise('train')" title="远行旅途"><i data-lucide="train"></i></div>
+        <div class="noise-card relative" onclick="playNoise('night')" title="静谧夏夜"><i data-lucide="moon"></i></div>
+        <div class="noise-card relative" onclick="playNoise('keyboard')" title="妙笔生花"><i data-lucide="keyboard"></i></div>
+    </div>
+    
+    <button id="noiseStopBtn" onclick="stopAllNoise()" class="w-full text-xs py-2.5 rounded-xl font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition border border-slate-200 flex items-center justify-center gap-2">
+        <i data-lucide="square" class="w-3 h-3"></i> 停止播放
+    </button>
+</div>
 
     <script>
         
@@ -402,12 +785,364 @@ window.addEventListener('load', initLucideSafe);
         const RAW_DATA = '{{TASKS_DATA}}';
         const OSS_BASE = "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com";
         const NOISE_BASE = "https://deepflow-hellojyh-audio.oss-cn-hangzhou.aliyuncs.com/audio/ambience/";
+        // --- ⭐ 新增：粒子特效引擎 (Particle Engine) ⭐ ---
+// --- ⭐ 终极修复版：高清粒子引擎 (适配手机 Retina 屏) ⭐ ---
+const PARTICLE_ENGINE = {
+    canvas: null, ctx: null, width: 0, height: 0, particles: [], animationId: null, mode: 'off',
+    init: function() {
+        this.canvas = document.getElementById('particleCanvas');
+        if(!this.canvas) return;
+        this.ctx = this.canvas.getContext('2d');
+        this.resize();
+        
+        // 监听屏幕旋转和缩放，确保特效始终全屏
+        window.addEventListener('resize', () => this.resize());
+        
+        const savedMode = localStorage.getItem('pro_visual_mode') || 'sakura';
+        this.setMode(savedMode);
+    },
+    resize: function() { 
+        // 1. 获取设备像素比 (解决手机端显示一半或模糊的问题)
+        const dpr = window.devicePixelRatio || 1;
+        
+        // 2. 获取逻辑尺寸
+        this.width = window.innerWidth; 
+        this.height = window.innerHeight; 
+        
+        // 3. 设置 Canvas 物理像素尺寸 (高清)
+        this.canvas.width = this.width * dpr;
+        this.canvas.height = this.height * dpr;
+        
+        // 4. 强制 CSS 尺寸匹配视口
+        this.canvas.style.width = this.width + 'px';
+        this.canvas.style.height = this.height + 'px';
+        
+        // 5. 缩放绘图上下文，让我们后续的坐标计算可以直接用逻辑像素
+        this.ctx.scale(dpr, dpr);
+    },
+    setMode: function(mode) {
+        this.mode = mode; this.particles = [];
+        if(this.animationId) cancelAnimationFrame(this.animationId);
+        // 清除画布时要考虑到 DPI 缩放，清除足够大的区域
+        if(mode !== 'off') this.start(); else this.ctx.clearRect(0,0,this.width+100,this.height+100);
+    },
+    start: function() { this.loop(); },
+    createParticle: function() {
+        // 这里的坐标 (x, y) 使用的是逻辑像素，不用管 DPI，因为 resize 里已经 scale 过了
+        if(this.mode === 'meteor') {
+            return {
+                x: Math.random() * this.width, y: Math.random() * this.height * -0.5,
+                speed: Math.random() * 15 + 10, angle: Math.PI / 3, // 稍微减慢流星速度，手机观感更好
+                length: Math.random() * 200 + 100, width: Math.random() * 2 + 1,
+                type: 'meteor'
+            };
+        }
+        if(this.mode === 'sakura') return { x: Math.random() * this.width, y: -20, speed: Math.random() * 2 + 1, size: Math.random() * 8 + 4, oscillation: Math.random() * 2, type: 'sakura' };
+        if(this.mode === 'bubbles') return { x: Math.random() * this.width, y: this.height + 20, speed: Math.random() * 2 + 0.5, size: Math.random() * 20 + 5, color: `hsla(${Math.random()*360}, 80%, 70%, 0.6)`, wobble: Math.random() * Math.PI * 2, type: 'bubble' };
+        if(this.mode === 'fireflies') return { x: Math.random() * this.width, y: Math.random() * this.height, vx: (Math.random() - 0.5) * 1, vy: (Math.random() - 0.5) * 1, size: Math.random() * 3 + 1, opacity: Math.random(), fadeDir: 1, type: 'firefly' };
+    },
+    loop: function() {
+        if(this.mode === 'off') return;
+        
+        // 清除画布
+        this.ctx.clearRect(0, 0, this.width + 100, this.height + 100);
+        this.ctx.globalCompositeOperation = 'screen'; 
+
+        // 手机端减少粒子数量，提升性能
+        const isMobile = this.width < 768;
+        const maxParticles = isMobile ? 60 : 120; // 手机最多60个粒子
+
+        // 生成控制
+        let chance = 0.05;
+        if(this.mode === 'meteor') chance = 0.3;
+        if(this.mode === 'sakura') chance = 0.08;
+        if(Math.random() < chance && this.particles.length < maxParticles) this.particles.push(this.createParticle());
+
+        for(let i=0; i<this.particles.length; i++) {
+            let p = this.particles[i];
+            
+            // 绘制逻辑
+            if(p.type === 'meteor') {
+                p.x -= p.speed * Math.cos(p.angle); p.y += p.speed * Math.sin(p.angle);
+                const g = this.ctx.createLinearGradient(p.x, p.y, p.x + p.length * Math.cos(p.angle), p.y - p.length * Math.sin(p.angle));
+                g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(1, "rgba(255,255,255,0)");
+                this.ctx.strokeStyle = g; this.ctx.lineWidth = p.width; this.ctx.beginPath(); this.ctx.moveTo(p.x, p.y); this.ctx.lineTo(p.x + p.length*Math.cos(p.angle), p.y - p.length*Math.sin(p.angle)); this.ctx.stroke();
+                if(p.y > this.height + 200) { this.particles.splice(i, 1); i--; }
+            } 
+            else if (p.type === 'sakura') {
+                p.y += p.speed; p.x += Math.sin(p.oscillation) * 1.5; p.oscillation += 0.03;
+                this.ctx.fillStyle = "rgba(255, 192, 203, 0.8)"; this.ctx.beginPath(); this.ctx.arc(p.x, p.y, p.size/2, 0, Math.PI*2); this.ctx.fill();
+                if(p.y > this.height + 20) { this.particles.splice(i, 1); i--; }
+            }
+            else if (p.type === 'bubble') {
+                p.y -= p.speed; p.x += Math.sin(p.wobble); p.wobble += 0.03;
+                this.ctx.beginPath(); this.ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); this.ctx.fillStyle = p.color; this.ctx.fill();
+                this.ctx.beginPath(); this.ctx.arc(p.x - p.size*0.3, p.y - p.size*0.3, p.size*0.25, 0, Math.PI*2); this.ctx.fillStyle = "rgba(255,255,255,0.6)"; this.ctx.fill();
+                if(p.y < -50) { this.particles.splice(i, 1); i--; }
+            }
+            else if (p.type === 'firefly') {
+                p.x += p.vx; p.y += p.vy; p.opacity += 0.02 * p.fadeDir;
+                if(p.opacity > 1 || p.opacity < 0) p.fadeDir *= -1;
+                const g = this.ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 4);
+                g.addColorStop(0, `rgba(255, 255, 200, ${Math.abs(p.opacity)})`);
+                g.addColorStop(1, "rgba(255, 255, 200, 0)");
+                this.ctx.fillStyle = g; this.ctx.beginPath(); this.ctx.arc(p.x, p.y, p.size*4, 0, Math.PI*2); this.ctx.fill();
+                this.ctx.fillStyle = "#fff"; this.ctx.beginPath(); this.ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); this.ctx.fill();
+                if(p.x < 0 || p.x > this.width || p.y < 0 || p.y > this.height) { this.particles.splice(i, 1); i--; }
+            }
+        }
+        this.animationId = requestAnimationFrame(() => this.loop());
+    }
+};
+
+// 菜单控制函数
+function toggleVisualMenu(e) { 
+    if(e) e.stopPropagation(); 
+    const p = document.getElementById('visualPopover'); 
+    p.classList.toggle('active'); 
+}
+function setVisualMode(m) { 
+    localStorage.setItem('pro_visual_mode', m); 
+    PARTICLE_ENGINE.setMode(m); 
+    document.getElementById('visualPopover').classList.remove('active');
+    showToast("特效已切换"); 
+}
+// 点击空白处关闭菜单
+document.addEventListener('click', (e) => { 
+    if(!e.target.closest('.visual-btn')) {
+        const p = document.getElementById('visualPopover');
+        if(p) p.classList.remove('active');
+    }
+});
         
         let tasksData = []; let planId = 'pro_v4_demo';
         let userProgress = {}; let startedDays = []; 
         let currentMode = 'mix'; let currentSingleColor = DOPAMINE_COLORS[0]; let currentDayIdx = 0;
         let timer = null, timeLeft = 25 * 60, isRunning = false;
+        let currentSessionMin = 25;
+        // --- 🎮 修复版：XP 游戏化引擎 (Gamification Engine v2) ---
+const PROFILE_KEY = 'v4_profile_' + planId; // 绑定到当前计划ID
+
+// --- 1. [核心升级] 游戏化引擎 (增强版：更多成就+明确指引) ---
+const BADGES_CONFIG = [
+    // --- 基础篇 ---
+    { id: 'first_step', icon: 'footprints', name: '跬步千里', desc: '【条件】完成你的第 1 个任务', condition: (p) => p.totalTasks >= 1 },
+    { id: 'streak_3', icon: 'flame', name: '渐入佳境', desc: '【条件】连续打卡 3 天', condition: (p) => p.streak >= 3 },
+    { id: 'streak_7', icon: 'zap', name: '持之以恒', desc: '【条件】连续打卡 7 天', condition: (p) => p.streak >= 7 },
+    { id: 'streak_21', icon: 'award', name: '习惯养成', desc: '【条件】连续打卡 21 天', condition: (p) => p.streak >= 21 },
+
+    // --- 专注篇 ---
+    { id: 'focus_master', icon: 'brain', name: '心无旁骛', desc: '【条件】累计专注时长达到 100 分钟', condition: (p) => (p.focusMinutes || 0) >= 100 },
+    { id: 'deep_diver', icon: 'anchor', name: '深海潜行', desc: '【条件】累计专注时长达到 1000 分钟', condition: (p) => (p.focusMinutes || 0) >= 1000 },
+    { id: 'zen_mode', icon: 'lotus', name: '天人合一', desc: '【条件】单次专注时长设定超过 45 分钟并完成', condition: (p) => p.maxSession >= 45 },
+
+    // --- 任务篇 ---
+    { id: 'half_way', icon: 'mountain', name: '中流击水', desc: '【条件】总任务完成率超过 50%', condition: (p) => p.completionRate >= 50 },
+    { id: 'perfectionist', icon: 'crown', name: '尽善尽美', desc: '【条件】累计 3 天完成当日所有任务', condition: (p) => p.perfectDays >= 3 },
+    { id: 'task_hunter', icon: 'target', name: '赏金猎人', desc: '【条件】累计完成 50 个任务', condition: (p) => p.totalTasks >= 50 },
+
+    // --- 习惯篇 ---
+    { id: 'early_bird', icon: 'sunrise', name: '闻鸡起舞', desc: '【条件】在早上 9 点前完成一次打卡', condition: (p) => p.hasEarlyTask },
+    { id: 'night_owl', icon: 'moon', name: '挑灯夜战', desc: '【条件】在晚上 10 点后完成一次打卡', condition: (p) => p.hasLateTask },
+    { id: 'ai_user', icon: 'bot', name: '如虎添翼', desc: '【条件】使用过 AI 辅助或生成功能', condition: (p) => p.aiUsed },
+    
+    // --- 终极 ---
+    { id: 'legend', icon: 'trophy', name: '登峰造极', desc: '【条件】达到 Level 10 且完成所有任务', condition: (p) => p.level >= 10 && p.completionRate >= 100 }
+];
+
+// 阈值：0级->1级需要0XP(出生), 1->2需要100XP...
+const LEVEL_THRESHOLDS = [0, 100, 300, 600, 1000, 1500, 2200, 3000, 4000, 5500, 7500, 10000];
+
+let userProfile = JSON.parse(localStorage.getItem(PROFILE_KEY) || JSON.stringify({
+    xp: 0, level: 1, streak: 0, lastActive: null, badges: [], 
+    totalTasks: 0, focusSessions: 0, focusMinutes: 0, maxSession: 0, // 加了 maxSession
+    hasEarlyTask: false, hasLateTask: false,
+    perfectDays: 0, aiUsed: false, activeDays: 0, completionRate: 0
+}));
+
+function saveProfile() { localStorage.setItem(PROFILE_KEY, JSON.stringify(userProfile)); }
+
+// 【核心修复】：支持增减 XP，且动态计算等级，防止无限刷级
+// 【核心修复】：支持增减 XP，且动态计算等级，防止无限刷级
+function gainXP(amount) {
+    const oldLevel = userProfile.level;
+    userProfile.xp += amount;
+    if(userProfile.xp < 0) userProfile.xp = 0; // 不允许负分
+
+    // 重新计算等级
+    let newLevel = 1;
+    for (let i = 0; i < LEVEL_THRESHOLDS.length; i++) {
+        if (userProfile.xp >= LEVEL_THRESHOLDS[i]) {
+            newLevel = i + 1; // 索引0是1级
+        } else {
+            break; 
+        }
+    }
+    userProfile.level = newLevel;
+
+    // 升级判定
+    if (newLevel > oldLevel) {
+        AUDIO_SYSTEM.play('finish'); // 使用 finish 音效庆祝升级
+        showToast(`🎉 升级啦！Level ${newLevel}`);
+        confettiEffect();
         
+        // ⭐ 【新增逻辑】: 延迟弹窗庆祝，并在 Profile Modal 关闭后触发 XP 提示
+        setTimeout(() => openProfileModal(), 1500);
+        
+        // 关键：检查是否需要提示 XP 按钮位置
+        if (localStorage.getItem('pro_xp_tip_disabled') !== 'true') {
+            // 在 Profile Modal 关闭后执行提示
+            document.getElementById('profileModalOverlay').addEventListener('transitionend', function handler() {
+                if (!document.getElementById('profileModalOverlay').classList.contains('show')) {
+                    setTimeout(openXpTipModal, 500); // 延迟打开 XP 提示
+                    this.removeEventListener('transitionend', handler);
+                }
+            });
+        }
+    }
+    
+    checkBadges();
+    saveProfile();
+}
+
+function checkBadges() {
+    // 重新计算总进度
+    let totalAll = 0; let doneAll = 0;
+    tasksData.forEach(d => {
+        totalAll += d.tasks.length;
+        d.tasks.forEach((_, ti) => { if(userProgress[d.date+'_'+ti]) doneAll++; });
+    });
+    
+    userProfile.totalTasks = doneAll;
+    userProfile.completionRate = totalAll ? (doneAll / totalAll * 100) : 0;
+
+    let newBadges = false;
+    BADGES_CONFIG.forEach(badge => {
+        if (!userProfile.badges.includes(badge.id) && badge.condition(userProfile)) {
+            userProfile.badges.push(badge.id);
+            showToast(`🏆 解锁成就: ${badge.name}`);
+            newBadges = true;
+        }
+    });
+    if (newBadges) { 
+        AUDIO_SYSTEM.play('check'); // 成就解锁音效
+        saveProfile(); 
+    }
+}
+
+// --- ⭐ 修复版：连胜计算逻辑 (精准判断昨日) ⭐ ---
+function updateStreak() {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+
+    // 1. 如果今天已经更新过，直接返回，避免重复增加
+    if (userProfile.lastActive === todayStr) return;
+
+    // 2. 计算“昨天”的日期字符串
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    // 3. 核心判定
+    if (userProfile.lastActive === yesterdayStr) {
+        // 如果上次活动是昨天 -> 连胜+1
+        userProfile.streak++;
+    } else {
+        // 如果上次活动不是昨天（是前天、大前天、或者从未开始） -> 重置为 1
+        userProfile.streak = 1;
+    }
+
+    // 4. 保存状态
+    userProfile.lastActive = todayStr;
+    userProfile.activeDays++; // 累计活跃总天数
+    saveProfile();
+}
+
+function getLevelTitle(lvl) {
+    if(lvl < 3) return "初窥门径"; // 刚开始探索
+    if(lvl < 5) return "略有小成"; // 取得了一些成绩
+    if(lvl < 8) return "驾轻就熟"; // 已经非常熟练
+    if(lvl < 10) return "炉火纯青"; // 达到很高的境界
+    return "出神入化"; // 顶级传说
+}
+
+// 渲染 Modal
+// 渲染 Modal (优化徽章点击体验版)
+function renderProfileModal() {
+    // 基础信息
+    document.getElementById('profileLevelTitle').innerText = `Level ${userProfile.level} ${getLevelTitle(userProfile.level)}`;
+    
+    // 数据更新 (使用 innerText 保护单位)
+    document.getElementById('streakCount').innerText = userProfile.streak;
+    document.getElementById('totalTasksCount').innerText = userProfile.totalTasks;
+    document.getElementById('focusCount').innerText = userProfile.focusMinutes || 0;
+    document.getElementById('xpCount').innerText = Math.floor(userProfile.xp);
+
+    // 进度条计算
+    const currentLvlIdx = userProfile.level - 1;
+    const prevXp = LEVEL_THRESHOLDS[currentLvlIdx];
+    const nextXp = LEVEL_THRESHOLDS[currentLvlIdx + 1] || (prevXp + 5000); 
+    
+    let progress = 0;
+    let nextNeed = 0;
+    
+    if (userProfile.level >= LEVEL_THRESHOLDS.length) {
+        progress = 100;
+        nextNeed = "MAX";
+    } else {
+        progress = ((userProfile.xp - prevXp) / (nextXp - prevXp)) * 100;
+        nextNeed = nextXp - userProfile.xp;
+    }
+    
+    document.getElementById('xpBarFill').style.width = `${Math.max(0, Math.min(100, progress))}%`;
+    document.getElementById('nextLevelXp').innerText = typeof nextNeed === 'number' ? Math.floor(nextNeed) : nextNeed;
+
+    // 徽章渲染
+    const badgeContainer = document.getElementById('badgesGrid');
+    badgeContainer.innerHTML = BADGES_CONFIG.map(b => {
+        const unlocked = userProfile.badges.includes(b.id);
+        const iconColor = unlocked ? 'text-yellow-500' : 'text-slate-300';
+        
+        // ⭐ 修复：不再使用 alert，改为调用 showBadgeTip ⭐
+        // 这里把徽章的名字和描述传进去
+        return `
+            <div class="badge-item ${unlocked ? 'unlocked' : ''}" onclick="showBadgeTip('${b.name}', '${b.desc}')">
+                <i data-lucide="${b.icon}" class="${iconColor} w-5 h-5"></i>
+                <span class="badge-name">${b.name}</span>
+            </div>
+        `;
+    }).join('');
+
+    if(window.lucide) initLucideSafe();
+}
+
+// ⭐ 新增：专门用于显示徽章详情的优雅提示函数 ⭐
+function showBadgeTip(name, desc) {
+    const t = document.getElementById('toast'); 
+    const m = document.getElementById('toastMsg');
+    const icon = t.querySelector('i');
+    
+    // 设置文案：标题 + 描述
+    if(m) m.innerHTML = `<span class="font-black text-yellow-300">${name}</span> <span class="opacity-80 font-normal">| ${desc}</span>`;
+    
+    // 设置图标为奖牌
+    if(icon) icon.setAttribute('data-lucide', 'medal');
+    if(window.lucide) initLucideSafe();
+
+    // 显示 Toast
+    t.style.opacity = '1'; 
+    t.style.transform = 'translate(-50%, 0)'; 
+    
+    // 这里的延时设为 4000ms (4秒)，让用户有足够时间看清条件
+    if(window.toastTimer) clearTimeout(window.toastTimer);
+    window.toastTimer = setTimeout(() => { 
+        t.style.opacity = '0'; 
+        t.style.transform = 'translate(-50%, -20px)'; 
+    }, 4000); 
+}
+
+function openProfileModal() { renderProfileModal(); document.getElementById('profileModalOverlay').classList.add('show'); }
+function closeProfileModal() { document.getElementById('profileModalOverlay').classList.remove('show'); }
         // --- 1. 核心工具函数 ---
         // 修复的 showToast：定义在全局作用域，支持图标和防抖
         window.showToast = function(msg) { 
@@ -598,8 +1333,37 @@ function initPalette() {
     if(window.lucide) window.lucide.createIcons();
 }
         function getDayColor(dayIndex) { return currentMode === 'mix' ? DOPAMINE_COLORS[dayIndex % DOPAMINE_COLORS.length] : currentSingleColor; }
-        function switchToMixMode() { currentMode = 'mix'; localStorage.setItem(THEME_MODE_KEY, 'mix'); document.getElementById('modeLabel').innerText = "DOPAMINE MIX"; renderDay(currentDayIdx); }
-        function switchToSingleColor(hex) { currentMode = 'single'; currentSingleColor = hex; localStorage.setItem(THEME_MODE_KEY, 'single'); localStorage.setItem(THEME_COLOR_KEY, hex); document.getElementById('modeLabel').innerText = "PRO FOCUS"; renderDay(currentDayIdx); }
+        function switchToMixMode() { 
+    currentMode = 'mix'; 
+    localStorage.setItem(THEME_MODE_KEY, 'mix'); 
+    document.getElementById('modeLabel').innerText = "DOPAMINE MIX"; 
+    
+    // 更新背景类名
+    const bg = document.getElementById('bg-gradient');
+    if(bg) { bg.className = 'bg-mix-mode'; bg.style.background = ''; }
+    
+    // ⭐ 新增：让沉浸模式变成多彩光效
+    document.getElementById('immersiveLayer').className = 'im-mix';
+    
+    renderDay(currentDayIdx); 
+}
+
+function switchToSingleColor(hex) { 
+    currentMode = 'single'; 
+    currentSingleColor = hex; 
+    localStorage.setItem(THEME_MODE_KEY, 'single'); 
+    localStorage.setItem(THEME_COLOR_KEY, hex); 
+    document.getElementById('modeLabel').innerText = "PRO FOCUS"; 
+    
+    // 更新背景类名
+    const bg = document.getElementById('bg-gradient');
+    if(bg) bg.className = 'bg-single-mode';
+    
+    // ⭐ 新增：让沉浸模式变成单色光效 (跟随 hex)
+    document.getElementById('immersiveLayer').className = 'im-single';
+    
+    renderDay(currentDayIdx); 
+}
         function applyThemeColor(hex) { const root = document.documentElement; const rgb = hexToRgb(hex); const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000; root.style.setProperty('--primary', hex); root.style.setProperty('--primary-dark', adjustBrightness(hex, -20)); root.style.setProperty('--primary-light', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.1)`); root.style.setProperty('--text-on-primary', brightness < 128 ? '#ffffff' : '#1d1d1f'); initPalette(); }
 
         function autoDetectTag(text) {
@@ -658,70 +1422,82 @@ function initPalette() {
         }
         
         async function toggleTask(tid) { 
-            if(document.getElementById('contentLocker').style.filter.includes('blur')) return; 
-            
-            const isChecking = !userProgress[tid]; 
-            
-            // 1. 更新数据状态
-            if(userProgress[tid]) { delete userProgress[tid]; } else { userProgress[tid] = true; } 
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(userProgress)); 
-            
-            // 2. [核心修复] 局部更新 DOM，防止列表闪烁
-            const taskEl = document.getElementById('task-card-' + tid);
-            if (taskEl) {
-                const checkIcon = taskEl.querySelector('.checkbox-ios svg');
-                if (isChecking) {
-                    taskEl.classList.add('task-checked');
-                    if(checkIcon) { checkIcon.classList.remove('opacity-0'); checkIcon.classList.add('opacity-100'); }
-                } else {
-                    taskEl.classList.remove('task-checked');
-                    if(checkIcon) { checkIcon.classList.remove('opacity-100'); checkIcon.classList.add('opacity-0'); }
-                }
-            }
+    if(document.getElementById('contentLocker').style.filter.includes('blur')) return; 
+    
+    const isChecking = !userProgress[tid]; 
+    
+    // 1. 更新数据状态
+    if(userProgress[tid]) { delete userProgress[tid]; } else { userProgress[tid] = true; } 
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(userProgress)); 
+    
+    // 2. DOM 更新
+    const taskEl = document.getElementById('task-card-' + tid);
+    if (taskEl) {
+        const checkIcon = taskEl.querySelector('.checkbox-ios svg');
+        if (isChecking) {
+            taskEl.classList.add('task-checked');
+            if(checkIcon) { checkIcon.classList.remove('opacity-0'); checkIcon.classList.add('opacity-100'); }
+        } else {
+            taskEl.classList.remove('task-checked');
+            if(checkIcon) { checkIcon.classList.remove('opacity-100'); checkIcon.classList.add('opacity-0'); }
+        }
+    }
 
-            // 3. 计算进度并更新头部（不重绘列表）
-            const dayDate = tid.split('_')[0]; 
-            const dayObj = tasksData.find(d => d.date === dayDate); 
-            const total = dayObj.tasks.length; 
-            const doneCount = dayObj.tasks.filter((_, i) => userProgress[dayDate+'_'+i]).length; 
-            const isAllDone = (doneCount === total && total > 0); 
-            
-            // 4. 触发音效和反馈
-            if (isChecking) { 
-                if (isAllDone) { AUDIO_SYSTEM.play('finish'); confettiEffect(); } 
-                else { AUDIO_SYSTEM.play('check'); showToast(); } 
-                if(navigator.vibrate) navigator.vibrate(10); 
-            } 
-            
-            // 5. 仅更新统计数据栏
-            updateStats(tasksData[currentDayIdx]);
-            
-            // 6. 自动设置倒计时逻辑
-            const currentTask = tasksData[currentDayIdx].tasks[parseInt(tid.split('_')[1])]; 
-            if (currentTask && currentTask.duration) { setTime(parseInt(currentTask.duration)); } 
-        }        
+    // 3. 进度计算
+    const dayDate = tid.split('_')[0]; 
+    const dayObj = tasksData.find(d => d.date === dayDate); 
+    const total = dayObj.tasks.length; 
+    const doneCount = dayObj.tasks.filter((_, i) => userProgress[dayDate+'_'+i]).length; 
+    const isAllDone = (doneCount === total && total > 0); 
+    
+    // 4. ⭐ 游戏化 XP 逻辑 (新增部分) ⭐
+    if (isChecking) {
+        gainXP(50); // 完成任务 +50
+        updateStreak();
+        // 时间相关成就判定
+        const h = new Date().getHours();
+        if(h < 9) { userProfile.hasEarlyTask = true; checkBadges(); }
+        if(h >= 22) { userProfile.hasLateTask = true; checkBadges(); }
+        
+        if (isAllDone) { 
+            AUDIO_SYSTEM.play('finish'); confettiEffect(); 
+            gainXP(100); // 全清奖励 +100
+            if(total >= 3) { userProfile.perfectDays++; checkBadges(); }
+        } 
+        else { AUDIO_SYSTEM.play('check'); showToast(); } 
+        
+        if(navigator.vibrate) navigator.vibrate(10); 
+    } else {
+        // 取消任务，扣除 XP (防止刷分)
+        gainXP(-50); 
+        // 如果取消导致不再是全清，这里不做特殊处理，因为全清奖励已发放。
+        // 选择比较宽松的策略：已发的全清奖励不收回，或者简单点不扣全清分。
+        // 这里只扣除基础任务分。
+    }
+    
+    updateStats(tasksData[currentDayIdx]);
+    
+    // 自动倒计时逻辑
+    const currentTask = tasksData[currentDayIdx].tasks[parseInt(tid.split('_')[1])]; 
+    if (isChecking && currentTask && currentTask.duration) { setTime(parseInt(currentTask.duration)); } 
+}        
         function updateStats(day) { const total = day.tasks.length; const done = day.tasks.filter((_, i) => userProgress[day.date+'_'+i]).length; const pct = total ? (done/total)*100 : 0; document.getElementById('dailyProgressBar').style.width = pct + '%'; document.getElementById('dailyProgressText').innerText = done + '/' + total; const trophy = document.getElementById('trophyContainer'); trophy.innerHTML = (done === total && total > 0) ? `<div class="p-3 rounded-full text-white shadow-lg animate-bounce theme-bg-target" style="background: var(--primary)"><i data-lucide="award" class="w-6 h-6"></i></div>` : `<div class="bg-slate-100 p-3 rounded-full text-slate-300"><i data-lucide="target" class="w-6 h-6"></i></div>`; let allT=0, allD=0; tasksData.forEach(d => { allT += d.tasks.length; allD += d.tasks.filter((_,i) => userProgress[d.date+'_'+i]).length; }); const gPct = allT ? Math.round((allD/allT)*100) : 0; document.getElementById('totalCompletionDisplay').innerText = gPct + '%'; document.getElementById('overallProgressBar').style.width = gPct + '%'; if(window.lucide) initLucideSafe(); }
         
         function startDay() { 
-    // 获取当前日期
     const d = tasksData[currentDayIdx].date; 
     
-    // 记录开始状态
     if(!startedDays.includes(d)) { 
         startedDays.push(d); 
         localStorage.setItem(START_KEY, JSON.stringify(startedDays)); 
     } 
     
-    // 播放音效
+    // ⭐ 新增：每日启动时更新连胜 ⭐
+    updateStreak();
+
     AUDIO_SYSTEM.play('start'); 
-    
     const overlay = document.getElementById('ritualOverlay');
     overlay.style.opacity = '0'; 
-    
-    // 【修复核心】：使用 window.proTimer 确保全局均可访问
     if(window.proTimer) clearTimeout(window.proTimer);
-    
-    // 重新设置定时器，500ms 后隐藏
     window.proTimer = setTimeout(() => { 
         overlay.style.display = 'none'; 
         unlockContent(); 
@@ -762,9 +1538,54 @@ function initPalette() {
         function unlockContent() { const locker = document.getElementById('contentLocker'); locker.style.filter = 'none'; locker.style.pointerEvents = 'auto'; locker.style.opacity = '1'; }
         
         // --- Modal & Utils ---
-        function openResetModal() { const overlay = document.getElementById('proModalOverlay'); document.getElementById('proModalTitle').innerText = "重置进度"; document.getElementById('proModalDesc').innerText = "确定要清空所有打卡记录吗？此操作无法撤销。"; document.getElementById('proModalInput').style.display = 'none'; const confirmBtn = document.getElementById('proModalConfirmBtn'); confirmBtn.innerText = "重置"; confirmBtn.classList.add('destructive'); confirmBtn.onclick = confirmReset; overlay.classList.add('show'); }
-        function confirmReset() { userProgress = {}; startedDays = []; localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(START_KEY); localStorage.removeItem(CURRENT_DAY_KEY); switchToMixMode(); location.reload(); }
-        function openRenameModal() { const overlay = document.getElementById('proModalOverlay'); const titleEl = document.getElementById('planTitleText'); document.getElementById('proModalTitle').innerText = "重命名计划"; document.getElementById('proModalDesc').innerText = "为当前的计划输入一个新的名称。"; const input = document.getElementById('proModalInput'); input.style.display = 'block'; input.value = titleEl.innerText; const confirmBtn = document.getElementById('proModalConfirmBtn'); confirmBtn.innerText = "保存"; confirmBtn.classList.remove('destructive'); confirmBtn.onclick = confirmRename; overlay.classList.add('show'); setTimeout(() => input.focus(), 100); }
+        function openResetModal() { 
+    const overlay = document.getElementById('proModalOverlay'); 
+    document.getElementById('proModalTitle').innerText = "重置数据"; 
+    document.getElementById('proModalDesc').innerText = "⚠️ 确定要清空所有打卡记录和修行阅历吗？此操作无法撤销。"; 
+    document.getElementById('proModalInput').style.display = 'none'; 
+    const confirmBtn = document.getElementById('proModalConfirmBtn'); 
+    confirmBtn.innerText = "清空数据"; 
+    
+    // 移除旧的类，添加新的类名
+    confirmBtn.classList.add('destructive'); 
+    confirmBtn.onclick = confirmReset; 
+    
+    overlay.classList.add('show'); 
+}
+        // --- 修复版：重置功能 (包含清除 XP) ---
+function confirmReset() { 
+    // 1. 清除打卡数据
+    userProgress = {}; 
+    startedDays = []; 
+    localStorage.removeItem(STORAGE_KEY); 
+    localStorage.removeItem(START_KEY); 
+    localStorage.removeItem(CURRENT_DAY_KEY); 
+    
+    // 2. ⭐ 新增：清除 XP、等级和徽章数据 ⭐
+    localStorage.removeItem(PROFILE_KEY);
+    
+    // 3. 恢复默认主题并刷新
+    switchToMixMode(); 
+    location.reload(); 
+}
+        function openRenameModal() { 
+    const overlay = document.getElementById('proModalOverlay'); 
+    const titleEl = document.getElementById('planTitleText'); 
+    document.getElementById('proModalTitle').innerText = "重塑心流轨道"; 
+    document.getElementById('proModalDesc').innerText = "为当前的专注计划输入一个更具动力的名称。"; 
+    const input = document.getElementById('proModalInput'); 
+    input.style.display = 'block'; 
+    input.value = titleEl.innerText; 
+    const confirmBtn = document.getElementById('proModalConfirmBtn'); 
+    confirmBtn.innerText = "立即重命名"; 
+    
+    // 确保没有 destructive 样式
+    confirmBtn.classList.remove('destructive'); 
+    
+    confirmBtn.onclick = confirmRename; 
+    overlay.classList.add('show'); 
+    setTimeout(() => input.focus(), 100); 
+}
         function confirmRename() { const val = document.getElementById('proModalInput').value; if(val) { document.getElementById('planTitleText').innerText = val; localStorage.setItem(TITLE_KEY, val); closeProModal(); } }
         function closeProModal() { document.getElementById('proModalOverlay').classList.remove('show'); }
         /* --- 替换开始：高级樱花/礼花特效函数 --- */
@@ -817,11 +1638,68 @@ function confettiEffect() {
         function toggleDock() { const panel = document.getElementById('dockPanel'); if (!panel.classList.contains('open')) { updatePanelPosition(); } panel.classList.toggle('open'); }
         function showTimeInput() { if (isRunning) return; const overlay = document.getElementById('customTimeOverlay'); const input = document.getElementById('customTimeInput'); overlay.classList.add('show'); const m = Math.floor(timeLeft / 60); const s = timeLeft % 60; input.value = s > 0 ? `${m}:${String(s).padStart(2,'0')}` : m; input.focus(); input.select(); }
         function hideTimeInput() { document.getElementById('customTimeOverlay').classList.remove('show'); }
-        function submitTime() { const input = document.getElementById('customTimeInput').value; let m = 0, s = 0; if (input.includes(':') || input.includes('：')) { const parts = input.replace('：', ':').split(':'); m = parseInt(parts[0]) || 0; s = parseInt(parts[1]) || 0; } else { m = parseInt(input) || 0; } if (m > 120) m = 120; timeLeft = m * 60 + s; if (timeLeft < 1) timeLeft = 25 * 60; updateUI(); hideTimeInput(); }
-        function adjustTime(delta) { if(isRunning) return; let m = Math.floor(timeLeft/60)+delta; if(m<1) m=1; setTime(m); }
-        function setTime(m) { if(isRunning) return; timeLeft = m * 60; updateUI(); }
+
+function submitTime() { 
+    const input = document.getElementById('customTimeInput').value; 
+    let m = 0, s = 0; 
+    if (input.includes(':') || input.includes('：')) { 
+        const parts = input.replace('：', ':').split(':'); 
+        m = parseInt(parts[0]) || 0; 
+        s = parseInt(parts[1]) || 0; 
+    } else { 
+        m = parseInt(input) || 0; 
+    } 
+    
+    if (m > 120) m = 120; 
+    if (m < 1 && s < 1) m = 1; // 防止输入 0
+    
+    // ⭐ 修复：同步更新结算时长 (精确到小数，例如 1.5 分钟)
+    currentSessionMin = m + (s/60); 
+    
+    timeLeft = m * 60 + s; 
+    updateUI(); 
+    hideTimeInput(); 
+}
+function adjustTime(delta) { 
+    if(isRunning) return; 
+    let m = Math.floor(timeLeft/60) + delta; 
+    if(m < 1) m = 1; 
+    if(m > 120) m = 120; // 限制最大 120 分钟
+    
+    // ⭐ 修复：同步更新结算时长
+    currentSessionMin = m; 
+    
+    setTime(m); 
+}
+function setTime(m) { if(isRunning) return; timeLeft = m * 60; updateUI(); }
         function toggleTimer() { if(isRunning) { clearInterval(timer); isRunning = false; } else { isRunning = true; timer = setInterval(() => { if(timeLeft>0) { timeLeft--; updateUI(); } else { finish(); } }, 1000); } updateUI(); }
-        function finish() { clearInterval(timer); isRunning = false; AUDIO_SYSTEM.play('finish'); alert("Focus Complete!"); confettiEffect(); timeLeft=25*60; exitImmersive(); updateUI(); }
+        function finish() { 
+    clearInterval(timer); 
+    isRunning = false; 
+    AUDIO_SYSTEM.play('finish'); 
+    
+    // ⭐ 逻辑修改：记录分钟数 ⭐
+    userProfile.focusSessions++; // 次数照样加（用于统计次数）
+    
+    // 累加分钟数 (如果没有记录过，就默认加25)
+    let addedMins = Math.floor(currentSessionMin || 25);
+    userProfile.focusMinutes = (userProfile.focusMinutes || 0) + addedMins;
+    
+    // 专注奖励：每分钟 5 XP (例如 25分钟 = 125 XP)
+    let xpGain = addedMins * 5;
+    gainXP(xpGain); 
+    
+    alert(`专注完成！沉浸 ${addedMins} 分钟，获得 +${xpGain} XP`); 
+    confettiEffect(); 
+    
+    // 重置状态
+    timeLeft = 25 * 60; 
+    currentSessionMin = 25; 
+    
+    exitImmersive(); 
+    updateUI(); 
+    saveProfile(); // 别忘了保存
+}
         function updateUI() { const str = Math.floor(timeLeft/60).toString().padStart(2,'0') + ':' + (timeLeft%60).toString().padStart(2,'0'); document.getElementById('dockTime').innerText = str; document.getElementById('immTime').innerText = str; const btn = document.getElementById('mainBtn'); btn.innerHTML = isRunning ? `<i data-lucide="pause" class="w-4 h-4"></i> <span>暂停</span>` : `<i data-lucide="play" class="w-4 h-4"></i> <span>开始专注</span>`; document.getElementById('immIcon').setAttribute('data-lucide', isRunning ? 'pause' : 'play'); if(window.lucide) initLucideSafe(); }
         function enterImmersive() { document.getElementById('immersiveLayer').classList.add('active'); document.getElementById('dockPanel').classList.remove('open'); if(!isRunning) toggleTimer(); }
         function exitImmersive() { document.getElementById('immersiveLayer').classList.remove('active'); }
@@ -887,7 +1765,208 @@ function confettiEffect() {
                 nPanel.offsetHeight; nPanel.style.opacity = '1'; nPanel.style.transform = 'scale(1)';
             }
         }
+        // --- 🏆 真实感排行榜系统 (Pro Leaderboard Engine) ---
+// 特性：符合国人命名习惯 + 3小时数据锁定 + 智能锚定算法
 
+const RANK_CACHE_KEY = 'pro_rank_cache_' + planId;
+const RANK_UPDATE_INTERVAL = 3 * 60 * 60 * 1000; // 3小时更新一次 (毫秒)
+let currentRankType = 'xp';
+
+// 1. 中国特色网名库 (真实感来源)
+const REALISTIC_NAMES = [
+    // 奋斗类
+    "考研必上岸", "凌晨四点的洛杉矶", "自律即自由", "这种感觉太棒了", "闭关修炼中", "每天进步一点点",
+    // 文艺/自然类
+    "清风徐来", "山川湖海", "听雨", "云深不知处", "浅笑安然", "这里的黎明静悄悄",
+    // 抽象/默认类
+    "momo", "用户89757", "芝士雪豹", "AAA建材王总", "纯爱战神", "只是个传说",
+    // 英文ID类 (符合国人习惯的)
+    "Focus_Man", "Echo", "Serendipity", "Joker", "Vicky", "Winner"
+];
+
+const AVATAR_POOLS = ["👨‍🎓", "👩‍💻", "🦁", "🐱", "🐶", "🚀", "🌟", "🔥", "⛄", "🎓", "🍀", "🐳"];
+
+// 2. 生成/读取榜单数据 (核心逻辑)
+function getVirtualRankings(type) {
+    let userVal = 0;
+    // 获取用户真实数据
+    if(type === 'xp') userVal = Math.floor(userProfile.xp);
+    else if(type === 'focus') userVal = userProfile.focusMinutes || 0;
+    else if(type === 'streak') userVal = userProfile.streak;
+
+    const now = Date.now();
+    let cache = JSON.parse(localStorage.getItem(RANK_CACHE_KEY) || '{}');
+
+    // 检查缓存是否存在且未过期
+    // 注意：我们分别为三种榜单存储缓存，互不干扰
+    if (!cache[type] || (now - cache[type].timestamp > RANK_UPDATE_INTERVAL)) {
+        // --- 缓存失效，生成新一批“陪跑学霸” ---
+        console.log(`[Leaderboard] Generating new ${type} opponents...`);
+        
+        const bots = [];
+        const botCount = 10; // 生成10个竞争对手
+        
+        for (let i = 0; i < botCount; i++) {
+            // 随机取名
+            const name = REALISTIC_NAMES[Math.floor(Math.random() * REALISTIC_NAMES.length)];
+            const avatar = AVATAR_POOLS[Math.floor(Math.random() * AVATAR_POOLS.length)];
+            
+            // 🧠 智能分数算法 (Big Data Simulation)
+            // 既要显得真实，又要激发欲望。
+            // 策略：大部分人在你附近 (0.8x - 1.2x)，设置 1-2 个“卷王” (1.5x - 2.0x) 让你仰望
+            
+            let score = 0;
+            const seed = Math.random();
+            
+            if (userVal < 50) {
+                // 如果用户是新手，机器人也是新手，但稍微高一点，引诱用户
+                score = Math.floor(Math.random() * 100) + 20; 
+            } else {
+                if (seed > 0.9) {
+                    // 10% 的概率出现“卷王” (你是1000分，他是 1800分)
+                    score = Math.floor(userVal * (1.5 + Math.random() * 0.5));
+                } else if (seed > 0.4) {
+                    // 50% 的概率是你前面的竞争对手 (你是1000分，他是 1050-1300分)
+                    score = Math.floor(userVal * (1.05 + Math.random() * 0.3));
+                } else {
+                    // 40% 的概率是被你甩在身后的 (你是1000分，他是 600-900分)
+                    score = Math.floor(userVal * (0.6 + Math.random() * 0.3));
+                }
+            }
+            
+            // 特殊修正：连胜榜单不能太离谱，要在 1~365 之间
+            if (type === 'streak') score = Math.min(score, 365);
+            
+            bots.push({ name, avatar, val: score, isMe: false });
+        }
+        
+        // 更新缓存结构
+        cache[type] = {
+            timestamp: now,
+            data: bots
+        };
+        localStorage.setItem(RANK_CACHE_KEY, JSON.stringify(cache));
+    }
+
+    // --- 3. 融合数据 (关键步骤) ---
+    // 取出缓存的死数据（机器人），加上用户的活数据（你）
+    // 这样切换榜单时，机器人分数不变，但如果你的分数涨了，排名会实时变动！
+    
+    let finalRunningList = [...cache[type].data];
+    
+    // 把“我”加进去
+    finalRunningList.push({ 
+        name: "我", 
+        avatar: "😎", 
+        val: userVal, 
+        isMe: true 
+    });
+
+    // 重新排序
+    finalRunningList.sort((a, b) => b.val - a.val);
+    
+    // 截取前 10 名 (如果我在10名开外，需要特殊处理，这里简化为只显示前12名)
+    return finalRunningList.slice(0, 15);
+}
+
+// 2. 渲染排行榜 (汉化单位 + 动态锁定提示)
+function renderLeaderboard(type) {
+    currentRankType = type;
+    
+    // 更新按钮状态
+    document.querySelectorAll('.rank-filter-btn').forEach(btn => {
+        if(btn.dataset.type === type) btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
+
+    const list = getVirtualRankings(type);
+    const container = document.getElementById('leaderboardList');
+    container.innerHTML = '';
+
+    list.forEach((item, idx) => {
+        const rank = idx + 1;
+        const row = document.createElement('div');
+        row.className = `rank-row rank-${rank} ${item.isMe ? 'is-me' : ''}`;
+        
+        // 只有前三名加粗高亮
+        let valDisplay = item.val;
+        if(type === 'focus') valDisplay += ' 分钟';
+        if(type === 'streak') valDisplay += ' 天';
+        if(type === 'xp') valDisplay += ' 阅历';
+
+        row.innerHTML = `
+            <div class="rank-num">${rank}</div>
+            <div class="rank-avatar">${item.avatar}</div>
+            <div class="rank-name">${item.name} ${item.isMe ? '<span class="text-[10px] bg-slate-200 text-slate-500 px-1 rounded ml-1">YOU</span>' : ''}</div>
+            <div class="rank-val">${valDisplay}</div>
+        `;
+        container.appendChild(row);
+    });
+    
+    // 计算下次更新时间，增加真实感
+    const cache = JSON.parse(localStorage.getItem(RANK_CACHE_KEY) || '{}');
+    let nextTimeStr = "即将";
+    if (cache[type]) {
+        const nextTime = cache[type].timestamp + RANK_UPDATE_INTERVAL;
+        const minLeft = Math.ceil((nextTime - Date.now()) / 60000);
+        if (minLeft > 60) nextTimeStr = `约 ${Math.floor(minLeft/60)} 小时后`;
+        else nextTimeStr = `约 ${minLeft} 分钟后`;
+    }
+    
+    // 更新底部提示文案
+    const footer = document.querySelector('#view-rank .text-center');
+    if(footer) footer.innerHTML = `榜单数据 ${nextTimeStr} 更新 · 与全网学友共勉`;
+}
+
+// 3. Tab 切换逻辑 (保持不变，但为了完整性贴在这里)
+function switchProfileTab(tab) {
+    const viewMe = document.getElementById('view-me');
+    const viewRank = document.getElementById('view-rank');
+    const btnMe = document.getElementById('tab-me');
+    const btnRank = document.getElementById('tab-rank');
+
+    if (tab === 'me') {
+        viewMe.style.display = 'block';
+        viewRank.style.display = 'none';
+        btnMe.className = "px-4 py-1.5 rounded-lg text-sm font-bold transition-all bg-white shadow-sm text-slate-800";
+        btnRank.className = "px-4 py-1.5 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-slate-600";
+    } else {
+        viewMe.style.display = 'none';
+        viewRank.style.display = 'block';
+        btnRank.className = "px-4 py-1.5 rounded-lg text-sm font-bold transition-all bg-white shadow-sm text-slate-800";
+        btnMe.className = "px-4 py-1.5 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-slate-600";
+        renderLeaderboard(currentRankType);
+    }
+}
+// --- ⭐ 新增：XP 提示控制逻辑 ⭐ ---
+function openXpTipModal() {
+    const modal = document.getElementById('xpTipModalOverlay');
+    if (modal && localStorage.getItem('pro_xp_tip_disabled') !== 'true') {
+        modal.classList.add('show');
+        document.getElementById('xpTipModal').classList.add('scale-100');
+    }
+}
+
+function closeXpTipModal() {
+    const modal = document.getElementById('xpTipModalOverlay');
+    if (modal) {
+        modal.classList.remove('show');
+        document.getElementById('xpTipModal').classList.remove('scale-100');
+    }
+}
+
+function disableXpTip() {
+    localStorage.setItem('pro_xp_tip_disabled', 'true');
+    showToast("下次升级将不再提示");
+    closeXpTipModal();
+}
+
+function showProfileModalAndCloseTip() {
+    closeXpTipModal();
+    // 因为 openProfileModal 已经包含在 gainXP 的延迟逻辑中，这里可以直接打开
+    // 确保用户能看到排行榜
+    openProfileModal(); 
+}
         // --- 7. 初始化 ---
         function init() { 
             if (!RAW_DATA.includes('{{')) { const st = localStorage.getItem(TITLE_KEY); if(st) document.getElementById('planTitleText').innerText = st; } 
@@ -896,7 +1975,11 @@ function confettiEffect() {
             let initialDayIdx = parseInt(localStorage.getItem(CURRENT_DAY_KEY) || '0'); 
             const hashMatch = window.location.hash.match(/day=(\d+)/); if (hashMatch) { initialDayIdx = parseInt(hashMatch[1]); } 
             const urlParams = new URLSearchParams(window.location.search); if (urlParams.has('day')) { const urlDayIdx = parseInt(urlParams.get('day')); if (!isNaN(urlDayIdx) && urlDayIdx >= 0 && urlDayIdx < tasksData.length) { initialDayIdx = urlDayIdx; } } 
-            renderDay(initialDayIdx); 
+            renderDay(initialDayIdx);
+            // 初始化沉浸模式背景
+document.getElementById('immersiveLayer').className = currentMode === 'mix' ? 'im-mix' : 'im-single';
+PARTICLE_ENGINE.init();
+
             document.getElementById('modeLabel').innerText = currentMode === 'mix' ? "DOPAMINE MIX" : "PRO FOCUS"; 
             document.addEventListener('click', (e) => { if(!e.target.closest('.palette-wrapper')) closePalette(); }); 
             window.addEventListener('hashchange', () => { const hashMatch = window.location.hash.match(/day=(\d+)/); if (hashMatch) { renderDay(parseInt(hashMatch[1])); } });
@@ -914,5 +1997,18 @@ function confettiEffect() {
         // 统一入口，解决执行时机问题
         window.addEventListener('DOMContentLoaded', init);
     </script>
+    <script>
+    // 强制每 100ms 检查一次图标是否渲染，尝试 10 次
+    // 这能解决手机端加载慢导致图标“不出来”的问题
+    let checkCount = 0;
+    const forceRender = setInterval(() => {
+        if(window.lucide) {
+            window.lucide.createIcons();
+            checkCount++;
+        }
+        if(checkCount > 10) clearInterval(forceRender);
+    }, 100);
+</script>
+
 </body>
 </html>
